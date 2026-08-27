@@ -4,27 +4,54 @@ Stand: 2026-08-27
 
 ## Aktueller Stand
 
-Repository `DrHoschi/CM3D` wurde als zentrale Projektbasis eingerichtet.
+Repository `DrHoschi/CM3D` ist als zentrale Projektbasis eingerichtet.
 
-### Vorhandene Ausgangsartefakte
+Die drei Ausgangsquellen wurden fachlich erfasst und gegeneinander geprüft:
 
 - Hauptfenster-Dokumentation V0.1
 - Funktionsmatrix V0.1
 - vollständiges Icon-Paket V3
 
-### Nächste kontrollierte Schritte
+AL-01 bis AL-06 wurden entschieden. Der Cross-Check ist PASS und es bestehen **0 offene Baseline-Blocker**.
 
-1. Originaldateien in die vorgesehenen Repository-Bereiche übernehmen.
-2. Dokumente und Matrix inhaltlich erfassen und gegeneinander abgleichen.
-3. stabile Funktions-/UI-IDs und Querverweise festziehen.
-4. technische Architektur für die Web-/3D-Implementierung dokumentieren.
-5. erst danach eigentliche Implementierung unter `src/` beginnen.
+## Verbindlicher Dokumentationsstand
+
+**CM3D V0.1 BASELINE – FROZEN**
+
+Verbindliche harmonisierte Funktionsquelle:
+
+`docs/03_functional-spec/CM3D_MASTER_FUNCTIONS_V0_1.md`
+
+Die ursprünglichen Quellabschriften bleiben als historische Ausgangsstände erhalten und werden nicht rückwirkend umgeschrieben.
+
+## Scope-Trennung
+
+### P0.1 – Minimal-Prototyp
+Kleinste durchgehende Funktionskette für die erste Implementierungsvalidierung:
+
+- leeres/neues Projekt
+- 3D-Viewport
+- Objektbaum
+- Würfel/Quader erstellen
+- auswählen
+- Position/Rotation/Skalierung
+- speichern
+- wieder laden
+- Icon-Paket im UI eingebunden
+
+### V1 – Pflichtkern
+Der vollständige erste belastbare Designer-Kern gemäß Master-Funktionsliste. P0.1 ist ausdrücklich nur eine Teilmenge davon.
 
 ## Statuskennzeichnung
 
 - `DRAFT` – in Bearbeitung
 - `REVIEW` – fachlich zur Prüfung bereit
-- `APPROVED` – freigegebener Stand
+- `FROZEN` – verbindliche Baseline; Änderungen nur kontrolliert über neue Revision/Entscheidung
+- `APPROVED` – formell freigegebener Folge-/Release-Stand
 - `ARCHIVED` – abgelöster historischer Stand
 
-Aktueller Gesamtstatus: **DRAFT / Repository-Basis eingerichtet**
+Aktueller Gesamtstatus: **FROZEN / CM3D V0.1 BASELINE**
+
+## Nächster Entwicklungsblock
+
+Nach dem Merge der Dokumentationsbaseline beginnt die technische Vorbereitung für **P0.1**. Dabei wird nicht sofort der gesamte V1-Umfang implementiert; zuerst wird die kleinste End-to-End-Kette Projekt → Viewport → Objekt → Transform → Save/Load stabil aufgebaut.
