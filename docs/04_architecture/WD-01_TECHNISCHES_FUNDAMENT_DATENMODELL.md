@@ -234,6 +234,191 @@ WD-01.02 ist erfüllt, wenn eine Szene mit mehreren Objekten und mindestens eine
 - der SceneGraph zyklusfrei und vollständig validierbar ist,
 - Three.js-Objekte ohne Verwendung ihrer alten Runtime-UUIDs neu aufgebaut werden können.
 
+## WD-01.03 – Objektarten und gemeinsames Basismodell
+
+**Status:** DECIDED
+
+### Entscheidung
+
+Alle speicherbaren Szenenobjekte verwenden **ein gemeinsames SceneObject-Basismodell**. Unterschiede zwischen Würfel, Sketch, Gruppe, Baugruppe, Kamera, Licht usw. werden nicht durch vollständig verschiedene Dateiformate abgebildet, sondern durch:
+
+- ein stabiles `type`-Feld zur fachlichen Klassifikation,
+- einen typabhängigen `data`-Block,
+- gemeinsame Basisfelder für Identität, Hierarchie, Transform, Materialreferenzen und Flags.
+
+Damit bleiben SceneGraph, Auswahl, Objektbaum, Undo/Redo, Save/Load und Inspector grundsätzlich für alle Objektarten gleich behandelbar.
+
+### Verbindliches SceneObject-Basismodell
+
+```json
+{
+  "objectId": "obj_...",
+  "type": "primitive.box",
+  "name": "Würfel",
+  "parentId": null,
+  "order": 0,
+  "transform": {},
+  "data": {},
+  "materialIds": [],
+  "flags": {
+    "visible": true,
+    "locked": false
+  },
+  "extensions": {}
+}
+```
+
+### Basisfelder
+
+- `objectId`: dauerhafte fachliche Identität gemäß WD-01.02.
+- `type`: stabile Objektart; bestimmt, wie `data` interpretiert und welche Runtime-Darstellung erzeugt wird.
+- `name`: frei änderbarer Anzeigename; niemals technische Identität.
+- `parentId`: hierarchische Zuordnung.
+- `order`: stabile Reihenfolge innerhalb derselben Hierarchieebene.
+- `transform`: gemeinsamer lokaler Transformblock; Details folgen in WD-01.05.
+- `data`: ausschließlich typabhängige fachliche Nutzdaten.
+- `materialIds`: Referenzen auf projektbezogene Materialdefinitionen; Details folgen in WD-01.08.
+- `flags`: gemeinsame objektbezogene Zustände wie Sichtbarkeit und Sperre.
+- `extensions`: reservierter Erweiterungsbereich für spätere Zusatzdaten, ohne das Basismodell aufzubrechen.
+
+### Objektarten-Namensschema
+
+Objektarten werden als stabile, kleingeschriebene, punktseparierte Typnamen gespeichert. Dadurch ist die Hauptklasse direkt erkennbar und Untertypen können ergänzt werden.
+
+Verbindliche Kernklassen:
+
+- `primitive.*`
+- `sketch.*`
+- `group`
+- `assembly`
+- `camera.*`
+- `light.*`
+- `helper.*`
+- `imported.*`
+
+Für WD-02/P0.1 ist mindestens `primitive.box` verbindlich.
+
+### Primitive
+
+Primitive sind parametrisierte Grundkörper. Ihre Formparameter liegen ausschließlich im `data`-Block.
+
+Beispiel Würfel/Quader:
+
+```json
+{
+  "type": "primitive.box",
+  "data": {
+    "size": {
+      "x": 100,
+      "y": 100,
+      "z": 100
+    }
+  }
+}
+```
+
+Spätere Typen können z. B. `primitive.cylinder`, `primitive.sphere`, `primitive.cone`, `primitive.plane`, `primitive.torus` und `primitive.pipe` sein. Die exakten Parameter werden jeweils beim entsprechenden Modellierungsblock spezifiziert und nicht vorzeitig in WD-01 festgeschrieben.
+
+### Sketch
+
+Skizzen sind eigenständige Szenenobjekte und keine bloßen UI-Hilfszustände.
+
+Grundtyp:
+
+`sketch.2d`
+
+Der `data`-Block darf später Ebenenbezug, Punkte, Segmente, Bögen, Profile und Constraints enthalten. Diese Detailstruktur gehört nicht zum WD-01-Scope; hier wird nur festgelegt, dass Sketches dieselben Basisfelder und eine dauerhafte `objectId` besitzen.
+
+### Group
+
+`group` ist ein hierarchisches Organisationsobjekt. Es besitzt grundsätzlich keine eigene Geometrie. Seine Mitglieder entstehen ausschließlich durch deren `parentId`; es wird keine zweite Member-Liste als parallele Wahrheit gepflegt.
+
+Eine Gruppe darf Transform besitzen. Dadurch können alle untergeordneten Objekte gemeinsam positioniert, gedreht oder skaliert werden. Die genaue Transformvererbung wird in WD-01.04 bis WD-01.06 festgelegt.
+
+### Assembly
+
+`assembly` ist fachlich von `group` getrennt.
+
+- **Group:** organisatorische/hierarchische Zusammenfassung.
+- **Assembly:** fachlich zusammengehörige, wiederverwendbare Baugruppe mit eigener Identität und später möglichen Metadaten, Anschlussinformationen oder Exportregeln.
+
+Auch eine Assembly erhält keine parallele Child-Liste; ihre enthaltenen Szenenobjekte werden über `parentId` zugeordnet.
+
+Für WD-02 muss Assembly noch nicht implementiert werden, das Datenmodell ist aber von Beginn an darauf vorbereitet.
+
+### Camera
+
+Kameras sind normale SceneObjects mit eigener `objectId`, Hierarchie und Transform.
+
+Vorgesehene Typen:
+
+- `camera.perspective`
+- `camera.orthographic`
+
+Kameraspezifische Parameter wie Sichtfeld, Near/Far oder orthografische Größe liegen im `data`-Block. Eine Viewport-Arbeitskamera darf später als nicht persistenter UI-/Runtime-Zustand existieren; eine bewusst in der Szene angelegte Kamera ist dagegen ein persistierbares SceneObject.
+
+### Light
+
+Lichtobjekte sind normale SceneObjects.
+
+Vorgesehene Typfamilie:
+
+`light.*`
+
+Mögliche spätere Untertypen sind z. B. `light.directional`, `light.point`, `light.spot`, `light.ambient`. Farbe, Intensität und weitere lichtspezifische Daten liegen in `data`.
+
+### Helper
+
+`helper.*` ist für fachlich persistierbare Hilfsobjekte reserviert, z. B. bewusst angelegte Referenzpunkte oder Konstruktionshilfen.
+
+Reine Runtime-Helfer von Three.js wie TransformControls, Auswahlrahmen, temporäre Rasterdarstellungen oder Debug-Visualisierungen sind **keine** SceneObjects und werden nicht gespeichert.
+
+### Imported
+
+Importierte Modelle werden später über `imported.*`-Objekte in den SceneGraph eingebunden. Das SceneObject enthält dabei stabile Referenzen auf Asset-Daten, nicht die Three.js-Loaderinstanz selbst.
+
+Die konkrete Assetstruktur wird erst im Import-/Asset-Block festgelegt.
+
+### Gemeinsame Regeln für alle Objektarten
+
+1. Jede Objektart verwendet dasselbe Basismodell.
+2. `type` darf nicht aus dem Three.js-Klassennamen abgeleitet werden.
+3. `data` enthält nur fachliche, serialisierbare Daten.
+4. Runtime-Objekte, Rendererzustände und DOM-Referenzen dürfen niemals in `data` gespeichert werden.
+5. Unbekannte Typen müssen beim Laden als nicht unterstützte SceneObjects erkannt werden; sie dürfen nicht stillschweigend als anderer Typ interpretiert werden.
+6. Eine spätere Erweiterung um neue `type`-Werte darf bestehende SceneObjects nicht strukturell ungültig machen.
+7. Typwechsel eines bestehenden Objekts ist kein gewöhnliches Umbenennen; falls später erlaubt, muss er als explizite Modelloperation behandelt werden.
+
+### WD-02/P0.1-Anwendung
+
+Der erste Würfel wird als `primitive.box` gespeichert. Objektbaum, Auswahl, Transform und Save/Load arbeiten ausschließlich mit dem gemeinsamen SceneObject-Basismodell. Three.js erzeugt daraus zur Laufzeit ein passendes Mesh; das Mesh selbst ist nicht das gespeicherte Objekt.
+
+Minimalbeispiel:
+
+```json
+{
+  "objectId": "obj_550e8400-e29b-41d4-a716-446655440000",
+  "type": "primitive.box",
+  "name": "Würfel",
+  "parentId": null,
+  "order": 0,
+  "transform": {},
+  "data": {
+    "size": { "x": 100, "y": 100, "z": 100 }
+  },
+  "materialIds": [],
+  "flags": {
+    "visible": true,
+    "locked": false
+  },
+  "extensions": {}
+}
+```
+
+### Abnahmekriterium WD-01.03
+
+WD-01.03 ist erfüllt, wenn mindestens `primitive.box`, `group`, `assembly`, `camera.perspective`, `light.*` und `sketch.2d` durch dasselbe SceneObject-Basismodell beschreibbar sind und der Typunterschied ausschließlich über `type` plus `data` modelliert wird, ohne SceneGraph-, ID- oder Save/Load-Sonderformate pro Objektart einzuführen.
+
 ## Nicht-Scope von WD-01
 
 - keine vollständige Implementierung der 89 Master-Funktionen
