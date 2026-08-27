@@ -317,107 +317,260 @@ Beispiel Würfel/Quader:
 }
 ```
 
-Spätere Typen können z. B. `primitive.cylinder`, `primitive.sphere`, `primitive.cone`, `primitive.plane`, `primitive.torus` und `primitive.pipe` sein. Die exakten Parameter werden jeweils beim entsprechenden Modellierungsblock spezifiziert und nicht vorzeitig in WD-01 festgeschrieben.
+Weitere vorgesehene Typen:
+
+- `primitive.cylinder`
+- `primitive.sphere`
+- `primitive.cone`
+- `primitive.plane`
+- `primitive.torus`
+- `primitive.pipe`
+
+Die Aufnahme in das Typenschema bedeutet nicht, dass diese bereits in WD-02 implementiert werden müssen.
 
 ### Sketch
 
-Skizzen sind eigenständige Szenenobjekte und keine bloßen UI-Hilfszustände.
+2D-Skizzen werden als eigene fachliche Objekte modelliert und nicht als temporäre Three.js-Linien behandelt.
 
-Grundtyp:
+Vorgesehene Typen:
 
-`sketch.2d`
+- `sketch.profile`
+- `sketch.line`
+- `sketch.rectangle`
+- `sketch.circle`
 
-Der `data`-Block darf später Ebenenbezug, Punkte, Segmente, Bögen, Profile und Constraints enthalten. Diese Detailstruktur gehört nicht zum WD-01-Scope; hier wird nur festgelegt, dass Sketches dieselben Basisfelder und eine dauerhafte `objectId` besitzen.
+Der `data`-Block enthält später die 2D-Geometrie, Skizzenebene und zugehörige Parameter. Details werden erst beim 2D-Sketch-Block festgezogen.
 
 ### Group
 
-`group` ist ein hierarchisches Organisationsobjekt. Es besitzt grundsätzlich keine eigene Geometrie. Seine Mitglieder entstehen ausschließlich durch deren `parentId`; es wird keine zweite Member-Liste als parallele Wahrheit gepflegt.
+`group` ist ein hierarchisches Organisationsobjekt. Eine Gruppe darf Kinder besitzen und hat einen eigenen Transform. Sie stellt primär Struktur und gemeinsame Transformation bereit.
 
-Eine Gruppe darf Transform besitzen. Dadurch können alle untergeordneten Objekte gemeinsam positioniert, gedreht oder skaliert werden. Die genaue Transformvererbung wird in WD-01.04 bis WD-01.06 festgelegt.
+Die Gruppenzugehörigkeit wird nicht zusätzlich in den Child-Objekten als separate Gruppen-ID gespeichert; `parentId` ist die hierarchische Wahrheit.
 
 ### Assembly
 
-`assembly` ist fachlich von `group` getrennt.
+`assembly` ist **nicht nur ein anderer Name für Group**. Eine Baugruppe ist eine fachliche Einheit und darf später zusätzliche Daten besitzen, z. B. Baugruppenmetadaten, Anschlussinformationen, Exportregeln oder Bibliotheksbezug.
 
-- **Group:** organisatorische/hierarchische Zusammenfassung.
-- **Assembly:** fachlich zusammengehörige, wiederverwendbare Baugruppe mit eigener Identität und später möglichen Metadaten, Anschlussinformationen oder Exportregeln.
-
-Auch eine Assembly erhält keine parallele Child-Liste; ihre enthaltenen Szenenobjekte werden über `parentId` zugeordnet.
-
-Für WD-02 muss Assembly noch nicht implementiert werden, das Datenmodell ist aber von Beginn an darauf vorbereitet.
+Sie verwendet dennoch dasselbe SceneObject-Basismodell und dieselbe Parent-/Child-Mechanik wie andere Objekte.
 
 ### Camera
 
-Kameras sind normale SceneObjects mit eigener `objectId`, Hierarchie und Transform.
+Kameraobjekte sind speicherbare Szenenobjekte.
 
 Vorgesehene Typen:
 
 - `camera.perspective`
 - `camera.orthographic`
 
-Kameraspezifische Parameter wie Sichtfeld, Near/Far oder orthografische Größe liegen im `data`-Block. Eine Viewport-Arbeitskamera darf später als nicht persistenter UI-/Runtime-Zustand existieren; eine bewusst in der Szene angelegte Kamera ist dagegen ein persistierbares SceneObject.
+Kameras verwenden das gemeinsame Transformmodell. Kameraspezifische Werte wie FOV, Near/Far oder orthografische Größe liegen in `data`.
 
 ### Light
 
-Lichtobjekte sind normale SceneObjects.
+Lichtobjekte sind ebenfalls speicherbare SceneObjects.
 
-Vorgesehene Typfamilie:
+Vorgesehene Typen:
 
-`light.*`
+- `light.ambient`
+- `light.directional`
+- `light.point`
+- `light.spot`
 
-Mögliche spätere Untertypen sind z. B. `light.directional`, `light.point`, `light.spot`, `light.ambient`. Farbe, Intensität und weitere lichtspezifische Daten liegen in `data`.
+Lichtspezifische Parameter liegen in `data`. Nicht jede Lichtart muss in V1 sofort umgesetzt werden.
 
 ### Helper
 
-`helper.*` ist für fachlich persistierbare Hilfsobjekte reserviert, z. B. bewusst angelegte Referenzpunkte oder Konstruktionshilfen.
+`helper.*` ist für **fachlich speicherbare Hilfsobjekte** reserviert, z. B. spätere Konstruktionsreferenzen oder definierte Hilfsebenen.
 
-Reine Runtime-Helfer von Three.js wie TransformControls, Auswahlrahmen, temporäre Rasterdarstellungen oder Debug-Visualisierungen sind **keine** SceneObjects und werden nicht gespeichert.
+Wichtig: reine Runtime-Helfer von Three.js wie TransformControls, Auswahlrahmen, Debug-Achsen oder temporäre Gizmos sind **keine** SceneObjects und werden nicht gespeichert.
 
 ### Imported
 
-Importierte Modelle werden später über `imported.*`-Objekte in den SceneGraph eingebunden. Das SceneObject enthält dabei stabile Referenzen auf Asset-Daten, nicht die Three.js-Loaderinstanz selbst.
+Importierte Inhalte werden als SceneObjects eingebunden, referenzieren ihre eigentliche Ressource jedoch über `data` bzw. spätere Asset-Referenzen.
 
-Die konkrete Assetstruktur wird erst im Import-/Asset-Block festgelegt.
+Vorgesehen:
 
-### Gemeinsame Regeln für alle Objektarten
+- `imported.mesh`
+- `imported.model`
 
-1. Jede Objektart verwendet dasselbe Basismodell.
-2. `type` darf nicht aus dem Three.js-Klassennamen abgeleitet werden.
-3. `data` enthält nur fachliche, serialisierbare Daten.
-4. Runtime-Objekte, Rendererzustände und DOM-Referenzen dürfen niemals in `data` gespeichert werden.
-5. Unbekannte Typen müssen beim Laden als nicht unterstützte SceneObjects erkannt werden; sie dürfen nicht stillschweigend als anderer Typ interpretiert werden.
-6. Eine spätere Erweiterung um neue `type`-Werte darf bestehende SceneObjects nicht strukturell ungültig machen.
-7. Typwechsel eines bestehenden Objekts ist kein gewöhnliches Umbenennen; falls später erlaubt, muss er als explizite Modelloperation behandelt werden.
+Damit bleibt auch importierter Inhalt in Auswahl, Hierarchie, Transform und Save/Load nach denselben Regeln behandelbar.
 
-### WD-02/P0.1-Anwendung
+### Type-Registry-Regel
 
-Der erste Würfel wird als `primitive.box` gespeichert. Objektbaum, Auswahl, Transform und Save/Load arbeiten ausschließlich mit dem gemeinsamen SceneObject-Basismodell. Three.js erzeugt daraus zur Laufzeit ein passendes Mesh; das Mesh selbst ist nicht das gespeicherte Objekt.
+Die Anwendung verwendet eine zentrale Type Registry. Für jeden unterstützten `type` können dort definiert werden:
 
-Minimalbeispiel:
+- Validator für `data`
+- Standardwerte
+- Anzeigename/Icon
+- Runtime-Factory für Three.js
+- Inspector-Schema
+- zulässige Operationen
 
-```json
-{
-  "objectId": "obj_550e8400-e29b-41d4-a716-446655440000",
-  "type": "primitive.box",
-  "name": "Würfel",
-  "parentId": null,
-  "order": 0,
-  "transform": {},
-  "data": {
-    "size": { "x": 100, "y": 100, "z": 100 }
-  },
-  "materialIds": [],
-  "flags": {
-    "visible": true,
-    "locked": false
-  },
-  "extensions": {}
-}
-```
+Diese Registry ist Programmcode und wird **nicht** als vollständige Definition in jeder Projektdatei gespeichert. Eine Projektdatei enthält nur den stabilen Typnamen und seine Daten.
+
+### Unbekannte Typen
+
+Ein Projekt darf bei einer neueren Schema-/Programmversion Objektarten enthalten, die eine ältere Anwendung noch nicht kennt. Solche Objekte dürfen nicht stillschweigend gelöscht werden.
+
+Grundregel:
+
+- unbekannten `type` erkennen,
+- Originaldaten erhalten,
+- Objekt als nicht unterstützten/platzhalterartigen Eintrag behandeln,
+- Speichern darf seine unbekannten Daten nicht zerstören, sofern keine Migration dies ausdrücklich verlangt.
+
+Damit bereiten wir Vorwärtskompatibilität vor.
+
+### WD-02/P0.1-Mindestobjekt
+
+Der erste Prototyp benötigt nur ein vollständig funktionierendes `primitive.box`-Objekt mit:
+
+- stabiler `objectId`
+- `name`
+- `parentId`
+- `order`
+- Transform
+- `data.size`
+- Sichtbarkeit/Sperre
+- optionaler bzw. zunächst leerer Materialreferenz
+
+Alle anderen Typen sind strukturell vorbereitet, aber nicht Teil des WD-02-Implementierungsscope.
 
 ### Abnahmekriterium WD-01.03
 
-WD-01.03 ist erfüllt, wenn mindestens `primitive.box`, `group`, `assembly`, `camera.perspective`, `light.*` und `sketch.2d` durch dasselbe SceneObject-Basismodell beschreibbar sind und der Typunterschied ausschließlich über `type` plus `data` modelliert wird, ohne SceneGraph-, ID- oder Save/Load-Sonderformate pro Objektart einzuführen.
+WD-01.03 ist erfüllt, wenn `primitive.box`, `group`, `assembly`, `camera.perspective` und `light.directional` als unterschiedliche Typen mit demselben Basismodell dargestellt werden können und Save/Load, Objekt-ID, Hierarchie und gemeinsame Basisfelder ohne typabhängige Sonderformate funktionieren.
+
+## WD-01.04 – Parent-/Child-Hierarchie
+
+**Status:** DECIDED
+
+### Entscheidung
+
+Die Hierarchie bleibt vollständig auf der in WD-01.02 festgelegten `parentId`-Beziehung aufgebaut. Reparenting verändert die fachliche Parent-Beziehung, aber standardmäßig **nicht** die sichtbare Welttransformation des verschobenen Objekts.
+
+Das bedeutet: Wird ein Objekt von Parent A nach Parent B verschoben, bleiben seine Weltposition, Weltrotation und Weltskalierung erhalten. Anschließend werden seine **lokalen** Transformwerte relativ zu Parent B neu berechnet und gespeichert.
+
+Diese Regel entspricht der Erwartung beim Verschieben eines Objekts im Objektbaum: Die Struktur ändert sich, das Objekt springt nicht unerwartet an eine andere Stelle.
+
+### Verbindliche Hierarchiefelder
+
+Jedes SceneObject verwendet:
+
+```json
+{
+  "parentId": "obj_parent" | null,
+  "order": 0
+}
+```
+
+- `parentId` bestimmt ausschließlich die fachliche Parent-Beziehung.
+- `order` bestimmt die stabile Reihenfolge unter Geschwistern mit demselben `parentId`.
+- Child-Arrays werden weiterhin **nicht** als zweite Wahrheit gespeichert.
+
+### Geschwisterreihenfolge
+
+Für alle Objekte mit identischer `parentId` gilt `order` als Sortierschlüssel.
+
+Verbindliche Regeln:
+
+1. `order` ist eine ganze Zahl >= 0.
+2. Innerhalb derselben Geschwistergruppe wird eine eindeutige Reihenfolge hergestellt.
+3. Bei Einfügen, Verschieben oder Reparenting darf die betroffene Geschwistergruppe neu durchnummeriert werden.
+4. Die konkrete Zahlenlücke ist nicht fachlich relevant; entscheidend ist nur die Reihenfolge.
+5. Beim Speichern wird eine kanonische Reihenfolge `0..n-1` empfohlen, damit unnötige Lücken oder Drift vermieden werden.
+6. `scene.rootObjectIds` wird aus den Root-Objekten entsprechend derselben Reihenfolge abgeleitet bzw. beim Speichern damit synchron gehalten.
+
+Damit haben wir keine doppelte Parent-/Child-Datenhaltung, aber dennoch eine reproduzierbare Reihenfolge im Objektbaum.
+
+### Zulässige Parents
+
+Grundsätzlich darf jedes SceneObject Parent eines anderen SceneObjects sein, sofern sein Typ Hierarchiekinder fachlich erlaubt. Die Type Registry kann dies einschränken.
+
+Mindestens zulässig:
+
+- `group` als Parent
+- `assembly` als Parent
+- Root (`parentId = null`)
+
+Für WD-02/P0.1 reicht Root plus `group` als vorbereitete Hierarchie. Spezifische Typbeschränkungen für Sketches, Kameras, Lichter oder importierte Modelle werden bei Bedarf über die Type Registry geprüft.
+
+### Reparenting-Ablauf
+
+Ein Reparent-Vorgang muss atomar als eine fachliche Operation behandelt werden:
+
+1. Quellobjekt und neue Parent-ID bestimmen.
+2. Prüfen, dass der neue Parent existiert oder `null` ist.
+3. Prüfen, dass kein Zyklus entsteht.
+4. Aktuelle Welttransformation des Objekts bestimmen.
+5. `parentId` auf den neuen Parent setzen.
+6. Lokalen Transform relativ zum neuen Parent aus der unveränderten Welttransformation neu berechnen.
+7. Neue `order`-Position innerhalb der Ziel-Geschwistergruppe setzen.
+8. Quell- und Ziel-Geschwistergruppen kanonisch neu ordnen.
+9. SceneGraph erneut validieren.
+
+Der Vorgang darf nicht halb durchgeführt werden. Falls eine Validierung fehlschlägt, bleibt der vorherige Zustand bestehen.
+
+### Welttransformation erhalten
+
+Standardmodus beim Reparenting ist `keepWorldTransform = true`.
+
+Formal gilt:
+
+`newLocalMatrix = inverse(newParentWorldMatrix) × oldWorldMatrix`
+
+Bei Reparenting zum Root gilt die Root-Weltmatrix als Identität, also wird die bisherige Welttransformation zur neuen lokalen Transformation.
+
+Die konkrete Zerlegung der Matrix in Position/Rotation/Scale wird in WD-01.05 festgelegt. Nicht sauber zerlegbare Sonderfälle dürfen später nicht stillschweigend verfälscht werden.
+
+### Optionaler Alternativmodus
+
+Für spätere Funktionen darf ein ausdrücklicher Modus `keepLocalTransform = true` eingeführt werden. In diesem Modus bleiben die lokalen Werte unverändert und das Objekt bewegt sich dadurch gegebenenfalls in der Welt.
+
+Dieser Modus ist **nicht** der Standard und gehört nicht zum WD-02/P0.1-Pflichtumfang.
+
+### Hierarchie und Gruppen/Baugruppen
+
+Beim Gruppieren mehrerer Objekte wird ein neues `group`- oder `assembly`-Objekt erzeugt. Die ausgewählten Objekte werden auf dieses neue Parent-Objekt reparented, jeweils mit `keepWorldTransform = true`.
+
+Beim Auflösen einer Gruppe werden deren direkten Kinder zum Parent der Gruppe bzw. zum Root reparented, ebenfalls mit Erhalt ihrer Welttransformation. Die Gruppe selbst kann danach gelöscht werden, sofern keine fachlichen Daten ihre Erhaltung verlangen.
+
+Für `assembly` gilt dieselbe Hierarchiemechanik, aber ein Auflösen kann später zusätzlichen fachlichen Regeln unterliegen.
+
+### Löschen eines Parent-Objekts
+
+Die Löschsemantik wird später beim eigentlichen Bearbeitungsblock detailliert festgelegt. Für das Datenmodell gilt jedoch bereits:
+
+- Ein Parent mit Kindern darf nicht einfach gelöscht werden, solange dadurch verwaiste `parentId`-Referenzen entstehen würden.
+- Eine Löschoperation muss ausdrücklich definieren, ob Kinder mitgelöscht oder vorher reparented werden.
+- Save/Load akzeptiert keine verwaisten Parent-Referenzen.
+
+### Sichtbarkeit und Sperre in der Hierarchie
+
+`visible` und `locked` bleiben als eigene Objektflags gespeichert. Eine spätere effektive Vererbung über Parent-Objekte kann zur Laufzeit berechnet werden, ohne die Child-Objekte umzuschreiben.
+
+Beispiel: Ist eine Gruppe unsichtbar, können ihre Kinder effektiv unsichtbar sein, obwohl deren gespeichertes `flags.visible` weiterhin `true` bleibt.
+
+Damit bleibt der eigene Zustand eines Kindes erhalten, wenn der Parent später wieder sichtbar wird.
+
+### WD-02/P0.1-Anwendung
+
+WD-02 muss mindestens nachweisen können:
+
+- ein Root-Objekt und eine Gruppe existieren,
+- ein Würfel kann von Root in die Gruppe und wieder zurück verschoben werden,
+- seine `objectId` bleibt gleich,
+- seine Weltposition/-rotation/-skalierung bleibt beim Standard-Reparenting gleich,
+- seine lokalen Transformwerte ändern sich korrekt relativ zum neuen Parent,
+- die Reihenfolge im Objektbaum bleibt nach Save/Load identisch.
+
+### Abnahmekriterium WD-01.04
+
+WD-01.04 ist erfüllt, wenn eine Szene mit mindestens zwei Parent-Ebenen und mehreren Geschwistern gespeichert und geladen werden kann und anschließend:
+
+- alle `parentId`-Beziehungen identisch sind,
+- die Geschwisterreihenfolge identisch ist,
+- kein Zyklus oder verwaister Parent existiert,
+- ein Reparenting mit `keepWorldTransform = true` die Welttransformation numerisch innerhalb definierter Toleranzen erhält,
+- die lokalen Transformwerte korrekt an den neuen Parent angepasst werden.
 
 ## Nicht-Scope von WD-01
 
