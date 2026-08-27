@@ -67,186 +67,184 @@ Standard-Reparenting arbeitet mit `keepWorldTransform = true`: Ein Objekt darf b
 
 **Status:** DECIDED
 
+Der persistierte `transform` eines `SceneObject` beschreibt immer die lokale Transformation relativ zum Parent. Gespeichert werden `position`, `rotation` als normalisiertes Quaternion, `scale` und `pivot`. Weltmatrizen werden nur abgeleitet bzw. zur Laufzeit gecacht und nicht als zweite Wahrheit persistiert.
+
+Euler-Winkel bleiben Bedienwerte für die UI, während das Quaternion die kanonische Rotationsrepräsentation ist. Das Transformmodell ist TRS-basiert; Shear ist im WD-01-Kern nicht vorgesehen. Numerische Werte werden als JavaScript-`Number`/Double Precision behandelt und intern nicht auf UI-Anzeigegenauigkeit gerundet.
+
+## WD-01.06 – Welt- gegenüber Objektkoordinaten
+
+**Status:** DECIDED
+
 ### Grundentscheidung
 
-Der persistierte `transform` eines `SceneObject` beschreibt immer die **lokale Transformation relativ zum Parent**. Welttransformationen werden aus der Parent-Kette berechnet und nicht als zweite persistierte Wahrheit gespeichert.
+CM3D unterscheidet fachlich klar zwischen **lokalen/Objektkoordinaten** und **Weltkoordinaten**:
 
-Der Transformblock besteht verbindlich aus:
+- **Lokale/Objektkoordinaten** sind die im Projekt persistierten Transformwerte eines Objekts relativ zu seinem direkten Parent.
+- **Weltkoordinaten** sind abgeleitete Werte, die aus der vollständigen Parent-Kette berechnet werden.
 
-- `position` – lokale Translation
-- `rotation` – lokale Orientierung als Quaternion
-- `scale` – lokale Skalierung
-- `pivot` – lokaler Bearbeitungs-/Ursprungspunkt
+Weltwerte werden nicht als zweite persistierte Transformwahrheit gespeichert.
 
-### Verbindliches Transformformat
+### Lokales Koordinatensystem
 
-```json
-{
-  "transform": {
-    "position": { "x": 0, "y": 0, "z": 0 },
-    "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 },
-    "scale": { "x": 1, "y": 1, "z": 1 },
-    "pivot": { "x": 0, "y": 0, "z": 0 }
-  }
-}
+Das lokale Koordinatensystem eines Objekts wird durch dessen Parent-Beziehung, lokalen Transform und Pivot bestimmt.
+
+Für Root-Objekte gilt:
+
+- lokales Koordinatensystem = Weltkoordinatensystem bezüglich des globalen Ursprungs, solange kein zusätzlicher späterer Szenen-/Weltanker eingeführt wird.
+
+Für Child-Objekte gilt:
+
+- `position`, `rotation` und `scale` werden relativ zum direkten Parent interpretiert.
+
+### Weltkoordinatensystem
+
+CM3D besitzt für den WD-01-Kern genau ein globales Weltkoordinatensystem.
+
+Verbindliche Achsenkonvention:
+
+- **X** = rechts
+- **Y** = oben
+- **Z** = räumliche Tiefe
+
+CM3D folgt damit einer rechtshändigen 3D-Konvention, kompatibel mit der verwendeten Three.js-Runtime.
+
+Die genaue semantische Nutzung von +Z/-Z für Kamera-/Ansichtsrichtungen ist eine Viewport-/Kamerafrage und ändert nicht das gespeicherte Koordinatensystem.
+
+### Berechnung Welttransform
+
+Die Weltmatrix eines Objekts wird rekursiv aus der Parent-Kette berechnet:
+
+```text
+worldMatrix(object) = worldMatrix(parent) * localMatrix(object)
 ```
 
-### Position
+Für Root-Objekte:
 
-`position` ist die lokale Verschiebung des Objektursprungs relativ zum Koordinatensystem des Parents.
-
-- Root-Objekte: Position relativ zum Weltursprung.
-- Child-Objekte: Position relativ zum Parent.
-- Anzeigeeinheit und internes Einheitensystem werden erst in WD-01.07 verbindlich festgelegt.
-
-### Rotation
-
-Persistiert wird die lokale Orientierung als **normalisiertes Quaternion** `{x, y, z, w}`.
-
-Gründe:
-
-- robuste Verkettung in Hierarchien
-- sauberes Reparenting mit `keepWorldTransform`
-- keine Mehrdeutigkeit durch Euler-Reihenfolgen im Datenmodell
-- direkte Abbildung auf Three.js-Quaternionen ohne die Three.js-Instanz selbst zu persistieren
-
-Euler-Winkel bleiben trotzdem wichtige **Bedienwerte** im Inspector. Die UI darf Rotation in Grad als X/Y/Z anzeigen und bearbeiten. Diese Euler-Werte werden bei Eingabe in ein Quaternion umgerechnet und sind nicht die kanonische persistierte Rotationswahrheit.
-
-Für die UI wird als Standard-Euler-Reihenfolge `XYZ` festgelegt. Falls später andere Rotationsmodi nötig werden, müssen diese explizit als zusätzliche Objekt-/Tool-Eigenschaft eingeführt werden; sie dürfen nicht stillschweigend die Persistenzregel ändern.
-
-### Quaternion-Regel
-
-Persistierte Quaternionen müssen beim Schreiben/Laden normalisiert sein. Ein Quaternion mit Länge nahe 0 ist ungültig. Die neutrale Rotation ist:
-
-```json
-{ "x": 0, "y": 0, "z": 0, "w": 1 }
+```text
+worldMatrix(root) = localMatrix(root)
 ```
 
-Quaternion-Vorzeichenäquivalenz (`q` und `-q`) ist mathematisch dieselbe Orientierung. Vergleiche in Tests dürfen deshalb nicht ausschließlich auf byteidentische Quaternion-Komponenten bestehen, sondern müssen die resultierende Orientierung berücksichtigen.
+`localMatrix` wird aus dem in WD-01.05 festgelegten lokalen Transformmodell erzeugt.
 
-### Scale
+### Weltposition, Weltrotation und Weltskalierung
 
-`scale` ist lokal relativ zum Parent und dimensionslos.
+Weltposition, Weltrotation und Weltskalierung sind abgeleitete Runtime-/Inspector-Werte. Sie dürfen angezeigt, für Werkzeuge benutzt und für Reparenting berechnet werden, werden aber nicht zusätzlich dauerhaft gespeichert.
 
-Standardwert:
+Damit gilt weiterhin:
 
-```json
-{ "x": 1, "y": 1, "z": 1 }
-```
+- lokale Transformkomponenten = kanonische Persistenz
+- Welttransform = berechnete Sicht auf dieselben Daten
 
-Für WD-02 gelten folgende Regeln:
+### Transform-Gizmo-Modi
 
-- positive Werte sind vollständig unterstützt
-- uniforme und nicht-uniforme Skalierung sind zulässig
-- ein Wert exakt `0` ist ungültig, weil dadurch inverse Transformberechnungen und Reparenting instabil werden
-- negative Skalierung/Mirroring wird im Datenmodell nicht grundsätzlich verboten, aber für WD-02 noch nicht als Bedienfunktion freigegeben; fachliche Mirror-Regeln werden später separat definiert
+Der Transform-Gizmo unterstützt mindestens zwei Achsensysteme:
 
-### Pivot / Ursprung
+- `WORLD`
+- `LOCAL`
 
-`pivot` ist ein lokaler Punkt im Objektkoordinatensystem und bestimmt den fachlichen Bearbeitungs-/Ursprungspunkt für Rotation und Skalierung.
+#### WORLD
 
-Standardwert:
+Die Gizmo-Achsen bleiben an den globalen Weltachsen X/Y/Z ausgerichtet.
 
-```json
-{ "x": 0, "y": 0, "z": 0 }
-```
+Beispiel: Eine Verschiebung entlang Welt-X bewegt ein Objekt horizontal entlang der globalen X-Achse, unabhängig von seiner eigenen Rotation.
 
-Für parametrische Primitive bedeutet `{0,0,0}` zunächst den geometrischen Standardursprung der jeweiligen Primitive. Der Pivot ist Projektdatenbestand und darf daher nicht nur als temporärer Three.js-Gizmo-Zustand existieren.
+#### LOCAL
 
-Die genaue Benutzerfunktion „Mittelpunkt setzen“ / „Ursprung setzen“ wird später implementiert, aber das Datenmodell ist bereits vorbereitet.
+Die Gizmo-Achsen folgen der aktuellen lokalen Objektorientierung.
 
-### Transform-Matrix als abgeleiteter Wert
+Beispiel: Ein um 90° gedrehtes Objekt wird entlang seiner eigenen lokalen X-Achse bewegt, auch wenn diese nicht mehr mit Welt-X übereinstimmt.
 
-Lokale und Weltmatrizen dürfen zur Laufzeit berechnet und gecacht werden, werden aber **nicht zusätzlich persistiert**. Kanonisch gespeichert bleiben Position, Quaternion, Scale und Pivot.
+### Gizmo-Modus ist kein Persistenzmodus
 
-Damit vermeiden wir redundante Wahrheiten wie:
+Der aktive Gizmo-Modus verändert **nicht** das Dateiformat und nicht die Bedeutung des gespeicherten `transform`.
 
-- Komponenten sagen A
-- Matrix sagt B
+Eine Benutzeraktion wird immer in eine neue gültige lokale Transformation des SceneObjects umgerechnet.
 
-### Reparenting
+Damit ist ausgeschlossen, dass ein Objekt je nach Werkzeugmodus einmal in Welt- und einmal in Objektkoordinaten gespeichert würde.
 
-WD-01.04 wird technisch auf folgende Transformregel konkretisiert:
+### Bearbeitung im WORLD-Modus
 
-1. Weltmatrix des Objekts vor dem Reparenting berechnen.
-2. neuen Parent validieren.
-3. neue lokale Matrix als `inverse(newParentWorld) * oldObjectWorld` berechnen.
-4. lokale Matrix in Position, Quaternion und Scale zerlegen.
-5. Quaternion normalisieren.
-6. Pivot unverändert im lokalen Objektgeometrie-Bezug halten, sofern keine explizite Pivot-Operation ausgeführt wird.
+Wird ein Child-Objekt im WORLD-Modus verändert, erfolgt logisch:
 
-Bei mathematisch nicht sauber zerlegbaren Transformkombinationen, insbesondere problematischem Shear, darf CM3D nicht stillschweigend falsche Werte erzeugen. Shear ist in WD-02 ausdrücklich **nicht Teil des Transformmodells**.
+1. aktuelle Welttransformation berechnen,
+2. Benutzeränderung im Weltkoordinatensystem anwenden,
+3. resultierende Welttransformation bestimmen,
+4. über `inverse(parentWorld)` wieder in einen lokalen Transform relativ zum Parent zurückrechnen,
+5. lokale Position/Quaternion/Scale speichern.
 
-### Kein Shear im WD-01-Kern
+Der Datenbestand bleibt dadurch konsistent zum Parent-System.
 
-Das CM3D-Kerntransformmodell ist TRS-basiert:
+### Bearbeitung im LOCAL-Modus
 
-**Translation + Rotation + Scale**
+Im LOCAL-Modus wird die Änderung entlang der lokalen Objektachsen interpretiert. Auch hier ist das Ergebnis am Ende ausschließlich ein aktualisierter lokaler Transformblock.
 
-Eine eigenständige Scherung/Shear-Komponente wird nicht gespeichert. Falls spätere Importformate Matrizen mit Shear liefern, muss der Importblock explizit entscheiden, ob Geometrie gebacken, angenähert oder ein erweitertes Transformmodell verwendet wird.
+### Inspector-Anzeige
 
-### Numerische Genauigkeit
+Für WD-02 ist der primäre Transform-Inspector auf **lokale Werte** ausgelegt, weil diese der persistierten Wahrheit entsprechen.
 
-Intern und in der `.cm3d`-Datei werden JavaScript-`Number`-Werte verwendet, also IEEE-754 Double Precision.
+Eine spätere zusätzliche Weltwert-Anzeige ist erlaubt und bereits architektonisch vorbereitet, muss aber klar als abgeleitet gekennzeichnet sein.
 
-Verbindliche Regeln:
+Weltwerte dürfen nie scheinbar unabhängige editierbare Felder werden, ohne dass die Eingabe wieder sauber in lokale Werte zurückgerechnet wird.
 
-- Berechnungen nicht künstlich auf UI-Dezimalstellen runden.
-- Die UI darf Werte gerundet anzeigen, ohne die intern gespeicherte Präzision zu zerstören.
-- Beim Speichern darf JSON normale Dezimalzahlen enthalten; keine Umwandlung in formatierte Strings.
-- `NaN`, `Infinity` und `-Infinity` sind in Projektdateien ungültig.
-- Sehr kleine Rundungsreste dürfen für Anzeige/Test mit Toleranzen behandelt werden.
+### Parent-/Child-Folge
 
-### Vergleichstoleranzen
+Ändert sich der Transform eines Parents, ändern sich die Weltwerte aller Nachfahren automatisch, während deren gespeicherte lokale Transformwerte unverändert bleiben.
 
-Für technische Tests werden keine strikten Fließkomma-Gleichheiten für berechnete Transformwerte verlangt. Stattdessen werden angemessene Epsilon-Vergleiche verwendet.
+Das ist ausdrücklich gewünschtes Hierarchieverhalten.
 
-Für WD-02 als Ausgangspunkt:
+Beispiel:
 
-- Position/Scale: absolute oder relative Toleranz etwa `1e-9` im internen Zahlenraum
-- Quaternion/Matrix: orientations-/komponentenbezogene Toleranz etwa `1e-10` bis `1e-9`
+- Gruppe bewegt sich +100 auf X.
+- Child besitzt lokal `position.x = 20`.
+- Child-Weltposition verschiebt sich ebenfalls +100.
+- `position.x = 20` des Childs bleibt unverändert gespeichert.
 
-Diese Werte sind Testregeln, keine UI-Auflösung.
+### Reparenting-Verknüpfung
 
-### Reset Transform
+WD-01.04 wird bestätigt:
 
-Der fachliche Standardtransform ist:
+Beim Standard-Reparenting mit `keepWorldTransform = true` wird die alte Welttransformation beibehalten und daraus der neue lokale Transform gegenüber dem neuen Parent berechnet.
 
-```json
-{
-  "position": { "x": 0, "y": 0, "z": 0 },
-  "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 },
-  "scale": { "x": 1, "y": 1, "z": 1 },
-  "pivot": { "x": 0, "y": 0, "z": 0 }
-}
-```
+Damit ist die Trennung Welt ↔ Lokal direkt Grundlage des stabilen Objektbaum-Verhaltens.
 
-Eine spätere UI-Funktion `Reset Transform` setzt Position, Rotation und Scale auf diese Neutralwerte. Ob ein benutzerdefinierter Pivot ebenfalls zurückgesetzt wird, muss die konkrete Tool-Funktion explizit entscheiden; Pivot wird nicht unbeabsichtigt als Nebeneffekt anderer Transformänderungen verändert.
+### Pivot-Bezug
+
+Der Pivot bleibt Teil des lokalen Objektkoordinatensystems. Weltpositionen eines Pivots werden aus Objekt-Welttransform und lokalem Pivot abgeleitet.
+
+Ein Wechsel zwischen WORLD- und LOCAL-Gizmo-Modus verändert den gespeicherten Pivot nicht.
+
+### Runtime-/Three.js-Regel
+
+Three.js darf seine Weltmatrizen und Objektmatrizen zur Laufzeit verwenden, aber CM3D behandelt diese nur als Rendering-/Berechnungsschicht.
+
+Die fachliche Quelle bleibt:
+
+`SceneObject.transform + Parent-Kette`.
+
+Three.js-Weltmatrizen dürfen daher jederzeit verworfen und aus den CM3D-Daten neu aufgebaut werden.
 
 ### WD-02/P0.1-Anwendung
 
-Der erste Würfel muss mindestens folgende Transformkette nachweisen:
+WD-02 muss mindestens nachweisen:
 
-1. Würfel bei neutralem Transform erzeugen.
-2. Position X/Y/Z ändern.
-3. Rotation über UI-Eulerwerte verändern und intern als Quaternion speichern.
-4. Scale verändern.
-5. Projekt speichern.
-6. Browser neu laden.
-7. Projekt laden.
-8. derselbe Würfel besitzt wieder dieselbe fachliche Position, Orientierung, Skalierung und denselben Pivot.
+1. Root-Würfel mit lokalen Werten = Weltwerten.
+2. Würfel unter einer Gruppe, bei dem lokale und Weltposition unterschiedlich sind.
+3. Änderung des Parents verändert die Weltposition des Childs, nicht dessen gespeicherte Lokalposition.
+4. WORLD-Gizmo-Änderung wird korrekt in lokalen Transform zurückgerechnet.
+5. LOCAL-Gizmo-Änderung folgt der Objektorientierung.
+6. Speichern/Laden reproduziert dieselben lokalen Daten und daraus dieselben Weltwerte.
 
-### Abnahmekriterium WD-01.05
+### Abnahmekriterium WD-01.06
 
-WD-01.05 ist erfüllt, wenn das Transformmodell ohne Three.js serialisiert/validiert werden kann und folgende Fälle eindeutig lösbar sind:
+WD-01.06 ist erfüllt, wenn für beliebige gültige Parent-Ketten eindeutig berechnet werden kann:
 
-- lokaler Neutraltransform
-- Position/Rotation/Scale eines Root-Objekts
-- Position/Rotation/Scale eines Child-Objekts
-- Euler-Eingabe ↔ Quaternion-Persistenz
-- Reparenting mit erhaltener Welttransformation
-- Save/Load ohne sichtbaren Transformverlust
-- Ablehnung ungültiger numerischer Werte und Nullskalierung
+- lokale Transformwerte eines Objekts,
+- seine Welttransformation,
+- Rückrechnung Welt → Lokal gegenüber einem Parent,
+- WORLD- und LOCAL-Gizmo-Verhalten,
+- Reparenting mit unveränderter Weltlage,
+
+ohne Welttransformdaten zusätzlich in der `.cm3d`-Datei persistieren zu müssen.
 
 ## Nicht-Scope von WD-01
 
