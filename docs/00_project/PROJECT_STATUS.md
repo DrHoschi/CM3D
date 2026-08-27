@@ -24,23 +24,58 @@ Verbindliche harmonisierte Funktionsquelle:
 
 Die ursprünglichen Quellabschriften bleiben als historische Ausgangsstände erhalten und werden nicht rückwirkend umgeschrieben.
 
-## Scope-Trennung
+## Entwicklungsreihenfolge ab Baseline
 
-### P0.1 – Minimal-Prototyp
-Kleinste durchgehende Funktionskette für die erste Implementierungsvalidierung:
+### WD-01 – Technisches Fundament & Datenmodell
 
-- leeres/neues Projekt
+WD-01 ist der nächste verbindliche Entwicklungsblock und wird **vor dem ersten eigentlichen Web-Prototyp** abgeschlossen.
+
+Zu entscheiden sind:
+
+1. Projektstruktur und Projektdatei
+2. SceneGraph und eindeutige Objekt-IDs
+3. Objektarten: Primitive, Sketch, Group, Assembly, Camera, Light usw.
+4. Parent-/Child-Hierarchie
+5. Position, Rotation und Scale
+6. Welt- gegenüber Objektkoordinaten
+7. internes Einheitensystem und mm/cm/m/km-Anzeige
+8. Materialzuordnung
+9. Selection-State
+10. Undo/Redo-Grundprinzip
+11. Save/Load und Versionsschema
+12. Trennung Datenmodell ↔ Three.js ↔ Benutzeroberfläche
+
+Verbindliches WD-01-Dokument:
+
+`docs/04_architecture/WD-01_TECHNISCHES_FUNDAMENT_DATENMODELL.md`
+
+### WD-02 / P0.1 – erster End-to-End-Web-Prototyp
+
+Der bisher als **P0.1 Minimal-Prototyp** bezeichnete Funktionskern wird eindeutig dem Entwicklungsblock **WD-02** zugeordnet.
+
+Zielkette:
+
+- Hauptfenster öffnen
 - 3D-Viewport
-- Objektbaum
-- Würfel/Quader erstellen
+- Würfel/Quader erzeugen
+- im Objektbaum anzeigen
 - auswählen
-- Position/Rotation/Skalierung
+- Position/Rotation/Skalierung verändern
 - speichern
-- wieder laden
+- Browser neu laden
+- Projekt laden
+- derselbe Würfel mit korrekter Identität, Hierarchie und Transform ist wieder vorhanden
 - Icon-Paket im UI eingebunden
 
+Damit gilt:
+
+**P0.1 = WD-02 End-to-End-Prototyp.**
+
+WD-01 ist die notwendige Architekturvorstufe.
+
 ### V1 – Pflichtkern
-Der vollständige erste belastbare Designer-Kern gemäß Master-Funktionsliste. P0.1 ist ausdrücklich nur eine Teilmenge davon.
+
+Der vollständige erste belastbare Designer-Kern gemäß Master-Funktionsliste. WD-02/P0.1 ist ausdrücklich nur eine kleine, durchgängige Teilmenge davon.
 
 ## Statuskennzeichnung
 
@@ -54,4 +89,10 @@ Aktueller Gesamtstatus: **FROZEN / CM3D V0.1 BASELINE**
 
 ## Nächster Entwicklungsblock
 
-Nach dem Merge der Dokumentationsbaseline beginnt die technische Vorbereitung für **P0.1**. Dabei wird nicht sofort der gesamte V1-Umfang implementiert; zuerst wird die kleinste End-to-End-Kette Projekt → Viewport → Objekt → Transform → Save/Load stabil aufgebaut.
+**WD-01 – Technisches Fundament & Datenmodell.**
+
+Erst nach Abschluss von WD-01 beginnt **WD-02 / P0.1** als erster echter Web-Prototyp.
+
+Verbindliche Reihenfolge:
+
+`CM3D V0.1 BASELINE – FROZEN → WD-01 → WD-02 / P0.1 → weiterer V1-Ausbau`
