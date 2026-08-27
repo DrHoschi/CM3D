@@ -114,6 +114,126 @@ Die logische `.cm3d`-Datei ist das kanonische Projektformat. Der Browser darf f�
 
 WD-01.01 ist erfüllt, wenn ein leeres CM3D-Projekt als valides `.cm3d`-JSON erzeugt, gespeichert, erneut gelesen und anhand von `format` und `schemaVersion` eindeutig erkannt werden kann.
 
+## WD-01.02 – SceneGraph und eindeutige Objekt-IDs
+
+**Status:** DECIDED
+
+### Entscheidung
+
+CM3D verwendet einen fachlichen, von Three.js unabhängigen SceneGraph. Persistiert wird ein **flacher Objektbestand** in `scene.objects`, während die Hierarchie über stabile Parent-Referenzen aufgebaut wird. Die sichtbare Baumstruktur wird beim Laden daraus rekonstruiert.
+
+Die Identität eines CM3D-Objekts wird ausschließlich durch eine eigene dauerhafte `objectId` bestimmt. Three.js-UUIDs, Arraypositionen, Objektname oder UI-Baumposition dürfen niemals als fachliche Objektidentität verwendet werden.
+
+### Verbindliche Szenenstruktur
+
+```json
+{
+  "scene": {
+    "rootObjectIds": ["obj_..."],
+    "objects": {
+      "obj_...": {
+        "objectId": "obj_...",
+        "type": "primitive.box",
+        "name": "Würfel",
+        "parentId": null,
+        "transform": {},
+        "data": {},
+        "materialIds": [],
+        "flags": {}
+      }
+    }
+  }
+}
+```
+
+`scene.objects` ist dabei logisch eine Map `objectId -> object`. In einer konkreten JSON-Ausgabe darf sie als Objekt/Dictionary serialisiert werden. Dadurch ist jedes Objekt direkt über seine ID erreichbar und nicht von seiner Position in einem Array abhängig.
+
+### Objekt-ID-Regel
+
+Jedes speicherbare Szenenobjekt erhält beim Erzeugen genau einmal eine dauerhafte `objectId`.
+
+Verbindliche Anforderungen:
+
+- projektweit eindeutig
+- unabhängig von Name, Typ und Hierarchieposition
+- bleibt bei Umbenennen, Verschieben, Transformieren, Gruppieren und normalem Save/Load unverändert
+- wird beim Laden nicht neu erzeugt
+- Three.js erhält die CM3D-`objectId` nur als Referenz/Mapping, erzeugt aber nicht die fachliche Identität
+
+Für die technische Erzeugung wird eine zufällige 128-Bit-UUID verwendet (`crypto.randomUUID()` bzw. RFC-4122-kompatibel). Zur besseren Lesbarkeit kann die gespeicherte Form mit `obj_` präfixiert werden, z. B. `obj_550e8400-e29b-41d4-a716-446655440000`.
+
+### Warum keine Three.js-UUID
+
+Three.js-Laufzeitobjekte können beim Laden vollständig neu erzeugt werden. Ihre internen UUIDs sind daher Runtime-Details. Würden Referenzen, Auswahl oder Parent-Beziehungen daran hängen, könnten sie nach Reload brechen. Die CM3D-`objectId` ist deshalb die einzige stabile Identität über Save/Load hinweg.
+
+### SceneGraph-Regeln
+
+1. Jedes Objekt existiert genau einmal in `scene.objects`.
+2. Jedes Objekt besitzt genau eine `objectId`.
+3. `parentId = null` bedeutet Root-Objekt.
+4. Ein Parent wird ausschließlich über seine `objectId` referenziert.
+5. Ein Objekt darf niemals sein eigener Parent sein.
+6. Parent-Ketten dürfen keine Zyklen bilden.
+7. Jede nicht-null `parentId` muss auf ein existierendes Objekt im selben Projekt zeigen.
+8. `rootObjectIds` enthält nur existierende Objekte mit `parentId = null` und dient der stabilen Root-Reihenfolge im Objektbaum.
+9. Child-Listen werden nicht zusätzlich als zweite Wahrheit gespeichert; sie werden aus `parentId` abgeleitet. Damit vermeiden wir widersprüchliche Parent-/Child-Doppelhaltung.
+10. Die Reihenfolge von Geschwistern wird über ein separates `order`-Feld am Objekt oder eine äquivalente stabile Sortierinformation geführt; die genaue Hierarchiebearbeitung wird in WD-01.04 festgezogen.
+
+### Mindestfelder eines SceneObjects
+
+Jedes speicherbare Szenenobjekt besitzt mindestens:
+
+- `objectId`
+- `type`
+- `name`
+- `parentId`
+- `transform`
+- `data`
+- `materialIds`
+- `flags`
+
+Die genaue Menge und Bedeutung der Objektarten wird in WD-01.03 entschieden. Transform wird in WD-01.05 präzisiert.
+
+### Referenzregel für andere Systeme
+
+Alle projektinternen Referenzen auf Szenenobjekte verwenden `objectId`, beispielsweise:
+
+- Selection-State
+- Parent-/Child-Beziehungen
+- Gruppen/Baugruppen
+- Kamera-Zielobjekte
+- spätere Constraints
+- spätere Verknüpfungen zwischen Sketch und erzeugtem 3D-Objekt
+- Undo/Redo-Kommandos
+
+Objektnamen sind nur Anzeige-/Benutzerdaten und niemals Schlüssel.
+
+### Ladevalidierung
+
+Beim Laden einer `.cm3d`-Datei muss der SceneGraph mindestens auf folgende Fehler geprüft werden:
+
+- doppelte IDs
+- fehlende referenzierte Parents
+- Selbstreferenz
+- Parent-Zyklen
+- Root-ID zeigt auf unbekanntes Objekt
+- Root-ID zeigt auf Objekt mit nicht-null `parentId`
+
+Eine beschädigte Hierarchie darf nicht stillschweigend als gültige Szene behandelt werden.
+
+### WD-02/P0.1-Anwendung
+
+Der erste Würfel erhält beim Erzeugen eine `objectId`. Objektbaum, Inspector, Three.js-Mesh und Save/Load beziehen sich alle auf dieselbe CM3D-ID. Nach Browser-Reload und Projektladen muss exakt dieselbe `objectId` wieder vorhanden sein, auch wenn das Three.js-Mesh vollständig neu erzeugt wurde.
+
+### Abnahmekriterium WD-01.02
+
+WD-01.02 ist erfüllt, wenn eine Szene mit mehreren Objekten und mindestens einer Parent-Beziehung gespeichert und geladen werden kann und danach:
+
+- jede `objectId` unverändert ist,
+- alle Parent-Referenzen identisch wiederhergestellt sind,
+- der SceneGraph zyklusfrei und vollständig validierbar ist,
+- Three.js-Objekte ohne Verwendung ihrer alten Runtime-UUIDs neu aufgebaut werden können.
+
 ## Nicht-Scope von WD-01
 
 - keine vollständige Implementierung der 89 Master-Funktionen
