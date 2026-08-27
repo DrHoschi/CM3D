@@ -1,7 +1,7 @@
 # WD-01 – Technisches Fundament & Datenmodell
 
 **Stand:** 2026-08-27  
-**Status:** PLANNED  
+**Status:** IN PROGRESS  
 **Voraussetzung:** CM3D V0.1 BASELINE – FROZEN
 
 ## Zweck
@@ -34,6 +34,85 @@ Verbindliche Trennung:
 - **UI-Schicht:** Hauptfenster, Objektbaum, Inspector, Auswahl- und Bedienzustände
 
 Three.js ist damit Rendering-/Runtime-Schicht, nicht die alleinige Quelle der Projektdaten.
+
+## WD-01.01 – Projektstruktur und Projektdatei
+
+**Status:** DECIDED
+
+### Entscheidung
+
+CM3D verwendet ein eigenes, versioniertes Projektformat mit der Dateiendung **`.cm3d`**. Inhaltlich ist die Projektdatei ein UTF-8-JSON-Dokument mit klar getrennten Bereichen für Metadaten, Projekteinstellungen, Szene und projektbezogene Ressourcenreferenzen.
+
+Für WD-02/P0.1 wird bewusst **keine Binärdatei und kein ZIP-Container** verwendet. Die erste Version bleibt direkt lesbar, diffbar und debugbar. Ein späterer Container darf eingeführt werden, ohne die logische Datenstruktur zu ändern.
+
+### Verbindliche Top-Level-Struktur
+
+```json
+{
+  "format": "CM3D_PROJECT",
+  "schemaVersion": "0.1.0",
+  "project": {},
+  "settings": {},
+  "scene": {},
+  "materials": [],
+  "assets": [],
+  "extensions": {}
+}
+```
+
+### Bedeutung der Bereiche
+
+- `format`: feste Kennung zur eindeutigen Erkennung einer CM3D-Projektdatei.
+- `schemaVersion`: Version des gespeicherten Datenmodells, nicht die Programmversion.
+- `project`: Projekt-ID, Name, Erstellungs-/Änderungsinformationen und projektbezogene Metadaten.
+- `settings`: persistierbare Projekteinstellungen wie Einheitensystem, Raster- und spätere Projekteinstellungen.
+- `scene`: fachlicher SceneGraph mit allen speicherbaren Szenenobjekten.
+- `materials`: projektbezogene Materialdefinitionen unabhängig von Three.js-Materialinstanzen.
+- `assets`: Referenzen auf importierte oder externe Ressourcen; in WD-02 zunächst leer bzw. minimal.
+- `extensions`: reservierter Erweiterungsbereich für spätere Daten, die den Kern nicht aufbrechen dürfen.
+
+### Projekt-ID
+
+Jedes Projekt erhält beim Erstellen eine dauerhafte eindeutige `projectId`. Diese Identität bleibt beim normalen Speichern und Laden unverändert. `Speichern unter` erzeugt nicht automatisch eine neue fachliche Identität; eine spätere Funktion „Projekt duplizieren“ kann dies ausdrücklich tun.
+
+### Persistenzregel
+
+Gespeichert werden ausschließlich fachliche und projektbezogene Daten, die zum reproduzierbaren Wiederaufbau des Projekts notwendig sind.
+
+**Nicht Bestandteil der Projektdatei sind insbesondere:**
+
+- Three.js-Objektinstanzen
+- WebGL-/GPU-Ressourcen
+- DOM-Elemente
+- offene Menüs oder Dialoge
+- Hover-Zustände
+- temporäre Gizmo-Zustände
+- Laufzeit-Caches
+- Browser-spezifische Handles
+
+UI-Zustände dürfen nur dann persistiert werden, wenn sie ausdrücklich als Projektzustand definiert werden. Auswahlzustand und reine Arbeitsoberflächenzustände werden in WD-01.09 separat entschieden.
+
+### Ressourcenregel
+
+WD-02/P0.1 muss vollständig ohne eingebettete Binärressourcen funktionieren. Der erste speicherfeste Kern benötigt nur primitive Geometrie und interne Daten.
+
+Für spätere Importe gilt: Die Projektdatei speichert stabile Asset-Referenzen und Metadaten; die konkrete Strategie für Einbettung, externe Dateien oder Paketierung wird erst beim Import-/Asset-Block entschieden.
+
+### Speicherort im Web-Prototyp
+
+Die logische `.cm3d`-Datei ist das kanonische Projektformat. Der Browser darf für WD-02 zusätzlich IndexedDB oder vergleichbaren lokalen Speicher als technische Ablage verwenden, aber diese Ablage ist **nicht** das Datenmodell selbst. Save/Load muss immer über dieselbe serialisierbare CM3D-Projektstruktur laufen.
+
+### Architekturfolgen
+
+1. Ein Projekt kann ohne Three.js geladen und validiert werden.
+2. Three.js wird aus dem Datenmodell rekonstruiert, nicht umgekehrt als alleinige Wahrheit gespeichert.
+3. Die Projektdatei bleibt für Tests und Fehlersuche menschenlesbar.
+4. Schema-Migrationen sind durch `schemaVersion` vorbereitet.
+5. Spätere Asset-Paketierung kann ergänzt werden, ohne SceneGraph und Objektmodell neu zu erfinden.
+
+### Abnahmekriterium WD-01.01
+
+WD-01.01 ist erfüllt, wenn ein leeres CM3D-Projekt als valides `.cm3d`-JSON erzeugt, gespeichert, erneut gelesen und anhand von `format` und `schemaVersion` eindeutig erkannt werden kann.
 
 ## Nicht-Scope von WD-01
 
