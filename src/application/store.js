@@ -31,7 +31,28 @@ export class AppStore {
   getWorldTransform(id){const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();this.worldMatrix(id).decompose(p,q,s);return{position:{x:p.x,y:p.y,z:p.z},rotation:{x:q.x,y:q.y,z:q.z,w:q.w},scale:{x:s.x,y:s.y,z:s.z}};}
   applyWorldMatrixAsLocal(id,world){const o=this.getObject(id);if(!o)return;const local=o.parentId?this.worldMatrix(o.parentId).invert().multiply(world.clone()):world.clone();const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();local.decompose(p,q,s);o.transform.position={x:p.x,y:p.y,z:p.z};o.transform.rotation={x:q.x,y:q.y,z:q.z,w:q.w};o.transform.scale={x:s.x,y:s.y,z:s.z};}
   deleteSelected(){const ids=[...this.selection.selectedObjectIds];if(!ids.length)return false;const before=this.snapshot(),remove=new Set(ids);let changed=true;while(changed){changed=false;for(const o of Object.values(this.project.scene.objects))if(o.parentId&&remove.has(o.parentId)&&!remove.has(o.objectId)){remove.add(o.objectId);changed=true;}}for(const id of remove)delete this.project.scene.objects[id];this.project.scene.rootObjectIds=this.project.scene.rootObjectIds.filter(id=>!remove.has(id));this.clearSelection(false);this.touch();this.pushHistory(before,'Objekt löschen');this.emit('projectChanged');return true;}
-  duplicateSelected(){const id=this.selection.activeObjectId,source=this.getObject(id);if(!source)return null;const before=this.snapshot(),copy=structuredClone(source);copy.objectId=`obj_${crypto.randomUUID()}`;copy.parentId=null;copy.name=`${source.name} Kopie`;copy.order=this.project.scene.rootObjectIds.length;copy.transform.position.x+=0.25;copy.transform.position.z+=0.25;this.project.scene.objects[copy.objectId]=copy;this.project.scene.rootObjectIds.push(copy.objectId);this.touch();this.select(copy.objectId,false);this.pushHistory(before,'Objekt duplizieren');this.emit('projectChanged');this.emit('selectionChanged');return copy.objectId;}
+  duplicateSelected(){
+    const id=this.selection.activeObjectId,source=this.getObject(id);if(!source)return null;
+    const before=this.snapshot(),idMap=new Map(),originals=this.project.scene.objects;
+    const collect=(sourceId)=>{
+      const original=originals[sourceId];if(!original)return null;
+      const copy=structuredClone(original),newId=`obj_${crypto.randomUUID()}`;
+      idMap.set(sourceId,newId);copy.objectId=newId;copy.name=`${original.name} Kopie`;
+      this.project.scene.objects[newId]=copy;
+      const children=Object.values(originals).filter(o=>o.parentId===sourceId).sort((a,b)=>a.order-b.order);
+      for(const child of children)collect(child.objectId);
+      return newId;
+    };
+    const rootCopyId=collect(id);
+    for(const [oldId,newId] of idMap){
+      const original=originals[oldId],copy=this.project.scene.objects[newId];
+      copy.parentId=original.parentId&&idMap.has(original.parentId)?idMap.get(original.parentId):null;
+      copy.order=original.order;
+    }
+    const rootCopy=this.project.scene.objects[rootCopyId];rootCopy.parentId=null;rootCopy.order=this.project.scene.rootObjectIds.length;rootCopy.transform.position.x+=0.25;rootCopy.transform.position.z+=0.25;
+    this.project.scene.rootObjectIds.push(rootCopyId);
+    this.touch();this.select(rootCopyId,false);this.pushHistory(before,['group','assembly'].includes(source.type)?'Unterbaum duplizieren':'Objekt duplizieren');this.emit('projectChanged');this.emit('selectionChanged');return rootCopyId;
+  }
   undo(){const e=this.undoStack.pop();if(!e)return false;this.redoStack.push(e);this.project=structuredClone(e.before);this.clearSelection(false);this.emit('projectChanged');this.emit('historyChanged');return true;} redo(){const e=this.redoStack.pop();if(!e)return false;this.undoStack.push(e);this.project=structuredClone(e.after);this.clearSelection(false);this.emit('projectChanged');this.emit('historyChanged');return true;} touch(){this.project.project.modifiedAt=new Date().toISOString();}
 }
 function matrixFromTransform(t){return new THREE.Matrix4().compose(new THREE.Vector3(t.position.x,t.position.y,t.position.z),new THREE.Quaternion(t.rotation.x,t.rotation.y,t.rotation.z,t.rotation.w),new THREE.Vector3(t.scale.x,t.scale.y,t.scale.z));}
