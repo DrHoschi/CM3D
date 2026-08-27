@@ -1,7 +1,7 @@
 # WD-03 – Bedienkern & Projektverwaltung
 
 **Stand:** 2026-08-27  
-**Status:** IMPLEMENTED – DEVICE TEST REQUIRED  
+**Status:** PASS / FROZEN  
 **Voraussetzung:** WD-02 / P0.1 – PASS / FROZEN
 
 ## Scope
@@ -68,6 +68,25 @@ Der einzelne WD-02-Speicherplatz wurde durch einen lokalen Projektindex ersetzt.
 12. Prüfen: Projektinhalt bleibt korrekt; Undo-History startet nach Reload bewusst leer.
 13. Einen gespeicherten Teststand über `Speicher löschen` entfernen und prüfen, dass der andere gespeichert bleibt.
 
+## Gerätetest 2026-08-27
+
+**Plattform:** iPhone / Safari / GitHub Pages  
+**Ergebnis:** PASS
+
+Im realen Browserbetrieb wurden die WD-03-Funktionen vollständig durchgetestet und mit Screenshots dokumentiert. Geprüft wurden insbesondere:
+
+- mehrere unabhängige gespeicherte Projekte im Projekt-Dropdown
+- Laden unterschiedlicher Projektstände
+- Löschen einzelner gespeicherter Projektstände
+- Duplizieren und Löschen von SceneObjects
+- Undo und Redo nach Objektoperationen
+- Move-, Rotate- und Scale-Werkzeug im Viewport
+- Bearbeitung unterschiedlicher Objektgrößen und Transformzustände
+- Wiederherstellung gespeicherter Projekte nach Browser-Neuladen
+- praktischer Einsatz des Prototyps zum Vorbereiten einfacher 3D-Assetformen
+
+Es wurden im Abnahmetest keine WD-03-Blocker festgestellt.
+
 ## Nicht-Scope
 
 - persistente Undo-History
@@ -81,4 +100,4 @@ Der einzelne WD-02-Speicherplatz wurde durch einen lokalen Projektindex ersetzt.
 
 ## Exit-Regel
 
-WD-03 wird erst nach erfolgreichem manuellen Gerätetest als PASS/FROZEN nach `main` übernommen.
+Die Exit-Regel ist erfüllt. WD-03 ist nach erfolgreichem manuellem Gerätetest als **PASS / FROZEN** freigegeben und darf nach `main` übernommen werden.
