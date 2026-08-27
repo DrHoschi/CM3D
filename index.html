@@ -3,67 +3,43 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CyberMotion 3D – WD-02</title>
+  <title>CyberMotion 3D – WD-03</title>
   <link rel="stylesheet" href="./styles.css" />
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-      }
-    }
-  </script>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">CyberMotion 3D <span>WD-02 / P0.1</span></div>
+    <div class="brand">CyberMotion 3D <span>WD-03</span></div>
     <div class="actions">
       <button id="new-project">Neues Projekt</button>
       <button id="add-box">Würfel</button>
+      <button id="duplicate-object">Duplizieren</button>
+      <button id="delete-object">Löschen</button>
+      <button id="undo">Undo</button>
+      <button id="redo">Redo</button>
+      <button id="tool-move" class="active">Move</button>
+      <button id="tool-rotate">Rotate</button>
+      <button id="tool-scale">Scale</button>
+      <select id="project-select"><option value="">Gespeichertes Projekt wählen</option></select>
       <button id="save-project">Speichern</button>
       <button id="load-project">Laden</button>
+      <button id="delete-project">Speicher löschen</button>
     </div>
   </header>
-
   <main class="workspace">
-    <aside class="panel tree-panel">
-      <h2>Objektbaum</h2>
-      <div id="object-tree" class="object-tree"></div>
-    </aside>
-
-    <section class="viewport-panel">
-      <div id="viewport" class="viewport"></div>
-      <div id="status" class="status">Bereit</div>
-    </section>
-
+    <aside class="panel tree-panel"><h2>Objektbaum</h2><div id="object-tree" class="object-tree"></div></aside>
+    <section class="viewport-panel"><div id="viewport" class="viewport"></div><div id="status" class="status">Bereit</div></section>
     <aside class="panel inspector-panel">
-      <h2>Inspector</h2>
-      <div id="inspector-empty" class="muted">Kein Objekt ausgewählt</div>
+      <h2>Inspector</h2><div id="inspector-empty" class="muted">Kein Objekt ausgewählt</div>
       <form id="inspector" hidden>
         <label>Name <input id="object-name" type="text" /></label>
-        <fieldset>
-          <legend>Position (m)</legend>
-          <label>X <input id="pos-x" type="number" step="0.001" /></label>
-          <label>Y <input id="pos-y" type="number" step="0.001" /></label>
-          <label>Z <input id="pos-z" type="number" step="0.001" /></label>
-        </fieldset>
-        <fieldset>
-          <legend>Rotation (°)</legend>
-          <label>X <input id="rot-x" type="number" step="1" /></label>
-          <label>Y <input id="rot-y" type="number" step="1" /></label>
-          <label>Z <input id="rot-z" type="number" step="1" /></label>
-        </fieldset>
-        <fieldset>
-          <legend>Scale</legend>
-          <label>X <input id="scale-x" type="number" step="0.1" /></label>
-          <label>Y <input id="scale-y" type="number" step="0.1" /></label>
-          <label>Z <input id="scale-z" type="number" step="0.1" /></label>
-        </fieldset>
+        <fieldset><legend>Position (m)</legend><label>X <input id="pos-x" type="number" step="0.001" /></label><label>Y <input id="pos-y" type="number" step="0.001" /></label><label>Z <input id="pos-z" type="number" step="0.001" /></label></fieldset>
+        <fieldset><legend>Rotation (°)</legend><label>X <input id="rot-x" type="number" step="1" /></label><label>Y <input id="rot-y" type="number" step="1" /></label><label>Z <input id="rot-z" type="number" step="1" /></label></fieldset>
+        <fieldset><legend>Scale</legend><label>X <input id="scale-x" type="number" step="0.1" /></label><label>Y <input id="scale-y" type="number" step="0.1" /></label><label>Z <input id="scale-z" type="number" step="0.1" /></label></fieldset>
         <div class="id-box"><strong>objectId</strong><code id="object-id"></code></div>
       </form>
     </aside>
   </main>
-
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>
