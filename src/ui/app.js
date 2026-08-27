@@ -1,139 +1,32 @@
 import * as THREE from 'three';
-import { hasSavedProject, loadProject, saveProject } from '../persistence/storage.js';
+import { deleteSavedProject, hasSavedProjects, listProjects, loadProject, saveProject } from '../persistence/storage.js';
 
 export class AppUI {
   constructor(store) {
-    this.store = store;
-    this.tree = document.querySelector('#object-tree');
-    this.status = document.querySelector('#status');
-    this.form = document.querySelector('#inspector');
-    this.empty = document.querySelector('#inspector-empty');
-
-    this.fields = {
-      name: document.querySelector('#object-name'),
-      px: document.querySelector('#pos-x'), py: document.querySelector('#pos-y'), pz: document.querySelector('#pos-z'),
-      rx: document.querySelector('#rot-x'), ry: document.querySelector('#rot-y'), rz: document.querySelector('#rot-z'),
-      sx: document.querySelector('#scale-x'), sy: document.querySelector('#scale-y'), sz: document.querySelector('#scale-z'),
-      id: document.querySelector('#object-id')
-    };
-
-    document.querySelector('#new-project').addEventListener('click', () => {
-      if (confirm('Neues Projekt erstellen? Nicht gespeicherte Änderungen gehen verloren.')) {
-        this.store.newProject();
-        this.setStatus('Neues Projekt erstellt.');
-      }
-    });
-    document.querySelector('#add-box').addEventListener('click', () => {
-      const id = this.store.addBox();
-      this.setStatus(`Würfel erzeugt: ${id}`);
-    });
-    document.querySelector('#save-project').addEventListener('click', () => this.save());
-    document.querySelector('#load-project').addEventListener('click', () => this.load());
-
-    this.fields.name.addEventListener('change', () => {
-      const id = this.store.selection.activeObjectId;
-      if (id) this.store.setName(id, this.fields.name.value);
-    });
-
-    for (const input of [this.fields.px,this.fields.py,this.fields.pz,this.fields.rx,this.fields.ry,this.fields.rz,this.fields.sx,this.fields.sy,this.fields.sz]) {
-      input.addEventListener('change', () => this.commitTransform());
-    }
-
-    this.store.subscribe((event) => {
-      if (['projectChanged','projectLoaded','objectCreated','objectChanged','selectionChanged'].includes(event.type)) this.render();
-    });
-
-    this.render();
-    if (hasSavedProject()) this.setStatus('Gespeichertes Projekt vorhanden – „Laden“ zum Wiederherstellen.');
+    this.store=store; this.tree=document.querySelector('#object-tree'); this.status=document.querySelector('#status'); this.form=document.querySelector('#inspector'); this.empty=document.querySelector('#inspector-empty'); this.projectSelect=document.querySelector('#project-select');
+    this.fields={name:document.querySelector('#object-name'),px:document.querySelector('#pos-x'),py:document.querySelector('#pos-y'),pz:document.querySelector('#pos-z'),rx:document.querySelector('#rot-x'),ry:document.querySelector('#rot-y'),rz:document.querySelector('#rot-z'),sx:document.querySelector('#scale-x'),sy:document.querySelector('#scale-y'),sz:document.querySelector('#scale-z'),id:document.querySelector('#object-id')};
+    document.querySelector('#new-project').addEventListener('click',()=>{if(confirm('Neues Projekt erstellen? Nicht gespeicherte Änderungen gehen verloren.')){this.store.newProject();this.setStatus('Neues Projekt erstellt.');}});
+    document.querySelector('#add-box').addEventListener('click',()=>{const id=this.store.addBox();this.setStatus(`Würfel erzeugt: ${id}`);});
+    document.querySelector('#save-project').addEventListener('click',()=>this.save()); document.querySelector('#load-project').addEventListener('click',()=>this.load()); document.querySelector('#delete-project').addEventListener('click',()=>this.deleteProject());
+    document.querySelector('#undo').addEventListener('click',()=>{if(this.store.undo())this.setStatus('Rückgängig.');}); document.querySelector('#redo').addEventListener('click',()=>{if(this.store.redo())this.setStatus('Wiederholt.');});
+    document.querySelector('#duplicate-object').addEventListener('click',()=>{const id=this.store.duplicateSelected();if(id)this.setStatus('Objekt dupliziert.');}); document.querySelector('#delete-object').addEventListener('click',()=>{if(this.store.deleteSelected())this.setStatus('Objekt gelöscht.');});
+    for(const [id,mode] of [['tool-move','translate'],['tool-rotate','rotate'],['tool-scale','scale']]) document.querySelector(`#${id}`).addEventListener('click',()=>this.store.setToolMode(mode));
+    this.fields.name.addEventListener('change',()=>{const id=this.store.selection.activeObjectId;if(id)this.store.setName(id,this.fields.name.value);});
+    for(const input of [this.fields.px,this.fields.py,this.fields.pz,this.fields.rx,this.fields.ry,this.fields.rz,this.fields.sx,this.fields.sy,this.fields.sz]) input.addEventListener('change',()=>this.commitTransform());
+    this.store.subscribe(event=>{if(['projectChanged','projectLoaded','objectCreated','objectChanged','selectionChanged','historyChanged','toolChanged'].includes(event.type))this.render();});
+    this.render(); if(hasSavedProjects())this.setStatus('Gespeicherte Projekte vorhanden.');
   }
 
-  save() {
-    try {
-      const bytes = saveProject(this.store.project);
-      this.setStatus(`Projekt gespeichert (${bytes} Zeichen). Browser kann jetzt neu geladen werden.`);
-    } catch (error) {
-      this.fail(error);
-    }
-  }
+  save(){try{const r=saveProject(this.store.project);this.refreshProjects(r.projectId);this.setStatus(`Projekt gespeichert (${r.bytes} Zeichen).`);}catch(e){this.fail(e);}}
+  load(){try{const id=this.projectSelect.value;if(!id)throw new Error('Bitte ein gespeichertes Projekt auswählen.');const candidate=loadProject(id);this.store.replaceProject(candidate);this.refreshProjects(id);this.setStatus(`Projekt geladen: ${candidate.project.name}`);}catch(e){this.fail(e);}}
+  deleteProject(){const id=this.projectSelect.value;if(!id)return;if(confirm('Diesen gespeicherten Projektstand löschen?')){deleteSavedProject(id);this.refreshProjects();this.setStatus('Gespeicherter Projektstand gelöscht.');}}
+  commitTransform(){const id=this.store.selection.activeObjectId;if(!id)return;this.store.setTransformFromEuler(id,{position:{x:this.fields.px.value,y:this.fields.py.value,z:this.fields.pz.value},rotationDeg:{x:this.fields.rx.value,y:this.fields.ry.value,z:this.fields.rz.value},scale:{x:this.fields.sx.value,y:this.fields.sy.value,z:this.fields.sz.value}});}
 
-  load() {
-    try {
-      const candidate = loadProject();
-      this.store.replaceProject(candidate);
-      this.setStatus(`Projekt geladen: ${candidate.project.name}`);
-    } catch (error) {
-      this.fail(error);
-    }
-  }
-
-  commitTransform() {
-    const id = this.store.selection.activeObjectId;
-    if (!id) return;
-    this.store.setTransformFromEuler(id, {
-      position: { x: this.fields.px.value, y: this.fields.py.value, z: this.fields.pz.value },
-      rotationDeg: { x: this.fields.rx.value, y: this.fields.ry.value, z: this.fields.rz.value },
-      scale: { x: this.fields.sx.value, y: this.fields.sy.value, z: this.fields.sz.value }
-    });
-  }
-
-  render() {
-    this.renderTree();
-    this.renderInspector();
-  }
-
-  renderTree() {
-    this.tree.replaceChildren();
-    const objects = Object.values(this.store.project.scene.objects).sort((a,b) => a.order - b.order);
-    if (!objects.length) {
-      const p = document.createElement('div');
-      p.className = 'muted';
-      p.textContent = 'Noch keine Objekte';
-      this.tree.appendChild(p);
-      return;
-    }
-    for (const object of objects) {
-      const item = document.createElement('div');
-      item.className = `tree-item${object.objectId === this.store.selection.activeObjectId ? ' selected' : ''}`;
-      item.textContent = object.name;
-      item.title = object.objectId;
-      item.addEventListener('click', () => this.store.select(object.objectId));
-      this.tree.appendChild(item);
-    }
-  }
-
-  renderInspector() {
-    const object = this.store.getObject(this.store.selection.activeObjectId);
-    this.form.hidden = !object;
-    this.empty.hidden = Boolean(object);
-    if (!object) return;
-
-    this.fields.name.value = object.name;
-    this.fields.id.textContent = object.objectId;
-    this.fields.px.value = clean(object.transform.position.x);
-    this.fields.py.value = clean(object.transform.position.y);
-    this.fields.pz.value = clean(object.transform.position.z);
-    this.fields.sx.value = clean(object.transform.scale.x);
-    this.fields.sy.value = clean(object.transform.scale.y);
-    this.fields.sz.value = clean(object.transform.scale.z);
-
-    const q = object.transform.rotation;
-    const e = new THREE.Euler().setFromQuaternion(new THREE.Quaternion(q.x,q.y,q.z,q.w), 'XYZ');
-    this.fields.rx.value = clean(THREE.MathUtils.radToDeg(e.x));
-    this.fields.ry.value = clean(THREE.MathUtils.radToDeg(e.y));
-    this.fields.rz.value = clean(THREE.MathUtils.radToDeg(e.z));
-  }
-
-  setStatus(message) {
-    this.status.textContent = message;
-  }
-
-  fail(error) {
-    console.error(error);
-    this.setStatus(error.message || String(error));
-    alert(error.message || String(error));
-  }
+  render(){this.renderTree();this.renderInspector();this.renderToolbar();this.refreshProjects(this.projectSelect?.value);}
+  renderToolbar(){document.querySelector('#undo').disabled=!this.store.undoStack.length;document.querySelector('#redo').disabled=!this.store.redoStack.length;const has=!!this.store.selection.activeObjectId;document.querySelector('#duplicate-object').disabled=!has;document.querySelector('#delete-object').disabled=!has;for(const [id,mode] of [['tool-move','translate'],['tool-rotate','rotate'],['tool-scale','scale']])document.querySelector(`#${id}`).classList.toggle('active',this.store.toolMode===mode);}
+  refreshProjects(selectedId){if(!this.projectSelect)return;const current=selectedId||this.projectSelect.value;this.projectSelect.replaceChildren();const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Gespeichertes Projekt wählen';this.projectSelect.appendChild(placeholder);for(const p of listProjects()){const o=document.createElement('option');o.value=p.projectId;o.textContent=`${p.name} – ${new Date(p.modifiedAt).toLocaleString()}`;this.projectSelect.appendChild(o);}if([...this.projectSelect.options].some(o=>o.value===current))this.projectSelect.value=current;}
+  renderTree(){this.tree.replaceChildren();const objects=Object.values(this.store.project.scene.objects).sort((a,b)=>a.order-b.order);if(!objects.length){const p=document.createElement('div');p.className='muted';p.textContent='Noch keine Objekte';this.tree.appendChild(p);return;}for(const object of objects){const item=document.createElement('div');item.className=`tree-item${object.objectId===this.store.selection.activeObjectId?' selected':''}`;item.textContent=object.name;item.title=object.objectId;item.addEventListener('click',()=>this.store.select(object.objectId));this.tree.appendChild(item);}}
+  renderInspector(){const object=this.store.getObject(this.store.selection.activeObjectId);this.form.hidden=!object;this.empty.hidden=Boolean(object);if(!object)return;this.fields.name.value=object.name;this.fields.id.textContent=object.objectId;this.fields.px.value=clean(object.transform.position.x);this.fields.py.value=clean(object.transform.position.y);this.fields.pz.value=clean(object.transform.position.z);this.fields.sx.value=clean(object.transform.scale.x);this.fields.sy.value=clean(object.transform.scale.y);this.fields.sz.value=clean(object.transform.scale.z);const q=object.transform.rotation,e=new THREE.Euler().setFromQuaternion(new THREE.Quaternion(q.x,q.y,q.z,q.w),'XYZ');this.fields.rx.value=clean(THREE.MathUtils.radToDeg(e.x));this.fields.ry.value=clean(THREE.MathUtils.radToDeg(e.y));this.fields.rz.value=clean(THREE.MathUtils.radToDeg(e.z));}
+  setStatus(message){this.status.textContent=message;} fail(error){console.error(error);this.setStatus(error.message||String(error));alert(error.message||String(error));}
 }
-
-function clean(value) {
-  return Number(Number(value).toFixed(9));
-}
+function clean(value){return Number(Number(value).toFixed(9));}
