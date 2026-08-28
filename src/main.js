@@ -4,6 +4,7 @@ import { ThreeRuntime } from './runtime-three/runtime.js';
 import { installExtrudeRuntime } from './runtime-three/extrude.js';
 import { AppUI } from './ui/app.js';
 import { installMaterialPanel } from './ui/material-panel.js';
+import { installCommandSurface } from './ui/command-surface.js';
 
 const store = new AppStore();
 const viewport = document.querySelector('#viewport');
@@ -49,10 +50,13 @@ store.subscribe(event=>{
     if(!button)continue;
     const active=event.enabled&&event.mode===mode;
     button.classList.toggle('active',active);
-    if(mode==='line')button.textContent=active?'Linie beenden':'Linie';
-    if(mode==='rectangle')button.textContent=active?'Rechteck beenden':'Rechteck';
-    if(mode==='polygon')button.textContent=active?'Polygon schließen':'Polygon';
+    const label=button.querySelector('span:last-child');
+    if(!label)continue;
+    if(mode==='line')label.textContent=active?'Linie beenden':'Linie';
+    if(mode==='rectangle')label.textContent=active?'Rechteck beenden':'Rechteck';
+    if(mode==='polygon')label.textContent=active?'Polygon schließen':'Polygon';
   }
 });
 
+installCommandSurface(store);
 window.cm3d = { store, runtime };
