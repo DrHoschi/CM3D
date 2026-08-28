@@ -1,7 +1,7 @@
 # WD-07 – Feste technische Ansichten & Viewport-Navigation
 
 **Stand:** 2026-08-28  
-**Status:** WD-07A IMPLEMENTED – DEVICE TEST REQUIRED  
+**Status:** WD-07A PASS / FROZEN  
 **Voraussetzung:** WD-06 – PASS / FROZEN
 
 ## Ziel
@@ -22,7 +22,7 @@ WD-07 ergänzt den bestehenden Viewport um feste technische Kameraorientierungen
 
 ## Abgrenzung
 
-WD-07A definiert zunächst feste **Orientierungen mit der bestehenden Perspektivkamera**. Eine separate orthografische Projektionsart ist nicht Bestandteil dieses kleinen Teilblocks und wird nicht stillschweigend eingeführt.
+WD-07A definiert feste **Orientierungen mit der bestehenden Perspektivkamera**. Eine separate orthografische Projektionsart ist nicht Bestandteil dieses Teilblocks und wurde nicht stillschweigend eingeführt.
 
 Nicht-Scope:
 
@@ -33,21 +33,14 @@ Nicht-Scope:
 - Sketch / Extrude
 - Material / Rendering-Ausbau
 
-## Manueller Gerätetest
+## Gerätetest – PASS
 
-1. Projekt öffnen und ein nicht symmetrisches Testobjekt bzw. mehrere unterschiedlich positionierte Objekte verwenden.
-2. `Top` drücken: Blick muss reproduzierbar senkrecht von oben erfolgen.
-3. `Front` drücken: Blick muss reproduzierbar entlang der Front-Richtung erfolgen.
-4. `Side` drücken: Blick muss reproduzierbar von der Seite erfolgen.
-5. `Perspektive` drücken: definierte räumliche Standardrichtung muss wiederhergestellt werden.
-6. `Isometrie` drücken: definierte gleichmäßige Raumdiagonale muss hergestellt werden.
-7. Zwischen allen fünf Ansichten mehrfach wechseln; Mittelpunkt und Entfernung dürfen nicht springen.
-8. Kamera pannen, danach feste Ansichten wechseln: der verschobene Navigationsmittelpunkt muss erhalten bleiben.
-9. Objekt auswählen, `Fit / Fokus` drücken und danach Top/Front/Side/Isometrie wechseln: die Kamera muss weiter um den fokussierten Objektmittelpunkt ausgerichtet bleiben.
-10. Nach einer festen Ansicht wieder frei orbitieren/pannen/zoomen; Navigation muss normal weiter funktionieren.
-11. WD-06 Regression: kleines/großes Objekt, Einheitenwechsel, Rasterursprung Welt `0/0/0`, Speichern/Laden kurz gegenprüfen.
-12. iPhone und iPad Safari separat prüfen.
+Gerätetest am 2026-08-28 erfolgreich abgeschlossen.
+
+Bestätigt wurden die festen Ansichten `Top`, `Front`, `Side`, `Perspektive` und `Isometrie` sowie das Umschalten zwischen den Ansichten im bestehenden Viewport. Die Projektleitung hat WD-07A anschließend ausdrücklich mit **WD-07A PASS** freigegeben.
+
+**Ergebnis:** PASS.
 
 ## Exit-Regel
 
-WD-07 bleibt auf `feature/wd-07-fixed-views`. `main` bleibt bis zum dokumentierten Geräte-PASS unverändert.
+Erfüllt. WD-07A ist **PASS / FROZEN** und darf kontrolliert von `feature/wd-07-fixed-views` nach `main` übernommen werden.
