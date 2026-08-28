@@ -1,7 +1,7 @@
 # WD-08 – 2D-Skizzenbasis
 
 **Stand:** 2026-08-28  
-**Status:** WD-08A2 DEVICE TEST FUNCTIONALLY PASS – EXPLICIT WD-08A PASS REQUIRED  
+**Status:** WD-08A PASS / FROZEN  
 **Voraussetzung:** WD-07 – PASS / FROZEN
 
 ## V1-Scope
@@ -35,32 +35,57 @@ Implementiert auf `feature/wd-08a-sketch-line`:
 
 ### WD-08A2 – Viewport-Eingabe & sichtbare Linien
 
-Implementiert und auf iPad Safari funktional bestätigt:
+Implementiert und auf iPad Safari bestätigt:
 
-- neuer Toolbar-Befehl `Skizze / Linie`
-- ohne vorhandene aktive Skizze wird automatisch ein persistentes `sketch`-Objekt erzeugt
-- eine ausgewählte Skizze kann direkt weiterverwendet werden
-- die lokale `XY`-Skizzenebene wird als eigenes objektgebundenes Raster sichtbar dargestellt
-- die Skizzenebene folgt dem normalen Objekt-Transform und liegt damit eindeutig im 3D-Raum
-- erster Pointer-Klick/-Tap setzt den Startpunkt
-- zweiter Pointer-Klick/-Tap erzeugt über den bestehenden Store-Core ein persistentes Liniensegment
-- zwischen Start- und aktuellem Pointerpunkt wird eine temporäre Vorschau gezeigt
-- persistierte Linien werden bei jedem Rebuild aus den gespeicherten Sketch-Daten neu aufgebaut
-- während der Linieneingabe bleiben TransformControls abgekoppelt, damit Zeichnen und Objekttransform nicht kollidieren
-- Beenden des Modus erfolgt über denselben Toolbar-Befehl `Linie beenden`
+- Toolbar-Befehl `Skizze / Linie`
+- automatische Erzeugung eines persistenten `sketch`-Objekts, wenn keine aktive Skizze vorhanden ist
+- ausgewählte Skizze kann weiterverwendet werden
+- lokale `XY`-Skizzenebene als objektgebundenes Raster
+- erster Tap setzt Startpunkt, zweiter Tap erzeugt ein persistentes Liniensegment
+- temporäre Linienvorschau zwischen erstem und zweitem Punkt
+- persistierte Linien werden beim Rebuild aus den Sketch-Daten aufgebaut
+- TransformControls sind während der Linieneingabe abgekoppelt
+- Modus wird über `Linie beenden` beendet
 
 ## Speicherblocker und Nachtest
 
 Während des Gerätetests trat auf Safari zunächst `The quota has been exceeded.` auf. Ursache war der begrenzte Browser-`localStorage`, nicht die Sketch-Validierung. Der Speicherpfad wurde gehärtet und Projektstände werden kompakter geschrieben.
 
-Nach Löschen zweier alter lokaler Testprojekte wurde auf iPad Safari erfolgreich geprüft:
+Nach Bereinigung alter lokaler Teststände auf iPad Safari erfolgreich geprüft:
 
 - vorhandenes Projekt + zweite Skizze + Speichern: PASS
 - neues Projekt + Skizze + Speichern: PASS
 - gespeichertes neues Projekt erneut laden: PASS
 - Skizze und Linien bleiben nach Laden sichtbar: PASS
 
-Damit ist der zuvor beobachtete WD-08A-Speicherblocker funktional geschlossen. Eine echte Datei-basierte Projekt-Sicherung bleibt als separate spätere Aufgabe vorgemerkt; `localStorage` ist nicht als endgültiges Langzeit-Projektarchiv vorgesehen.
+Eine echte dateibasierte Projekt-Sicherung bleibt als separate spätere Aufgabe vorgemerkt; `localStorage` ist nicht als endgültiges Langzeit-Projektarchiv vorgesehen.
+
+## Gerätetest WD-08A2
+
+Bestätigt:
+
+1. `Skizze / Linie` erzeugt eine neue Skizze und aktiviert den Zeichenmodus.
+2. Die lokale Sketch-Ebene ist sichtbar.
+3. Linien können per Tap erzeugt werden.
+4. Mehrere Linien funktionieren.
+5. Undo/Redo funktioniert.
+6. Speichern und Laden erhält Skizze und Linien.
+7. Mehrere Skizzen in einem Projekt sind speicherbar.
+8. Neues Projekt mit neuer Skizze ist speicherbar und wieder ladbar.
+9. Bestehende Primitive, Hierarchie und Ansichten bleiben nutzbar.
+
+**Freigabe Projektleitung:** `WD-08A PASS` am 2026-08-28.
+
+## Verbindliche Follow-ups aus dem Gerätetest
+
+Diese Punkte erweitern WD-08A nicht rückwirkend, müssen aber in den folgenden Blöcken berücksichtigt werden:
+
+- **Sketch Plane Selection:** Skizzen dürfen langfristig nicht auf Front/localXY beschränkt bleiben. Für die Modellierung müssen definierte Ebenen für Front, Top und Side auswählbar sein; später zusätzlich frei transformierbare/objektbezogene Ebenen.
+- **Blueprint-/Referenz-Unterlage:** Für Skizzen soll später ein Bild als Hintergrund-/Referenzebene importiert, positioniert, skaliert und zum Nachzeichnen verwendet werden können. PDF-Unterlagen sollen ebenfalls als mögliche Referenzquelle geprüft werden. Die genaue Import-/Rasterstrategie wird separat festgelegt und nicht stillschweigend in WD-08B gezogen.
+- **Objektbaum:** Gruppen und Baugruppen müssen auf- und zuklappbar werden; das betrifft nur die Darstellung, nicht die Projektdaten.
+- **Toolbar/Arbeitsmodi:** Die obere Werkzeugleiste soll kompakter und modusabhängig werden. Je nach Arbeitsmodus sollen nur relevante Befehle sichtbar sein.
+- **Smartphone-Layout:** Inspector und Toolbar dürfen zentrale Funktionen nicht verdecken. Smartphone bleibt sekundär; Tablet/Desktop ist der primäre Zielbereich.
+- **Feste Ansichten / Raster:** Für Front und Side ist eine passende Rasterdarstellung weiterhin als Viewport-Follow-up vorgemerkt.
 
 ## Abgrenzung
 
@@ -72,38 +97,9 @@ Noch nicht enthalten:
 - Constraints
 - Extrude (WD-09)
 - automatische Flächenerkennung
-
-## Viewport-Anmerkung aus Gerätetest
-
-Für `Top` ist das bestehende Weltgrid bereits passend sichtbar. Für `Front` und `Side` wurde als gewünschte spätere Verbesserung festgehalten, ebenfalls eine zur aktiven technischen Ansicht passende Rasterebene anzeigen bzw. zuschalten zu können.
-
-Diese Beobachtung wird nicht stillschweigend in WD-08A eingebaut und öffnet WD-07 nicht rückwirkend. Das in WD-08A2 eingeführte Sketch-Raster ist objektgebunden und dient ausschließlich der aktiven lokalen Skizzenebene; es ersetzt keine spätere Entscheidung über ansichtsabhängige Welt-Raster.
-
-## UI-Follow-ups aus Gerätetest
-
-Folgende Punkte sind allgemeine Produkt-/Bedienanforderungen und ausdrücklich nicht nur Smartphone-Themen:
-
-- Objektbaum: Gruppen und Baugruppen müssen auf- und zuklappbar werden, damit große Hierarchien übersichtlich bleiben. Das Einklappen betrifft nur die Baumdarstellung, nicht die Projektdaten.
-- Toolbar/Arbeitsmodi: Die aktuell stark belegte obere Werkzeugleiste soll später kompakter und modusabhängig werden. Je nach aktivem Arbeitsmodus sollen nur die dafür relevanten Befehle sichtbar sein, statt dauerhaft alle Funktionen gleichzeitig zu zeigen.
-- Smartphone-Layout: Inspector und Toolbar dürfen zentrale Befehle nicht überdecken. Smartphone-Nutzung ist sekundär, soll aber mindestens bedienbar bleiben.
-- Tablet/Desktop bleibt der primäre Zielbereich für die umfangreichere Modellierungsoberfläche.
-
-Diese Punkte werden nicht in WD-08A hineingezogen, sondern als spätere UI-/Shell-Arbeiten geführt.
-
-## Gerätetest WD-08A2
-
-Funktional auf iPad Safari bestätigt:
-
-1. `Skizze / Linie` erzeugt eine neue Skizze und aktiviert den Zeichenmodus.
-2. Die lokale Sketch-Ebene ist sichtbar.
-3. Erster Tap setzt den Startpunkt; zweiter Tap erzeugt eine sichtbare Linie.
-4. Mehrere Linien können erzeugt werden.
-5. Undo/Redo funktioniert.
-6. Speichern und Laden erhält Skizze und Linien.
-7. Mehrere Skizzen in einem Projekt sind speicherbar.
-8. Neues Projekt mit neuer Skizze ist speicherbar und wieder ladbar.
-9. Bestehende Primitive, Hierarchie und Ansichten bleiben nutzbar.
+- Blueprint-Bild/PDF-Import
+- vollständige Sketch-Plane-Auswahl
 
 ## Exit WD-08A
 
-Der funktionale Gerätetest ist erfolgreich. WD-08A wird entsprechend der Projektarbeitsweise erst mit explizitem `WD-08A PASS` formal geschlossen / FROZEN und danach in `main` übernommen. Erst anschließend beginnt WD-08B – Rechteck / Polygon.
+Erfüllt. WD-08A ist **PASS / FROZEN** und darf kontrolliert nach `main` übernommen werden. Danach beginnt WD-08B – Rechteck / Polygon auf einem neuen Arbeitsbranch.
