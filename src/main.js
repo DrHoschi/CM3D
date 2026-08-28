@@ -1,11 +1,14 @@
 import { AppStore } from './application/store.js';
+import { createExtrudeFromSketch } from './application/extrude.js';
 import { ThreeRuntime } from './runtime-three/runtime.js';
+import { installExtrudeRuntime } from './runtime-three/extrude.js';
 import { AppUI } from './ui/app.js';
 
 const store = new AppStore();
 const viewport = document.querySelector('#viewport');
 
 const runtime = new ThreeRuntime(viewport, store);
+installExtrudeRuntime(runtime);
 new AppUI(store);
 
 for (const button of document.querySelectorAll('[data-fixed-view]')) {
@@ -25,6 +28,18 @@ for(const [mode,button] of Object.entries(sketchButtons))button?.addEventListene
   const ok=runtime.toggleSketchInput(mode);
   if(!ok)alert('Bitte zuerst „Neue Skizze“ anlegen oder eine vorhandene Skizze im Objektbaum auswählen.');
 });
+
+const extrudeDepth=document.querySelector('#extrude-depth');
+const extrudeButton=document.querySelector('#extrude-sketch');
+extrudeButton?.addEventListener('click',()=>{
+  if(runtime.sketchInput?.enabled)runtime.disableSketchInput(false);
+  const selected=store.getObject(store.selection.activeObjectId);
+  const sketchId=selected?.type==='sketch'?selected.objectId:null;
+  if(!sketchId){alert('Bitte zuerst eine geschlossene Skizze im Objektbaum auswählen.');return;}
+  const result=createExtrudeFromSketch(store,sketchId,extrudeDepth?.value??1);
+  if(!result.ok)alert(result.message||'Extrusion konnte nicht erzeugt werden.');
+});
+
 store.subscribe(event=>{
   if(event.type==='sketchSessionCreated'&&sketchPlane)sketchPlane.value=event.plane;
   if(event.type!=='sketchInputChanged')return;
