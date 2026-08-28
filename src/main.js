@@ -2,15 +2,18 @@ import { AppStore } from './application/store.js';
 import { createExtrudeFromSketch } from './application/extrude.js';
 import { ThreeRuntime } from './runtime-three/runtime.js';
 import { installExtrudeRuntime } from './runtime-three/extrude.js';
+import { installGltfInterchange } from './runtime-three/gltf-interchange.js';
 import { AppUI } from './ui/app.js';
 import { installMaterialPanel } from './ui/material-panel.js';
 import { installCommandSurface } from './ui/command-surface.js';
+import { installGltfPanel } from './ui/gltf-panel.js';
 
 const store = new AppStore();
 const viewport = document.querySelector('#viewport');
 
 const runtime = new ThreeRuntime(viewport, store);
 installExtrudeRuntime(runtime);
+const gltfInterchange = installGltfInterchange(runtime, store);
 new AppUI(store);
 installMaterialPanel(store);
 
@@ -59,4 +62,5 @@ store.subscribe(event=>{
 });
 
 installCommandSurface(store);
-window.cm3d = { store, runtime };
+installGltfPanel(store, gltfInterchange);
+window.cm3d = { store, runtime, gltfInterchange };
