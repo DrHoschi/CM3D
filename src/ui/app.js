@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { deleteSavedProject, hasSavedProjects, listProjects, loadProject, saveProject } from '../persistence/storage.js';
+import { downloadProjectFile, readProjectFile } from '../persistence/project-file.js';
 
 const UNIT_TO_METERS={mm:0.001,cm:0.01,m:1,km:1000};
 const validUnit=u=>Object.prototype.hasOwnProperty.call(UNIT_TO_METERS,u)?u:'m';
@@ -8,11 +9,12 @@ const typeIcon=t=>t==='group'?'▾':t==='assembly'?'◆':t==='primitive.sphere'?
 
 export class AppUI {
   constructor(store){
-    this.store=store;const q=s=>document.querySelector(s);this.q=q;this.tree=q('#object-tree');this.status=q('#status');this.form=q('#inspector');this.empty=q('#inspector-empty');this.projectSelect=q('#project-select');this.parentSelect=q('#parent-select');this.unitSelect=q('#display-unit');
+    this.store=store;const q=s=>document.querySelector(s);this.q=q;this.tree=q('#object-tree');this.status=q('#status');this.form=q('#inspector');this.empty=q('#inspector-empty');this.projectSelect=q('#project-select');this.parentSelect=q('#parent-select');this.unitSelect=q('#display-unit');this.projectFileInput=q('#project-file-input');
     this.fields={name:q('#object-name'),type:q('#object-type'),px:q('#pos-x'),py:q('#pos-y'),pz:q('#pos-z'),rx:q('#rot-x'),ry:q('#rot-y'),rz:q('#rot-z'),sx:q('#scale-x'),sy:q('#scale-y'),sz:q('#scale-z'),pvx:q('#pivot-x'),pvy:q('#pivot-y'),pvz:q('#pivot-z'),dx:q('#dim-x'),dy:q('#dim-y'),dz:q('#dim-z'),radius:q('#radius'),height:q('#height'),id:q('#object-id')};
     q('#new-project').onclick=()=>{if(confirm('Neues Projekt erstellen? Nicht gespeicherte Änderungen gehen verloren.')){store.newProject();this.setStatus('Neues Projekt erstellt.');}};
     q('#add-box').onclick=()=>this.created('Würfel',store.addBox());q('#add-sphere').onclick=()=>this.created('Kugel',store.addSphere());q('#add-cylinder').onclick=()=>this.created('Zylinder',store.addCylinder());q('#group-selected').onclick=()=>{if(store.groupSelected())this.setStatus('Gruppe gebildet.');};q('#assembly-selected').onclick=()=>{if(store.assemblySelected())this.setStatus('Baugruppe gebildet.');};q('#ungroup-selected').onclick=()=>{if(store.ungroupSelected())this.setStatus('Container aufgelöst.');};
-    q('#save-project').onclick=()=>this.save();q('#load-project').onclick=()=>this.load();q('#delete-project').onclick=()=>this.deleteProject();q('#undo').onclick=()=>{if(store.undo())this.setStatus('Rückgängig.');};q('#redo').onclick=()=>{if(store.redo())this.setStatus('Wiederholt.');};q('#duplicate-object').onclick=()=>{if(store.duplicateSelected())this.setStatus('Objekt dupliziert.');};q('#delete-object').onclick=()=>{if(store.deleteSelected())this.setStatus('Auswahl gelöscht.');};
+    q('#save-project').onclick=()=>this.save();q('#load-project').onclick=()=>this.load();q('#delete-project').onclick=()=>this.deleteProject();q('#export-project-file').onclick=()=>this.exportProjectFile();q('#import-project-file').onclick=()=>this.projectFileInput?.click();if(this.projectFileInput)this.projectFileInput.onchange=e=>this.importProjectFile(e);
+    q('#undo').onclick=()=>{if(store.undo())this.setStatus('Rückgängig.');};q('#redo').onclick=()=>{if(store.redo())this.setStatus('Wiederholt.');};q('#duplicate-object').onclick=()=>{if(store.duplicateSelected())this.setStatus('Objekt dupliziert.');};q('#delete-object').onclick=()=>{if(store.deleteSelected())this.setStatus('Auswahl gelöscht.');};
     for(const [id,mode] of [['#tool-move','translate'],['#tool-rotate','rotate'],['#tool-scale','scale']])q(id).onclick=()=>store.setToolMode(mode);q('#space-world').onclick=()=>store.setCoordinateSpace('world');q('#space-local').onclick=()=>store.setCoordinateSpace('local');q('#snap-enabled').onchange=e=>store.setSnapEnabled(e.target.checked);q('#snap-move').onchange=()=>store.setSnapValues({translate:this.toMeters(q('#snap-move').value)});q('#snap-rotate').onchange=()=>store.setSnapValues({rotateDeg:q('#snap-rotate').value});q('#snap-scale').onchange=()=>store.setSnapValues({scale:q('#snap-scale').value});
     this.unitSelect.onchange=()=>this.setDisplayUnit(this.unitSelect.value);q('#focus-selection').onclick=()=>store.emit('focusRequested');
     q('#pivot-center').onclick=()=>{const id=store.selection.activeObjectId;if(id)store.setPivotPreset(id,'center');};q('#pivot-bottom').onclick=()=>{const id=store.selection.activeObjectId;if(id)store.setPivotPreset(id,'bottom');};q('#apply-parent').onclick=()=>{const id=store.selection.activeObjectId;if(!id)return;const p=this.parentSelect.value||null;if(store.reparent(id,p))this.setStatus('Parent geändert, Weltlage erhalten.');};
@@ -27,6 +29,17 @@ export class AppUI {
   created(label,id){this.setStatus(`${label} erzeugt: ${id}`);}
   save(){try{const r=saveProject(this.store.project);this.refreshProjects(r.projectId);this.setStatus(`Projekt gespeichert (${r.bytes} Zeichen).`);}catch(e){this.fail(e);}}
   load(){try{const id=this.projectSelect.value;if(!id)throw new Error('Bitte ein gespeichertes Projekt auswählen.');const p=loadProject(id);this.store.replaceProject(p);this.refreshProjects(id);this.setStatus(`Projekt geladen: ${p.project.name}`);}catch(e){this.fail(e);}}
+  exportProjectFile(){try{const r=downloadProjectFile(this.store.project);this.setStatus(`Projektdatei exportiert: ${r.fileName}`);}catch(e){this.fail(e);}}
+  async importProjectFile(event){
+    const input=event?.target;const file=input?.files?.[0];
+    try{
+      if(!file)return;
+      const candidate=await readProjectFile(file);
+      this.store.replaceProject(candidate);
+      this.refreshProjects();
+      this.setStatus(`Projektdatei importiert: ${candidate.project.name}`);
+    }catch(e){this.fail(e);}finally{if(input)input.value='';}
+  }
   deleteProject(){const id=this.projectSelect.value;if(id&&confirm('Diesen gespeicherten Projektstand löschen?')){deleteSavedProject(id);this.refreshProjects();this.setStatus('Gespeicherter Projektstand gelöscht.');}}
   commitTransform(){const id=this.store.selection.activeObjectId;if(!id)return;const next={position:{x:this.toMeters(this.fields.px.value),y:this.toMeters(this.fields.py.value),z:this.toMeters(this.fields.pz.value)},rotationDeg:{x:this.fields.rx.value,y:this.fields.ry.value,z:this.fields.rz.value},scale:{x:this.fields.sx.value,y:this.fields.sy.value,z:this.fields.sz.value}};this.store.coordinateSpace==='world'?this.store.setWorldTransformFromEuler(id,next):this.store.setTransformFromEuler(id,next);}
   commitPivot(){const id=this.store.selection.activeObjectId;if(id)this.store.setPivot(id,{x:this.toMeters(this.fields.pvx.value),y:this.toMeters(this.fields.pvy.value),z:this.toMeters(this.fields.pvz.value)});}
