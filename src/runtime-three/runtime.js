@@ -16,7 +16,7 @@ export class ThreeRuntime {
     this.transform.addEventListener('objectChange',()=>this.commitTransform(false));
     this.raycaster=new THREE.Raycaster();this.pointer=new THREE.Vector2();
     this.scene.add(new THREE.HemisphereLight(0xffffff,0x3b4450,2.2));const key=new THREE.DirectionalLight(0xffffff,2.5);key.position.set(5,8,4);this.scene.add(key);
-    this.grid=new THREE.GridHelper(20,20,0x4d5560,0x2d3239);this.scene.add(this.grid);
+    this.grid=new THREE.GridHelper(20,20,0x4d5560,0x2d3239);this.grid.position.set(0,0,0);this.scene.add(this.grid);
     this.renderer.domElement.addEventListener('pointerdown',e=>this.pick(e));window.addEventListener('resize',()=>this.resize());
     this.store.subscribe(event=>{
       if(['projectChanged','projectLoaded','objectCreated','geometryChanged'].includes(event.type))this.rebuild();
@@ -41,7 +41,7 @@ export class ThreeRuntime {
   focusSelection(){const id=this.store.selection.activeObjectId,node=id?this.objectMap.get(id):null;if(!node)return;node.updateWorldMatrix(true,true);const box=new THREE.Box3().setFromObject(node);if(box.isEmpty())box.setFromCenterAndSize(node.getWorldPosition(new THREE.Vector3()),new THREE.Vector3(1,1,1));const center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3()),maxSize=Math.max(size.x,size.y,size.z,0.0000001);const fov=THREE.MathUtils.degToRad(this.camera.fov),distance=Math.max(maxSize/(2*Math.tan(fov/2))*1.6,0.000001);const direction=this.camera.position.clone().sub(this.orbit.target);if(direction.lengthSq()<1e-20)direction.set(1,0.75,1);direction.normalize();this.orbit.target.copy(center);this.camera.position.copy(center).addScaledVector(direction,distance);this.updateCameraRange();this.updateGrid();this.orbit.update();this.store.emit('focusCompleted',{objectId:id});}
   sceneRadius(){const box=new THREE.Box3().setFromObject(this.modelRoot);if(box.isEmpty())return 1;const sphere=box.getBoundingSphere(new THREE.Sphere());return Math.max(sphere.radius,0.0000001);}
   updateCameraRange(){const distance=Math.max(this.camera.position.distanceTo(this.orbit.target),0.0000001),radius=this.sceneRadius();const near=Math.max(0.000000001,Math.min(distance,radius)/10000),far=Math.max(1000,distance*10000,radius*1000);if(Math.abs(this.camera.near-near)/near>0.01||Math.abs(this.camera.far-far)/far>0.01){this.camera.near=near;this.camera.far=far;this.camera.updateProjectionMatrix();}}
-  updateGrid(){const distance=Math.max(this.camera.position.distanceTo(this.orbit.target),0.0000001);const step=Math.pow(10,Math.floor(Math.log10(distance/8)));if(step!==this.lastGridStep){this.grid.scale.setScalar(step);this.lastGridStep=step;}this.grid.position.x=Math.round(this.orbit.target.x/step)*step;this.grid.position.z=Math.round(this.orbit.target.z/step)*step;}
+  updateGrid(){const distance=Math.max(this.camera.position.distanceTo(this.orbit.target),0.0000001);const step=Math.pow(10,Math.floor(Math.log10(distance/8)));if(step!==this.lastGridStep){this.grid.scale.setScalar(step);this.lastGridStep=step;}this.grid.position.set(0,0,0);}
   resize(){const w=Math.max(1,this.container.clientWidth),h=Math.max(1,this.container.clientHeight);this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
   animate(){requestAnimationFrame(()=>this.animate());this.orbit.update();this.updateCameraRange();this.updateGrid();this.renderer.render(this.scene,this.camera);}
 }
