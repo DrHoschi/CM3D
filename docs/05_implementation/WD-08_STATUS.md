@@ -1,7 +1,7 @@
 # WD-08 – 2D-Skizzenbasis
 
 **Stand:** 2026-08-28  
-**Status:** WD-08A2 IMPLEMENTED – DEVICE TEST REQUIRED  
+**Status:** WD-08A2 DEVICE TEST FUNCTIONALLY PASS – EXPLICIT WD-08A PASS REQUIRED  
 **Voraussetzung:** WD-07 – PASS / FROZEN
 
 ## V1-Scope
@@ -35,7 +35,7 @@ Implementiert auf `feature/wd-08a-sketch-line`:
 
 ### WD-08A2 – Viewport-Eingabe & sichtbare Linien
 
-Implementiert, Gerätetest ausstehend:
+Implementiert und auf iPad Safari funktional bestätigt:
 
 - neuer Toolbar-Befehl `Skizze / Linie`
 - ohne vorhandene aktive Skizze wird automatisch ein persistentes `sketch`-Objekt erzeugt
@@ -48,6 +48,19 @@ Implementiert, Gerätetest ausstehend:
 - persistierte Linien werden bei jedem Rebuild aus den gespeicherten Sketch-Daten neu aufgebaut
 - während der Linieneingabe bleiben TransformControls abgekoppelt, damit Zeichnen und Objekttransform nicht kollidieren
 - Beenden des Modus erfolgt über denselben Toolbar-Befehl `Linie beenden`
+
+## Speicherblocker und Nachtest
+
+Während des Gerätetests trat auf Safari zunächst `The quota has been exceeded.` auf. Ursache war der begrenzte Browser-`localStorage`, nicht die Sketch-Validierung. Der Speicherpfad wurde gehärtet und Projektstände werden kompakter geschrieben.
+
+Nach Löschen zweier alter lokaler Testprojekte wurde auf iPad Safari erfolgreich geprüft:
+
+- vorhandenes Projekt + zweite Skizze + Speichern: PASS
+- neues Projekt + Skizze + Speichern: PASS
+- gespeichertes neues Projekt erneut laden: PASS
+- Skizze und Linien bleiben nach Laden sichtbar: PASS
+
+Damit ist der zuvor beobachtete WD-08A-Speicherblocker funktional geschlossen. Eine echte Datei-basierte Projekt-Sicherung bleibt als separate spätere Aufgabe vorgemerkt; `localStorage` ist nicht als endgültiges Langzeit-Projektarchiv vorgesehen.
 
 ## Abgrenzung
 
@@ -66,19 +79,31 @@ Für `Top` ist das bestehende Weltgrid bereits passend sichtbar. Für `Front` un
 
 Diese Beobachtung wird nicht stillschweigend in WD-08A eingebaut und öffnet WD-07 nicht rückwirkend. Das in WD-08A2 eingeführte Sketch-Raster ist objektgebunden und dient ausschließlich der aktiven lokalen Skizzenebene; es ersetzt keine spätere Entscheidung über ansichtsabhängige Welt-Raster.
 
+## UI-Follow-ups aus Gerätetest
+
+Folgende Punkte sind allgemeine Produkt-/Bedienanforderungen und ausdrücklich nicht nur Smartphone-Themen:
+
+- Objektbaum: Gruppen und Baugruppen müssen auf- und zuklappbar werden, damit große Hierarchien übersichtlich bleiben. Das Einklappen betrifft nur die Baumdarstellung, nicht die Projektdaten.
+- Toolbar/Arbeitsmodi: Die aktuell stark belegte obere Werkzeugleiste soll später kompakter und modusabhängig werden. Je nach aktivem Arbeitsmodus sollen nur die dafür relevanten Befehle sichtbar sein, statt dauerhaft alle Funktionen gleichzeitig zu zeigen.
+- Smartphone-Layout: Inspector und Toolbar dürfen zentrale Befehle nicht überdecken. Smartphone-Nutzung ist sekundär, soll aber mindestens bedienbar bleiben.
+- Tablet/Desktop bleibt der primäre Zielbereich für die umfangreichere Modellierungsoberfläche.
+
+Diese Punkte werden nicht in WD-08A hineingezogen, sondern als spätere UI-/Shell-Arbeiten geführt.
+
 ## Gerätetest WD-08A2
 
-Vor PASS sind mindestens folgende Punkte auf iPhone/iPad Safari zu prüfen:
+Funktional auf iPad Safari bestätigt:
 
 1. `Skizze / Linie` erzeugt eine neue Skizze und aktiviert den Zeichenmodus.
 2. Die lokale Sketch-Ebene ist sichtbar.
 3. Erster Tap setzt den Startpunkt; zweiter Tap erzeugt eine sichtbare Linie.
-4. Mehrere Linien können nacheinander erzeugt werden.
-5. `Linie beenden` beendet den Zeichenmodus sauber.
-6. Undo entfernt das zuletzt erzeugte Liniensegment; Redo stellt es wieder her.
-7. Speichern und Laden erhält Skizze und Linien sichtbar und datenidentisch.
-8. Bestehende Primitive, Auswahl, Transform, feste Ansichten und Fit/Fokus bleiben funktionsfähig.
+4. Mehrere Linien können erzeugt werden.
+5. Undo/Redo funktioniert.
+6. Speichern und Laden erhält Skizze und Linien.
+7. Mehrere Skizzen in einem Projekt sind speicherbar.
+8. Neues Projekt mit neuer Skizze ist speicherbar und wieder ladbar.
+9. Bestehende Primitive, Hierarchie und Ansichten bleiben nutzbar.
 
 ## Exit WD-08A
 
-WD-08A wird erst mit explizitem Gerätetest-PASS geschlossen. Erst danach beginnt WD-08B – Rechteck / Polygon.
+Der funktionale Gerätetest ist erfolgreich. WD-08A wird entsprechend der Projektarbeitsweise erst mit explizitem `WD-08A PASS` formal geschlossen / FROZEN und danach in `main` übernommen. Erst anschließend beginnt WD-08B – Rechteck / Polygon.
