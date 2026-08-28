@@ -8,7 +8,7 @@ export function installMaterialPanel(store){
 
   const active=()=>store.getObject(store.selection.activeObjectId);
   function render(){
-    const object=active(),supported=!!object&&!['sketch','group','assembly'].includes(object.type);panel.hidden=!supported;if(!supported)return;
+    const object=active(),supported=!!object&&!['sketch','group','assembly','external.gltf'].includes(object.type);panel.hidden=!supported;if(!supported)return;
     const currentId=object.materialIds?.[0]??'';select.replaceChildren();for(const material of Object.values(store.project.materials??{}))select.appendChild(new Option(material.name||material.materialId,material.materialId));if(currentId&&[...select.options].some(o=>o.value===currentId))select.value=currentId;
     const material=materialForObject(store,object.objectId)??store.project.materials?.[select.value];if(material?.properties?.baseColor)color.value=material.properties.baseColor;
   }
