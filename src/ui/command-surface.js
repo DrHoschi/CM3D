@@ -138,21 +138,19 @@ export function installCommandSurface(store){
     }
   };
 
-  // UI-01 owns the Bearbeiten menu. Bind history commands here as real menu
-  // commands instead of relying on the former toolbar wiring. This also keeps
-  // the disabled state in sync immediately on iPad/Safari after a transform.
+  // UI-01 owns the Bearbeiten menu. Replace the former toolbar handlers with
+  // menu-owned history commands so one tap always performs exactly one step.
   const undoButton=q('#undo');
   const redoButton=q('#redo');
+  if(undoButton)undoButton.onclick=null;
+  if(redoButton)redoButton.onclick=null;
   const syncHistory=()=>{
     if(undoButton)undoButton.disabled=store.undoStack.length===0;
     if(redoButton)redoButton.disabled=store.redoStack.length===0;
   };
   const runHistory=direction=>{
     const changed=direction==='undo'?store.undo():store.redo();
-    if(changed){
-      store.emit('uiStatusRequested',{message:direction==='undo'?'Rückgängig.':'Wiederholt.'});
-      closeMenus();
-    }
+    if(changed)closeMenus();
     syncHistory();
   };
   undoButton?.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();runHistory('undo');});
