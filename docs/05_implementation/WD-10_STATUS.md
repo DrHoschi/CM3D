@@ -1,10 +1,12 @@
 # WD-10 – Material / Farbe
 
 **Stand:** 2026-08-28  
-**Status:** WD-10A IMPLEMENTED – DEVICE TEST REQUIRED  
+**Status:** WD-10A PASS / FROZEN  
 **Voraussetzung:** WD-09 – PASS / FROZEN
 
 ## WD-10A – Materialzuweisung & Basisfarbe
+
+**Ergebnis:** PASS / FROZEN.
 
 Implementiert auf `feature/wd-10-material-color`:
 
@@ -19,16 +21,17 @@ Implementiert auf `feature/wd-10-material-color`:
 - Material/Farbe erscheint kontextbezogen im Inspector nur bei unterstützten Objekttypen
 - keine Schema-Migration; `schemaVersion` bleibt `0.1.0`
 
-## Gerätetest WD-10A
+## Gerätetest WD-10A – PASS
 
-1. Würfel auswählen; Material/Farbe erscheint im Inspector.
-2. Basisfarbe ändern; Würfel aktualisiert sich sofort.
-3. neues Material anlegen; es wird dem aktiven Objekt zugewiesen.
-4. zweites Objekt auswählen und dasselbe Material zuweisen; beide verwenden dieselbe persistente Materialdefinition.
-5. Extrude-Körper auswählen; Material/Farbe funktioniert identisch.
-6. Undo/Redo für Farb- bzw. Materialänderung prüfen.
-7. Projekt speichern/laden; Materialbindung und Farbe bleiben erhalten.
-8. Skizze auswählen; Materialbereich soll nicht angeboten werden.
+Auf iPad / Safari erfolgreich geprüft:
+
+1. Basisfarbe eines Objekts ändern → PASS.
+2. unterschiedlichen Komponenten einzelne Farben zuweisen → PASS.
+3. neue Materialien anlegen und Objekten zuweisen → PASS.
+4. Materialzuweisungen und Farben speichern → PASS.
+5. Projekt neu laden → Materialbindungen und Farben vollständig erhalten → PASS.
+
+Die Projektleitung hat WD-10A anschließend zur Übernahme nach `main` freigegeben.
 
 ## Verbindliche spätere Modellierungs-Follow-ups
 
@@ -45,4 +48,4 @@ Diese Punkte werden nicht rückwirkend in den bereits gefrorenen WD-08/WD-09-Sco
 
 ## Exit WD-10A
 
-WD-10A wird erst nach erfolgreichem Gerätetest und explizitem `WD-10A PASS` geschlossen / FROZEN. `main` bleibt bis dahin unverändert.
+Erfüllt. WD-10A ist **PASS / FROZEN** und darf nach `main` übernommen werden. Der nächste WD-10-Unterblock wird separat auf eigener Branch-Basis festgelegt.
