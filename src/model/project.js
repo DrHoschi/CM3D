@@ -19,6 +19,9 @@ export const createSphereObject=(project,name='Kugel')=>baseObject(project,'prim
 export const createCylinderObject=(project,name='Zylinder')=>baseObject(project,'primitive.cylinder',name,{radius:0.5,height:1,segments:32});
 export const createGroupObject=(project,name='Gruppe')=>baseObject(project,'group',name,{},false);
 export const createAssemblyObject=(project,name='Baugruppe')=>baseObject(project,'assembly',name,{assembly:{kind:'generic'}},false);
+export const createSketchObject=(project,name='Skizze')=>baseObject(project,'sketch',name,{plane:'localXY',points:{},lines:{}},false);
+export const createSketchPoint=(x=0,y=0)=>({pointId:uuid('pt'),x:Number(x),y:Number(y)});
+export const createSketchLine=(startPointId,endPointId)=>({lineId:uuid('ln'),startPointId,endPointId});
 
 export function validateProject(project) {
   const errors=[];
@@ -43,6 +46,20 @@ export function validateProject(project) {
       if(o.type==='primitive.box'&&['x','y','z'].some(k=>!(o.data?.size?.[k]>0)))errors.push(`Ungültige Box-Abmessung für ${o.objectId}.`);
       if(o.type==='primitive.sphere'&&!(o.data?.radius>0))errors.push(`Ungültiger Kugelradius für ${o.objectId}.`);
       if(o.type==='primitive.cylinder'&&(!(o.data?.radius>0)||!(o.data?.height>0)))errors.push(`Ungültige Zylinderabmessung für ${o.objectId}.`);
+      if(o.type==='sketch'){
+        if(o.data?.plane!=='localXY')errors.push(`Ungültige Skizzenebene für ${o.objectId}.`);
+        if(!o.data?.points||Array.isArray(o.data.points)||typeof o.data.points!=='object')errors.push(`Skizzenpunkte fehlen für ${o.objectId}.`);
+        if(!o.data?.lines||Array.isArray(o.data.lines)||typeof o.data.lines!=='object')errors.push(`Skizzenlinien fehlen für ${o.objectId}.`);
+        for(const [pointKey,p] of Object.entries(o.data?.points??{})){
+          if(pointKey!==p.pointId)errors.push(`Punktschlüssel stimmt nicht mit pointId überein: ${pointKey}`);
+          if(!Number.isFinite(p.x)||!Number.isFinite(p.y))errors.push(`Ungültiger Skizzenpunkt ${pointKey} in ${o.objectId}.`);
+        }
+        for(const [lineKey,l] of Object.entries(o.data?.lines??{})){
+          if(lineKey!==l.lineId)errors.push(`Linienschlüssel stimmt nicht mit lineId überein: ${lineKey}`);
+          if(!o.data?.points?.[l.startPointId]||!o.data?.points?.[l.endPointId])errors.push(`Skizzenlinie ${lineKey} referenziert fehlende Punkte in ${o.objectId}.`);
+          if(l.startPointId===l.endPointId)errors.push(`Skizzenlinie ${lineKey} benötigt zwei verschiedene Punkte.`);
+        }
+      }
       const seen=new Set([o.objectId]); let parent=o.parentId;
       while(parent){if(seen.has(parent)){errors.push(`Parent-Zyklus bei ${o.objectId}.`);break;}seen.add(parent);parent=objects[parent]?.parentId??null;}
     }
