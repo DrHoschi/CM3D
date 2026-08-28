@@ -3,6 +3,7 @@ import { createExtrudeFromSketch } from './application/extrude.js';
 import { ThreeRuntime } from './runtime-three/runtime.js';
 import { installExtrudeRuntime } from './runtime-three/extrude.js';
 import { AppUI } from './ui/app.js';
+import { installMaterialPanel } from './ui/material-panel.js';
 
 const store = new AppStore();
 const viewport = document.querySelector('#viewport');
@@ -10,6 +11,7 @@ const viewport = document.querySelector('#viewport');
 const runtime = new ThreeRuntime(viewport, store);
 installExtrudeRuntime(runtime);
 new AppUI(store);
+installMaterialPanel(store);
 
 for (const button of document.querySelectorAll('[data-fixed-view]')) {
   button.addEventListener('click', () => runtime.setFixedView(button.dataset.fixedView));
