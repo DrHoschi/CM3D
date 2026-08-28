@@ -20,6 +20,7 @@ export const createCylinderObject=(project,name='Zylinder')=>baseObject(project,
 export const createGroupObject=(project,name='Gruppe')=>baseObject(project,'group',name,{},false);
 export const createAssemblyObject=(project,name='Baugruppe')=>baseObject(project,'assembly',name,{assembly:{kind:'generic'}},false);
 export const createSketchObject=(project,name='Skizze')=>baseObject(project,'sketch',name,{plane:'localXY',points:{},lines:{}},false);
+export const createExternalGltfObject=(project,assetId,name='Importiertes Modell')=>baseObject(project,'external.gltf',name,{assetId,sourceFormat:'gltf'},false);
 export const createSketchPoint=(x=0,y=0)=>({pointId:uuid('pt'),x:Number(x),y:Number(y)});
 export const createSketchLine=(startPointId,endPointId)=>({lineId:uuid('ln'),startPointId,endPointId});
 
@@ -30,6 +31,31 @@ export function validateProject(project) {
   if(!project?.project?.projectId)errors.push('projectId fehlt.');
   if(!project?.scene?.objects||typeof project.scene.objects!=='object')errors.push('scene.objects fehlt oder ist ungültig.');
   if(!project?.materials||Array.isArray(project.materials)||typeof project.materials!=='object')errors.push('materials muss eine Material-Map sein.');
+
+  const assetMap=new Map();
+  if(!Array.isArray(project?.assets))errors.push('assets muss ein Array sein.');
+  else for(const asset of project.assets){
+    if(!asset?.assetId){errors.push('Asset ohne assetId.');continue;}
+    if(assetMap.has(asset.assetId))errors.push(`Doppelte assetId: ${asset.assetId}.`);
+    assetMap.set(asset.assetId,asset);
+    if(asset.kind==='model.gltf.bundle'){
+      if(!['glb','gltf'].includes(asset.format))errors.push(`Ungültiges GLB/GLTF-Assetformat für ${asset.assetId}.`);
+      if(!asset.entryFile)errors.push(`entryFile fehlt für ${asset.assetId}.`);
+      if(!Array.isArray(asset.files)||!asset.files.length)errors.push(`Asset-Dateien fehlen für ${asset.assetId}.`);
+      else {
+        const entryName=String(asset.entryFile||'').replace(/\\/g,'/').split('/').pop();
+        let hasEntry=false;
+        for(const file of asset.files){
+          if(!file?.name)errors.push(`Asset-Datei ohne Namen in ${asset.assetId}.`);
+          if(typeof file?.dataUrl!=='string'||!file.dataUrl.startsWith('data:'))errors.push(`Asset-Datei ohne eingebettete Daten in ${asset.assetId}.`);
+          const fileName=String(file?.path||file?.name||'').replace(/\\/g,'/').split('/').pop();
+          if(fileName&&fileName===entryName)hasEntry=true;
+        }
+        if(asset.entryFile&&!hasEntry)errors.push(`Einstiegsdatei ${asset.entryFile} fehlt in ${asset.assetId}.`);
+      }
+    }
+  }
+
   if(project?.scene?.objects){
     const objects=project.scene.objects;
     for(const [key,o] of Object.entries(objects)){
@@ -46,6 +72,12 @@ export function validateProject(project) {
       if(o.type==='primitive.box'&&['x','y','z'].some(k=>!(o.data?.size?.[k]>0)))errors.push(`Ungültige Box-Abmessung für ${o.objectId}.`);
       if(o.type==='primitive.sphere'&&!(o.data?.radius>0))errors.push(`Ungültiger Kugelradius für ${o.objectId}.`);
       if(o.type==='primitive.cylinder'&&(!(o.data?.radius>0)||!(o.data?.height>0)))errors.push(`Ungültige Zylinderabmessung für ${o.objectId}.`);
+      if(o.type==='external.gltf'){
+        const assetId=o.data?.assetId,asset=assetMap.get(assetId);
+        if(!assetId)errors.push(`assetId fehlt für GLB/GLTF-Objekt ${o.objectId}.`);
+        else if(!asset)errors.push(`Asset ${assetId} fehlt für GLB/GLTF-Objekt ${o.objectId}.`);
+        else if(asset.kind!=='model.gltf.bundle')errors.push(`Asset ${assetId} besitzt den falschen Typ für ${o.objectId}.`);
+      }
       if(o.type==='sketch'){
         if(o.data?.plane!=='localXY')errors.push(`Ungültige Skizzenebene für ${o.objectId}.`);
         if(!o.data?.points||Array.isArray(o.data.points)||typeof o.data.points!=='object')errors.push(`Skizzenpunkte fehlen für ${o.objectId}.`);
