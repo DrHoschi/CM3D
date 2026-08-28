@@ -10,6 +10,12 @@ const FIXED_VIEWS={
   side:{direction:new THREE.Vector3(1,0,0),up:new THREE.Vector3(0,1,0)}
 };
 
+const SKETCH_PLANE_ROTATION={
+  front:new THREE.Quaternion(),
+  top:new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,0,'XYZ')),
+  side:new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI/2,0,'XYZ'))
+};
+
 export class ThreeRuntime {
   constructor(container,store){
     this.container=container;this.store=store;this.objectMap=new Map();this.pickables=[];this.dragBefore=null;this.lastGridStep=null;this.sketchInput={enabled:false,mode:null,sketchId:null,start:null,vertices:[],preview:null};
@@ -37,10 +43,19 @@ export class ThreeRuntime {
     this.resize();this.rebuild();this.animate();
   }
   setFixedView(name){const preset=FIXED_VIEWS[name];if(!preset)return false;const target=this.orbit.target.clone();const distance=Math.max(this.camera.position.distanceTo(target),0.000001);this.camera.up.copy(preset.up);this.camera.position.copy(target).addScaledVector(preset.direction,distance);this.camera.lookAt(target);this.updateCameraRange();this.updateGrid();this.orbit.update();this.store.emit('fixedViewCompleted',{view:name});return true;}
-  resolveSketch(sketchId=null){let id=sketchId;const selected=this.store.getObject(this.store.selection.activeObjectId);if(!id&&selected?.type==='sketch')id=selected.objectId;if(!id)id=this.store.addSketch();return this.store.getObject(id)?.type==='sketch'?id:null;}
-  enableSketchInput(mode,sketchId=null){const id=this.resolveSketch(sketchId);if(!id)return false;this.sketchInput.enabled=true;this.sketchInput.mode=mode;this.sketchInput.sketchId=id;this.sketchInput.start=null;this.sketchInput.vertices=[];this.clearSketchPreview();this.store.select(id);this.transform.detach();this.store.emit('sketchInputChanged',{enabled:true,mode,sketchId:id});return true;}
+  createSketchOnPlane(plane='front'){
+    if(!SKETCH_PLANE_ROTATION[plane])return null;
+    if(this.sketchInput.enabled)this.disableSketchInput(false);
+    const id=this.store.addSketch(),sketch=this.store.getObject(id);if(!sketch)return null;
+    const q=SKETCH_PLANE_ROTATION[plane];sketch.transform.rotation={x:q.x,y:q.y,z:q.z,w:q.w};sketch.data.referencePlane=plane;this.store.touch();
+    const last=this.store.undoStack.at(-1);if(last?.label==='Skizze erzeugen')last.after=this.store.snapshot();
+    this.store.emit('geometryChanged',{objectId:id});this.store.select(id);this.setFixedView(plane);
+    this.store.emit('sketchSessionCreated',{sketchId:id,plane});return id;
+  }
+  resolveSelectedSketch(){const selected=this.store.getObject(this.store.selection.activeObjectId);return selected?.type==='sketch'?selected.objectId:null;}
+  enableSketchInput(mode,sketchId=null){const id=sketchId??this.resolveSelectedSketch();if(!id){this.store.emit('sketchInputRejected',{mode,reason:'no-active-sketch'});return false;}const sketch=this.store.getObject(id);if(sketch?.type!=='sketch')return false;this.sketchInput.enabled=true;this.sketchInput.mode=mode;this.sketchInput.sketchId=id;this.sketchInput.start=null;this.sketchInput.vertices=[];this.clearSketchPreview();this.store.select(id);this.transform.detach();this.store.emit('sketchInputChanged',{enabled:true,mode,sketchId:id});return true;}
   disableSketchInput(commitPolygon=false){if(!this.sketchInput.enabled)return false;const {mode,sketchId,vertices}=this.sketchInput;let committed=false;if(commitPolygon&&mode==='polygon'&&vertices.length>=3)committed=!!this.store.addSketchPolygon(sketchId,vertices);this.sketchInput.enabled=false;this.sketchInput.mode=null;this.sketchInput.start=null;this.sketchInput.vertices=[];this.clearSketchPreview();this.sketchInput.sketchId=null;this.syncSelection();this.store.emit('sketchInputChanged',{enabled:false,mode,sketchId,committed});return committed;}
-  toggleSketchInput(mode){if(this.sketchInput.enabled&&this.sketchInput.mode===mode){this.disableSketchInput(mode==='polygon');return;}if(this.sketchInput.enabled)this.disableSketchInput(false);this.enableSketchInput(mode);}
+  toggleSketchInput(mode){if(this.sketchInput.enabled&&this.sketchInput.mode===mode){this.disableSketchInput(mode==='polygon');return true;}if(this.sketchInput.enabled)this.disableSketchInput(false);return this.enableSketchInput(mode);}
   applyToolSettings(){this.transform.setMode(this.store.toolMode);this.transform.setSpace(this.store.coordinateSpace);const s=this.store.snap;this.transform.setTranslationSnap(s.enabled?s.translate:null);this.transform.setRotationSnap(s.enabled?THREE.MathUtils.degToRad(s.rotateDeg):null);this.transform.setScaleSnap(s.enabled?s.scale:null);}
   materialFor(object){const id=object.materialIds?.[0],d=id?this.store.project.materials[id]:null,p=d?.properties??{};return new THREE.MeshStandardMaterial({color:p.baseColor??'#b8bcc2',metalness:Number(p.metallic??0),roughness:Number(p.roughness??0.6),opacity:Number(p.opacity??1),transparent:Number(p.opacity??1)<1});}
   geometryFor(object){if(object.type==='primitive.box'){const s=object.data.size;return new THREE.BoxGeometry(s.x,s.y,s.z);}if(object.type==='primitive.sphere')return new THREE.SphereGeometry(object.data.radius,object.data.segments??32,20);if(object.type==='primitive.cylinder')return new THREE.CylinderGeometry(object.data.radius,object.data.radius,object.data.height,object.data.segments??32);return null;}
