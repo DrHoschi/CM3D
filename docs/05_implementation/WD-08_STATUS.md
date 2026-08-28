@@ -1,7 +1,7 @@
 # WD-08 – 2D-Skizzenbasis
 
 **Stand:** 2026-08-28  
-**Status:** WD-08A PASS / FROZEN  
+**Status:** WD-08 COMPLETE / PASS / FROZEN  
 **Voraussetzung:** WD-07 – PASS / FROZEN
 
 ## V1-Scope
@@ -12,94 +12,68 @@ WD-08 umfasst im V1-Pflichtkern:
 - Linien
 - Rechteck / Polygon
 
-Nicht Bestandteil des aktuellen V1-Blocks sind Kreis/Bogen und Profile. Extrude folgt separat in WD-09.
+Nicht Bestandteil des V1-Pflichtkerns sind Kreis/Bogen und Profile. Extrude folgt separat in WD-09.
 
 ## WD-08A – Sketch Plane & Linienbasis
 
-### WD-08A1 – Sketch-Datenmodell & Store-Core
+WD-08A ist **PASS / FROZEN** und wurde nach `main` übernommen.
 
-Core-Check: PASS.
+Bestätigt sind persistente `sketch`-Scene-Objekte, stabile `pointId`/`lineId`, Linienerzeugung per Pointer/Tap, Undo/Redo, Speichern/Laden, mehrere Skizzen pro Projekt und der gehärtete Safari-Quota-Pfad.
 
-Implementiert auf `feature/wd-08a-sketch-line`:
+## WD-08B – Rechteck / Polygon
 
-- persistentes Scene-Objekt `sketch`
-- definierte lokale Skizzenebene `localXY`
-- normale Objekt-Transforms bestimmen die Lage der Skizze im 3D-Weltraum
-- persistente Punkt-Map mit stabilen `pointId`
-- persistente Linien-Map mit stabilen `lineId` und Punktreferenzen
-- Store-Operationen zum Erzeugen einer Skizze, einzelner Punkte, Linien und vollständiger Liniensegmente
-- Undo/Redo über die bestehende Snapshot-Historie
-- Speichern/Laden über das bestehende Projektmodell
-- Validierung für Ebene, Punktkoordinaten, IDs und Linienreferenzen
-- keine Schema-Migration; `schemaVersion` bleibt `0.1.0`
+Implementiert auf `feature/wd-08b-rectangle-polygon`:
 
-### WD-08A2 – Viewport-Eingabe & sichtbare Linien
+- klarer Bedienpfad `Skizzenebene → Neue Skizze → Werkzeug`.
+- auswählbare Skizzenebenen `Front`, `Top`, `Side`.
+- `Linie`, `Rechteck` und `Polygon` arbeiten ausschließlich innerhalb einer aktiven Skizze.
+- `Rechteck`: zwei gegenüberliegende Eckpunkte erzeugen atomar vier gemeinsame Eckpunkte und vier geschlossene Linien.
+- `Polygon`: mehrere Punkte werden als Vorschau gesammelt und mit `Polygon schließen` atomar als geschlossene Linienkette gespeichert.
+- Werkzeugwechsel verwirft unvollständige Polygonentwürfe.
+- alle Werkzeuge verwenden dasselbe persistente Sketch-Datenmodell.
+- Undo/Redo und Speichern/Laden verwenden den bestehenden Projektpfad.
+- keine Schema-Migration; `schemaVersion` bleibt `0.1.0`.
 
-Implementiert und auf iPad Safari bestätigt:
+## Gerätetest WD-08B
 
-- Toolbar-Befehl `Skizze / Linie`
-- automatische Erzeugung eines persistenten `sketch`-Objekts, wenn keine aktive Skizze vorhanden ist
-- ausgewählte Skizze kann weiterverwendet werden
-- lokale `XY`-Skizzenebene als objektgebundenes Raster
-- erster Tap setzt Startpunkt, zweiter Tap erzeugt ein persistentes Liniensegment
-- temporäre Linienvorschau zwischen erstem und zweitem Punkt
-- persistierte Linien werden beim Rebuild aus den Sketch-Daten aufgebaut
-- TransformControls sind während der Linieneingabe abgekoppelt
-- Modus wird über `Linie beenden` beendet
+Gerätetest am 2026-08-28 auf iPad / Safari erfolgreich abgeschlossen.
 
-## Speicherblocker und Nachtest
+Bestätigt wurden:
 
-Während des Gerätetests trat auf Safari zunächst `The quota has been exceeded.` auf. Ursache war der begrenzte Browser-`localStorage`, nicht die Sketch-Validierung. Der Speicherpfad wurde gehärtet und Projektstände werden kompakter geschrieben.
+- neue Skizze auf gewählter Front-/Top-/Side-Ebene.
+- Linienerzeugung funktioniert weiterhin.
+- Rechtecke lassen sich erzeugen und bleiben geschlossen.
+- Polygone lassen sich mit mehreren Punkten erzeugen und schließen.
+- mehrere Skizzen und mehrere Formen im selben Projekt funktionieren.
+- Undo/Redo für Rechteck und Polygon funktioniert.
+- Speichern und Laden erhält die Sketch-Geometrie.
+- bestehende Primitive und die bisherigen Viewport-/Transformfunktionen bleiben nutzbar.
 
-Nach Bereinigung alter lokaler Teststände auf iPad Safari erfolgreich geprüft:
+**Freigabe Projektleitung:** `WD-08B PASS` am 2026-08-28.
 
-- vorhandenes Projekt + zweite Skizze + Speichern: PASS
-- neues Projekt + Skizze + Speichern: PASS
-- gespeichertes neues Projekt erneut laden: PASS
-- Skizze und Linien bleiben nach Laden sichtbar: PASS
+## Verbindliche Follow-ups
 
-Eine echte dateibasierte Projekt-Sicherung bleibt als separate spätere Aufgabe vorgemerkt; `localStorage` ist nicht als endgültiges Langzeit-Projektarchiv vorgesehen.
+Diese Punkte bleiben bewusst außerhalb von WD-08:
 
-## Gerätetest WD-08A2
-
-Bestätigt:
-
-1. `Skizze / Linie` erzeugt eine neue Skizze und aktiviert den Zeichenmodus.
-2. Die lokale Sketch-Ebene ist sichtbar.
-3. Linien können per Tap erzeugt werden.
-4. Mehrere Linien funktionieren.
-5. Undo/Redo funktioniert.
-6. Speichern und Laden erhält Skizze und Linien.
-7. Mehrere Skizzen in einem Projekt sind speicherbar.
-8. Neues Projekt mit neuer Skizze ist speicherbar und wieder ladbar.
-9. Bestehende Primitive, Hierarchie und Ansichten bleiben nutzbar.
-
-**Freigabe Projektleitung:** `WD-08A PASS` am 2026-08-28.
-
-## Verbindliche Follow-ups aus dem Gerätetest
-
-Diese Punkte erweitern WD-08A nicht rückwirkend, müssen aber in den folgenden Blöcken berücksichtigt werden:
-
-- **Sketch Plane Selection:** Skizzen dürfen langfristig nicht auf Front/localXY beschränkt bleiben. Für die Modellierung müssen definierte Ebenen für Front, Top und Side auswählbar sein; später zusätzlich frei transformierbare/objektbezogene Ebenen.
-- **Blueprint-/Referenz-Unterlage:** Für Skizzen soll später ein Bild als Hintergrund-/Referenzebene importiert, positioniert, skaliert und zum Nachzeichnen verwendet werden können. PDF-Unterlagen sollen ebenfalls als mögliche Referenzquelle geprüft werden. Die genaue Import-/Rasterstrategie wird separat festgelegt und nicht stillschweigend in WD-08B gezogen.
-- **Objektbaum:** Gruppen und Baugruppen müssen auf- und zuklappbar werden; das betrifft nur die Darstellung, nicht die Projektdaten.
-- **Toolbar/Arbeitsmodi:** Die obere Werkzeugleiste soll kompakter und modusabhängig werden. Je nach Arbeitsmodus sollen nur relevante Befehle sichtbar sein.
-- **Smartphone-Layout:** Inspector und Toolbar dürfen zentrale Funktionen nicht verdecken. Smartphone bleibt sekundär; Tablet/Desktop ist der primäre Zielbereich.
-- **Feste Ansichten / Raster:** Für Front und Side ist eine passende Rasterdarstellung weiterhin als Viewport-Follow-up vorgemerkt.
+- frei transformierbare bzw. objektbezogene Sketch-Ebenen zusätzlich zu Front/Top/Side.
+- Blueprint-/Referenz-Unterlage: Bild als positionier-/skalierbare Referenzebene; PDF als mögliche Referenzquelle prüfen.
+- Objektbaum: Gruppen und Baugruppen auf- und zuklappbar.
+- Toolbar/Arbeitsmodi: kompaktere, modusabhängige Werkzeugleiste.
+- Smartphone-Layout: Kernbedienung darf nicht durch Inspector/Toolbar verdeckt werden.
+- feste Ansichten / Raster: passende Rasterdarstellung für Front und Side weiter verfeinern.
+- echte dateibasierte Projekt-Sicherung statt `localStorage` als Langzeitarchiv.
 
 ## Abgrenzung
 
 Noch nicht enthalten:
 
-- Rechteck / Polygon (WD-08B)
 - Kreis / Bogen
 - Profile / Profil-Erkennung
 - Constraints
-- Extrude (WD-09)
+- Extrude
 - automatische Flächenerkennung
 - Blueprint-Bild/PDF-Import
-- vollständige Sketch-Plane-Auswahl
 
-## Exit WD-08A
+## Exit WD-08
 
-Erfüllt. WD-08A ist **PASS / FROZEN** und darf kontrolliert nach `main` übernommen werden. Danach beginnt WD-08B – Rechteck / Polygon auf einem neuen Arbeitsbranch.
+Erfüllt. WD-08A und WD-08B sind **PASS / FROZEN**. Der V1-Pflichtkern von WD-08 ist abgeschlossen und darf nach `main` übernommen werden. Danach beginnt **WD-09 – Extrude-Basis** auf einem neuen Arbeitsbranch.
