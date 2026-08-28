@@ -12,4 +12,13 @@ for (const button of document.querySelectorAll('[data-fixed-view]')) {
   button.addEventListener('click', () => runtime.setFixedView(button.dataset.fixedView));
 }
 
+const sketchLineButton = document.querySelector('#sketch-line');
+sketchLineButton?.addEventListener('click', () => runtime.toggleSketchLineInput());
+store.subscribe(event => {
+  if (event.type === 'sketchInputChanged' && sketchLineButton) {
+    sketchLineButton.classList.toggle('active', event.enabled);
+    sketchLineButton.textContent = event.enabled ? 'Linie beenden' : 'Skizze / Linie';
+  }
+});
+
 window.cm3d = { store, runtime };
