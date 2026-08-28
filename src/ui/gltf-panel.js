@@ -15,17 +15,17 @@ export function installGltfPanel(store, interchange) {
     <div class="menu-separator"></div>
     <div class="menu-inline column"><span>3D-Modell importieren</span><small class="muted">GLB oder GLTF; bei GLTF Abhängigkeiten gemeinsam auswählen</small></div>
     <button id="import-gltf-model" class="menu-item">
-      <svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#import"></use></svg>
+      <svg class="cm-icon"><use href="#import"></use></svg>
       <span>GLB / GLTF importieren</span>
     </button>
     <input id="gltf-model-input" type="file" accept=".glb,.gltf,.bin,.png,.jpg,.jpeg,.webp,.ktx2,model/gltf-binary,model/gltf+json" multiple hidden/>
     <div class="menu-separator"></div>
     <div class="menu-inline column"><span>3D-Modell exportieren</span><small class="muted">WD-11B: Ganze Szene</small></div>
     <button id="start-gltf-export" class="menu-item">
-      <svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#export-json"></use></svg>
+      <svg class="cm-icon"><use href="#export-json"></use></svg>
       <span>Ganze Szene als GLB / GLTF …</span>
     </button>
-    <button class="menu-item" disabled><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#export-json"></use></svg><span>Auswahl / Teilprojekt <em>folgt separat</em></span></button>
+    <button class="menu-item" disabled><svg class="cm-icon"><use href="#export-json"></use></svg><span>Auswahl / Teilprojekt <em>folgt separat</em></span></button>
   `;
   while (menuBlock.firstChild) fileMenu.appendChild(menuBlock.firstChild);
 
@@ -33,7 +33,7 @@ export function installGltfPanel(store, interchange) {
   exportPanel.id = 'tool-inspector-export';
   exportPanel.hidden = true;
   exportPanel.innerHTML = `
-    <div class="tool-inspector-title"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#export-json"></use></svg><strong>Exportieren</strong></div>
+    <div class="tool-inspector-title"><svg class="cm-icon"><use href="#export-json"></use></svg><strong>Exportieren</strong></div>
     <label>Exportieren <output>Ganze Szene</output></label>
     <label>Format <select id="gltf-export-format"><option value="glb" selected>GLB</option><option value="gltf">GLTF</option></select></label>
     <label>Dateiname <input id="gltf-export-name" type="text" autocomplete="off"/></label>
