@@ -1,15 +1,109 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>CyberMotion 3D – WD-11A</title><link rel="stylesheet" href="./styles.css"/><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script></head>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>CyberMotion 3D – UI-01</title>
+  <link rel="stylesheet" href="./styles.css"/>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+</head>
 <body>
-<header class="topbar"><div class="brand">CyberMotion 3D <span>WD-11A</span></div><div class="actions">
-<button id="new-project">Neues Projekt</button><button id="add-box">Würfel</button><button id="add-sphere">Kugel</button><button id="add-cylinder">Zylinder</button><label>Skizzenebene <select id="sketch-plane"><option value="front" selected>Front</option><option value="top">Top</option><option value="side">Side</option></select></label><button id="new-sketch">Neue Skizze</button><button id="sketch-line">Linie</button><button id="sketch-rectangle">Rechteck</button><button id="sketch-polygon">Polygon</button><label>Extrude <input id="extrude-depth" class="tiny" type="number" min="0.000000001" step="0.1" value="1"/> m</label><button id="extrude-sketch">Extrudieren</button><button id="group-selected">Gruppe</button><button id="assembly-selected">Baugruppe</button><button id="ungroup-selected">Auflösen</button><button id="duplicate-object">Duplizieren</button><button id="delete-object">Löschen</button><button id="undo">Undo</button><button id="redo">Redo</button><button id="tool-move" class="active">Move</button><button id="tool-rotate">Rotate</button><button id="tool-scale">Scale</button><button id="space-world" class="active">WORLD</button><button id="space-local">LOCAL</button><label>Einheit <select id="display-unit"><option value="mm">mm</option><option value="cm">cm</option><option value="m" selected>m</option><option value="km">km</option></select></label><button id="focus-selection">Fit / Fokus</button><button data-fixed-view="top">Top</button><button data-fixed-view="front">Front</button><button data-fixed-view="side">Side</button><button data-fixed-view="perspective">Perspektive</button><button data-fixed-view="isometric">Isometrie</button><label class="toolbar-check"><input id="snap-enabled" type="checkbox"/> Snap</label><label>Δ <input id="snap-move" class="tiny" type="number" min="0.000000001" step="0.01" value="0.1"/> <span id="snap-unit">m</span></label><label>Δ° <input id="snap-rotate" class="tiny" type="number" min="0.001" step="1" value="15"/></label><label>ΔS <input id="snap-scale" class="tiny" type="number" min="0.001" step="0.1" value="0.1"/></label><select id="project-select"><option value="">Gespeichertes Projekt wählen</option></select><button id="save-project">Speichern</button><button id="load-project">Laden</button><button id="delete-project">Speicher löschen</button><button id="export-project-file">Datei exportieren</button><button id="import-project-file">Datei importieren</button><input id="project-file-input" type="file" accept=".json,.cm3d.json,application/json" hidden/>
-</div></header>
-<main class="workspace"><aside class="panel tree-panel"><h2>Objektbaum</h2><div class="muted selection-hint">Häkchen = Gruppenauswahl</div><div id="object-tree" class="object-tree"></div></aside><section class="viewport-panel"><div id="viewport" class="viewport"></div><div id="status" class="status">Bereit · Einheit: m</div></section><aside class="panel inspector-panel"><h2>Inspector</h2><div id="inspector-empty" class="muted">Kein Objekt ausgewählt</div><form id="inspector" hidden>
-<label>Name <input id="object-name" type="text"/></label><div class="id-box"><strong>Typ</strong><code id="object-type"></code></div>
-<label>Parent <select id="parent-select"><option value="">ROOT</option></select></label><button id="apply-parent" type="button">Parent übernehmen</button>
-<fieldset id="geometry-fields"><legend id="geometry-legend">Abmessungen (m)</legend><label id="dim-x-row">X <input id="dim-x" type="number" step="0.001" min="0.000000001"/></label><label id="dim-y-row">Y <input id="dim-y" type="number" step="0.001" min="0.000000001"/></label><label id="dim-z-row">Z <input id="dim-z" type="number" step="0.001" min="0.000000001"/></label><label id="radius-row">Radius <input id="radius" type="number" step="0.001" min="0.000000001"/></label><label id="height-row">Höhe <input id="height" type="number" step="0.001" min="0.000000001"/></label></fieldset>
-<fieldset><legend id="pivot-legend">Pivot / Origin (m)</legend><label>X <input id="pivot-x" type="number" step="0.001"/></label><label>Y <input id="pivot-y" type="number" step="0.001"/></label><label>Z <input id="pivot-z" type="number" step="0.001"/></label><div class="button-row"><button id="pivot-center" type="button">Zentrum</button><button id="pivot-bottom" type="button">Unterkante</button></div></fieldset>
-<fieldset><legend id="position-legend">Position WORLD (m)</legend><label>X <input id="pos-x" type="number" step="0.1"/></label><label>Y <input id="pos-y" type="number" step="0.1"/></label><label>Z <input id="pos-z" type="number" step="0.1"/></label></fieldset>
-<fieldset><legend id="rotation-legend">Rotation WORLD (°)</legend><label>X <input id="rot-x" type="number" step="15"/></label><label>Y <input id="rot-y" type="number" step="15"/></label><label>Z <input id="rot-z" type="number" step="15"/></label></fieldset>
-<fieldset><legend>Scale</legend><label>X <input id="scale-x" type="number" step="0.1"/></label><label>Y <input id="scale-y" type="number" step="0.1"/></label><label>Z <input id="scale-z" type="number" step="0.1"/></label></fieldset>
-<div class="id-box"><strong>objectId</strong><code id="object-id"></code></div></form></aside></main><script type="module" src="./src/main.js"></script></body></html>
+<header class="app-header">
+  <div class="topbar">
+    <div class="brand"><span class="icon-tile brand-icon"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#app-logo"></use></svg></span><span>CyberMotion 3D</span><small>UI-01</small></div>
+    <nav class="menu-strip" aria-label="Hauptmenü">
+      <div class="menu-group"><button class="menu-button" data-menu-toggle="new-menu"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#new-project"></use></svg></span><span>Neu</span><span class="chevron">▾</span></button><div id="new-menu" class="menu-popover" hidden>
+        <button id="new-project" class="menu-item"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#new-project"></use></svg><span>Neues Projekt</span></button>
+        <button id="new-object-mode" class="menu-item" data-set-context="object"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#add-cube"></use></svg><span>Neues Objekt</span></button>
+        <label class="menu-inline"><span><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#add-profile"></use></svg>Skizzenebene</span><select id="sketch-plane"><option value="front" selected>Front</option><option value="top">Top</option><option value="side">Side</option></select></label>
+        <button id="new-sketch" class="menu-item" data-set-context="sketch"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#add-profile"></use></svg><span>Neue Skizze</span></button>
+        <button class="menu-item" disabled><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#group"></use></svg><span>Neue Gruppe <em>über Szene</em></span></button>
+        <button class="menu-item" disabled><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#assembly"></use></svg><span>Neue Baugruppe <em>über Szene</em></span></button>
+      </div></div>
+      <div class="menu-group"><button class="menu-button" data-menu-toggle="file-menu"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#folder"></use></svg></span><span>Datei</span><span class="chevron">▾</span></button><div id="file-menu" class="menu-popover wide" hidden>
+        <label class="menu-inline column"><span>Lokaler Projektstand</span><select id="project-select"><option value="">Gespeichertes Projekt wählen</option></select></label>
+        <button id="save-project" class="menu-item"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#save-project"></use></svg><span>Speichern</span></button>
+        <button id="load-project" class="menu-item"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#open-project"></use></svg><span>Laden</span></button>
+        <button id="delete-project" class="menu-item danger"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#delete"></use></svg><span>Lokalen Speicherstand löschen</span></button>
+        <div class="menu-separator"></div>
+        <button id="export-project-file" class="menu-item"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#export-json"></use></svg><span>CM3D-Projektdatei exportieren</span></button>
+        <button id="import-project-file" class="menu-item"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#import"></use></svg><span>CM3D-Projektdatei importieren</span></button>
+        <input id="project-file-input" type="file" accept=".json,.cm3d.json,application/json" hidden/>
+      </div></div>
+      <div class="menu-group"><button class="menu-button" data-menu-toggle="edit-menu"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#properties"></use></svg></span><span>Bearbeiten</span><span class="chevron">▾</span></button><div id="edit-menu" class="menu-popover" hidden>
+        <button id="undo" class="menu-item"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#undo"></use></svg><span>Rückgängig</span></button>
+        <button id="redo" class="menu-item"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#redo"></use></svg><span>Wiederholen</span></button>
+        <div class="menu-separator"></div>
+        <button id="duplicate-object" class="menu-item"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#duplicate"></use></svg><span>Duplizieren</span></button>
+        <button id="delete-object" class="menu-item danger"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#delete"></use></svg><span>Löschen</span></button>
+      </div></div>
+      <button class="menu-button category-button" data-context-target="view"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#view-perspective"></use></svg></span><span>Ansicht</span></button>
+      <button class="menu-button category-button" data-context-target="transform"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#move"></use></svg></span><span>Transform</span></button>
+      <button class="menu-button category-button" data-context-target="modeling"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#extrude"></use></svg></span><span>Modellieren</span></button>
+      <button class="menu-button category-button" data-context-target="scene"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#scene"></use></svg></span><span>Szene</span></button>
+      <button class="menu-button category-button" data-context-target="material"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#material"></use></svg></span><span>Material</span></button>
+      <button class="menu-button category-button" data-context-target="tools"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#measure"></use></svg></span><span>Werkzeuge</span></button>
+    </nav>
+  </div>
+  <div class="contextbar">
+    <div class="context-caption"><strong id="context-title">Objekt</strong><span id="context-subtitle">Erstellen und auswählen</span></div>
+    <div class="context-tools">
+      <div class="context-set" data-context="object">
+        <button id="add-box" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#add-cube"></use></svg></span><span>Würfel</span></button>
+        <button id="add-sphere" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#add-sphere"></use></svg></span><span>Kugel</span></button>
+        <button id="add-cylinder" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#add-cylinder"></use></svg></span><span>Zylinder</span></button>
+      </div>
+      <div class="context-set" data-context="sketch" hidden>
+        <button id="sketch-line" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#add-profile"></use></svg></span><span>Linie</span></button>
+        <button id="sketch-rectangle" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#add-profile"></use></svg></span><span>Rechteck</span></button>
+        <button id="sketch-polygon" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#add-profile"></use></svg></span><span>Polygon</span></button>
+        <span class="context-divider"></span><button id="start-extrude" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#extrude"></use></svg></span><span>Extrudieren</span></button>
+      </div>
+      <div class="context-set" data-context="view" hidden>
+        <button id="focus-selection" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#view-fit"></use></svg></span><span>Fit / Fokus</span></button>
+        <button data-fixed-view="top" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#view-top"></use></svg></span><span>Top</span></button>
+        <button data-fixed-view="front" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#view-front"></use></svg></span><span>Front</span></button>
+        <button data-fixed-view="side" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#view-right"></use></svg></span><span>Side</span></button>
+        <button data-fixed-view="perspective" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#view-perspective"></use></svg></span><span>Perspektive</span></button>
+        <button data-fixed-view="isometric" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#view-isometric"></use></svg></span><span>Isometrie</span></button>
+      </div>
+      <div class="context-set" data-context="transform" hidden>
+        <button id="tool-move" class="tool-button active"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#move"></use></svg></span><span>Move</span></button>
+        <button id="tool-rotate" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#rotate"></use></svg></span><span>Rotate</span></button>
+        <button id="tool-scale" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#scale"></use></svg></span><span>Scale</span></button>
+        <span class="context-divider"></span><button id="space-world" class="compact-button active">WORLD</button><button id="space-local" class="compact-button">LOCAL</button>
+        <label class="context-check"><input id="snap-enabled" type="checkbox"/><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#snap"></use></svg><span>Snap</span></label>
+        <label class="compact-field">Δ <input id="snap-move" type="number" min="0.000000001" step="0.01" value="0.1"/><span id="snap-unit">m</span></label>
+        <label class="compact-field">Δ° <input id="snap-rotate" type="number" min="0.001" step="1" value="15"/></label>
+        <label class="compact-field">ΔS <input id="snap-scale" type="number" min="0.001" step="0.1" value="0.1"/></label>
+      </div>
+      <div class="context-set" data-context="modeling" hidden><button id="modeling-extrude" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#extrude"></use></svg></span><span>Extrudieren</span></button><span class="context-note">Weitere Modellierwerkzeuge folgen in eigenen WD-Blöcken.</span></div>
+      <div class="context-set" data-context="scene" hidden>
+        <button id="group-selected" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#group"></use></svg></span><span>Gruppe</span></button>
+        <button id="assembly-selected" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#assembly"></use></svg></span><span>Baugruppe</span></button>
+        <button id="ungroup-selected" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#ungroup"></use></svg></span><span>Auflösen</span></button>
+        <span class="context-divider"></span><button class="tool-button" data-proxy-click="duplicate-object"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#duplicate"></use></svg></span><span>Duplizieren</span></button><button class="tool-button danger" data-proxy-click="delete-object"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#delete"></use></svg></span><span>Löschen</span></button>
+      </div>
+      <div class="context-set" data-context="material" hidden><button id="show-material-inspector" class="tool-button"><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#material"></use></svg></span><span>Material im Inspector</span></button><span class="context-note">Farbe und Materialzuweisung werden rechts eingestellt.</span></div>
+      <div class="context-set" data-context="tools" hidden><label class="tool-select"><span>Einheit</span><select id="display-unit"><option value="mm">mm</option><option value="cm">cm</option><option value="m" selected>m</option><option value="km">km</option></select></label><button class="tool-button" disabled><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#measure"></use></svg></span><span>Messen</span></button><button class="tool-button" disabled><span class="icon-tile"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#library"></use></svg></span><span>Bibliothek</span></button></div>
+    </div>
+  </div>
+</header>
+<main class="workspace">
+  <aside class="panel tree-panel"><h2><svg class="cm-icon panel-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#object-tree"></use></svg>Objektbaum</h2><div class="muted selection-hint">Häkchen = Gruppenauswahl</div><div id="object-tree" class="object-tree"></div></aside>
+  <section class="viewport-panel"><div id="viewport" class="viewport"></div><div id="status" class="status">Bereit · Einheit: m</div></section>
+  <aside class="panel inspector-panel"><h2><svg class="cm-icon panel-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#properties"></use></svg>Inspector</h2>
+    <section id="tool-inspector" class="tool-inspector" hidden><div id="tool-inspector-extrude" hidden><div class="tool-inspector-title"><svg class="cm-icon"><use href="./design/icons/cm3d-ui-icons-v3.svg#extrude"></use></svg><strong>Extrudieren</strong></div><label>Quelle <output id="extrude-source">–</output></label><label>Tiefe <span class="inline-value"><input id="extrude-depth" type="number" min="0.000000001" step="0.1" value="1"/><span>m</span></span></label><div class="button-row"><button id="cancel-extrude" type="button">Abbrechen</button><button id="extrude-sketch" class="primary" type="button">Anwenden</button></div></div></section>
+    <div id="inspector-empty" class="muted">Kein Objekt ausgewählt</div><form id="inspector" hidden>
+      <label>Name <input id="object-name" type="text"/></label><div class="id-box"><strong>Typ</strong><code id="object-type"></code></div><label>Parent <select id="parent-select"><option value="">ROOT</option></select></label><button id="apply-parent" type="button">Parent übernehmen</button>
+      <fieldset id="geometry-fields"><legend id="geometry-legend">Abmessungen (m)</legend><label id="dim-x-row">X <input id="dim-x" type="number" step="0.001" min="0.000000001"/></label><label id="dim-y-row">Y <input id="dim-y" type="number" step="0.001" min="0.000000001"/></label><label id="dim-z-row">Z <input id="dim-z" type="number" step="0.001" min="0.000000001"/></label><label id="radius-row">Radius <input id="radius" type="number" step="0.001" min="0.000000001"/></label><label id="height-row">Höhe <input id="height" type="number" step="0.001" min="0.000000001"/></label></fieldset>
+      <fieldset><legend id="pivot-legend">Pivot / Origin (m)</legend><label>X <input id="pivot-x" type="number" step="0.001"/></label><label>Y <input id="pivot-y" type="number" step="0.001"/></label><label>Z <input id="pivot-z" type="number" step="0.001"/></label><div class="button-row"><button id="pivot-center" type="button">Zentrum</button><button id="pivot-bottom" type="button">Unterkante</button></div></fieldset>
+      <fieldset><legend id="position-legend">Position WORLD (m)</legend><label>X <input id="pos-x" type="number" step="0.1"/></label><label>Y <input id="pos-y" type="number" step="0.1"/></label><label>Z <input id="pos-z" type="number" step="0.1"/></label></fieldset>
+      <fieldset><legend id="rotation-legend">Rotation WORLD (°)</legend><label>X <input id="rot-x" type="number" step="15"/></label><label>Y <input id="rot-y" type="number" step="15"/></label><label>Z <input id="rot-z" type="number" step="15"/></label></fieldset>
+      <fieldset><legend>Scale</legend><label>X <input id="scale-x" type="number" step="0.1"/></label><label>Y <input id="scale-y" type="number" step="0.1"/></label><label>Z <input id="scale-z" type="number" step="0.1"/></label></fieldset><div class="id-box"><strong>objectId</strong><code id="object-id"></code></div>
+    </form>
+  </aside>
+</main>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
