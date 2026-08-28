@@ -138,6 +138,26 @@ export function installCommandSurface(store){
     }
   };
 
+  // UI-01 owns the Bearbeiten menu. Bind history commands here as real menu
+  // commands instead of relying on the former toolbar wiring. This also keeps
+  // the disabled state in sync immediately on iPad/Safari after a transform.
+  const undoButton=q('#undo');
+  const redoButton=q('#redo');
+  const syncHistory=()=>{
+    if(undoButton)undoButton.disabled=store.undoStack.length===0;
+    if(redoButton)redoButton.disabled=store.redoStack.length===0;
+  };
+  const runHistory=direction=>{
+    const changed=direction==='undo'?store.undo():store.redo();
+    if(changed){
+      store.emit('uiStatusRequested',{message:direction==='undo'?'Rückgängig.':'Wiederholt.'});
+      closeMenus();
+    }
+    syncHistory();
+  };
+  undoButton?.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();runHistory('undo');});
+  redoButton?.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();runHistory('redo');});
+
   document.addEventListener('click',event=>{
     if(!event.target.closest('.menu-group'))closeMenus();
   });
@@ -171,6 +191,7 @@ export function installCommandSurface(store){
   q('#new-sketch')?.addEventListener('click',()=>setTimeout(()=>setContext('sketch'),0));
 
   store.subscribe(event=>{
+    if(event.type==='historyChanged')syncHistory();
     if(event.type!=='selectionChanged'&&event.type!=='projectChanged'&&event.type!=='projectLoaded')return;
 
     const object=store.getObject(store.selection.activeObjectId);
@@ -191,4 +212,5 @@ export function installCommandSurface(store){
 
   setContext(null);
   syncProxies();
+  syncHistory();
 }
