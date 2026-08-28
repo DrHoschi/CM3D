@@ -5,7 +5,11 @@ import { AppUI } from './ui/app.js';
 const store = new AppStore();
 const viewport = document.querySelector('#viewport');
 
-new ThreeRuntime(viewport, store);
+const runtime = new ThreeRuntime(viewport, store);
 new AppUI(store);
 
-window.cm3d = { store };
+for (const button of document.querySelectorAll('[data-fixed-view]')) {
+  button.addEventListener('click', () => runtime.setFixedView(button.dataset.fixedView));
+}
+
+window.cm3d = { store, runtime };

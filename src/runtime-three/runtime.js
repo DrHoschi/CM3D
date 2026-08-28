@@ -2,6 +2,14 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 
+const FIXED_VIEWS={
+  perspective:{direction:new THREE.Vector3(4,3,6).normalize(),up:new THREE.Vector3(0,1,0)},
+  isometric:{direction:new THREE.Vector3(1,1,1).normalize(),up:new THREE.Vector3(0,1,0)},
+  top:{direction:new THREE.Vector3(0,1,0),up:new THREE.Vector3(0,0,-1)},
+  front:{direction:new THREE.Vector3(0,0,1),up:new THREE.Vector3(0,1,0)},
+  side:{direction:new THREE.Vector3(1,0,0),up:new THREE.Vector3(0,1,0)}
+};
+
 export class ThreeRuntime {
   constructor(container,store){
     this.container=container;this.store=store;this.objectMap=new Map();this.pickables=[];this.dragBefore=null;this.lastGridStep=null;
@@ -27,6 +35,7 @@ export class ThreeRuntime {
     });
     this.resize();this.rebuild();this.animate();
   }
+  setFixedView(name){const preset=FIXED_VIEWS[name];if(!preset)return false;const target=this.orbit.target.clone();const distance=Math.max(this.camera.position.distanceTo(target),0.000001);this.camera.up.copy(preset.up);this.camera.position.copy(target).addScaledVector(preset.direction,distance);this.camera.lookAt(target);this.updateCameraRange();this.updateGrid();this.orbit.update();this.store.emit('fixedViewCompleted',{view:name});return true;}
   applyToolSettings(){this.transform.setMode(this.store.toolMode);this.transform.setSpace(this.store.coordinateSpace);const s=this.store.snap;this.transform.setTranslationSnap(s.enabled?s.translate:null);this.transform.setRotationSnap(s.enabled?THREE.MathUtils.degToRad(s.rotateDeg):null);this.transform.setScaleSnap(s.enabled?s.scale:null);}
   materialFor(object){const id=object.materialIds?.[0],d=id?this.store.project.materials[id]:null,p=d?.properties??{};return new THREE.MeshStandardMaterial({color:p.baseColor??'#b8bcc2',metalness:Number(p.metallic??0),roughness:Number(p.roughness??0.6),opacity:Number(p.opacity??1),transparent:Number(p.opacity??1)<1});}
   geometryFor(object){if(object.type==='primitive.box'){const s=object.data.size;return new THREE.BoxGeometry(s.x,s.y,s.z);}if(object.type==='primitive.sphere')return new THREE.SphereGeometry(object.data.radius,object.data.segments??32,20);if(object.type==='primitive.cylinder')return new THREE.CylinderGeometry(object.data.radius,object.data.radius,object.data.height,object.data.segments??32);return null;}
