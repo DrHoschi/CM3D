@@ -1,7 +1,7 @@
 # WD-08 – 2D-Skizzenbasis
 
 **Stand:** 2026-08-28  
-**Status:** WD-08A1 CORE CHECK PASS – WD-08A2 READY  
+**Status:** WD-08A2 IMPLEMENTED – DEVICE TEST REQUIRED  
 **Voraussetzung:** WD-07 – PASS / FROZEN
 
 ## V1-Scope
@@ -18,9 +18,11 @@ Nicht Bestandteil des aktuellen V1-Blocks sind Kreis/Bogen und Profile. Extrude 
 
 ### WD-08A1 – Sketch-Datenmodell & Store-Core
 
+Core-Check: PASS.
+
 Implementiert auf `feature/wd-08a-sketch-line`:
 
-- neues persistentes Scene-Objekt `sketch`
+- persistentes Scene-Objekt `sketch`
 - definierte lokale Skizzenebene `localXY`
 - normale Objekt-Transforms bestimmen die Lage der Skizze im 3D-Weltraum
 - persistente Punkt-Map mit stabilen `pointId`
@@ -31,25 +33,21 @@ Implementiert auf `feature/wd-08a-sketch-line`:
 - Validierung für Ebene, Punktkoordinaten, IDs und Linienreferenzen
 - keine Schema-Migration; `schemaVersion` bleibt `0.1.0`
 
-### WD-08A1 – Core-Check
+### WD-08A2 – Viewport-Eingabe & sichtbare Linien
 
-Der Datenpfad wurde am 2026-08-28 gegen die aktuelle Branch-Implementierung geprüft:
+Implementiert, Gerätetest ausstehend:
 
-1. **Sketch erzeugen – PASS:** `addSketch()` verwendet den normalen `addObject()`-Pfad. Die Skizze landet in `scene.objects`, wird Root-Objekt und erhält eine stabile `objectId`.
-2. **Punkte erzeugen – PASS:** `addSketchPoint()` akzeptiert nur endliche X/Y-Werte, erzeugt stabile `pointId` und schreibt in die persistente Punkt-Map.
-3. **Linie erzeugen – PASS:** `addSketchLine()` verlangt zwei vorhandene, unterschiedliche Punkt-IDs. `addSketchSegment()` erzeugt zwei Punkte und eine Linie atomar in einem Historieneintrag.
-4. **Validierung – PASS:** `validateProject()` prüft `localXY`, Maps, Punktwerte, Schlüssel/IDs, Punktreferenzen und identische Start-/Endpunkt-IDs.
-5. **Undo – PASS (Codepfad):** jede Sketch-Mutation erzeugt vorher einen vollständigen Projekt-Snapshot; `undo()` stellt diesen Snapshot wieder her.
-6. **Redo – PASS (Codepfad):** der nach der Mutation gespeicherte Snapshot wird durch `redo()` vollständig wiederhergestellt.
-7. **Speichern – PASS (Codepfad):** `saveProject()` validiert das vollständige Projekt und serialisiert danach das komplette Projektobjekt einschließlich `scene.objects` als JSON.
-8. **Laden – PASS (Codepfad):** `loadProject()` parst das gespeicherte JSON und validiert es erneut; Sketch-Ebene, IDs, Punkte und Linien sind Bestandteil desselben Projektobjekts und werden nicht separat rekonstruiert.
-9. **Bestandsschutz – PASS:** bestehende Primitive, Materialstruktur, Transform-/Hierarchiepfade sowie WD-06/WD-07-Datenstrukturen wurden für WD-08A1 nicht umgebaut.
-
-Hinweis: Dieser Check bestätigt den strukturellen Core-Codepfad. Eine echte interaktive Geräteprüfung der Sketch-Eingabe ist erst sinnvoll, sobald WD-08A2 die Viewport-Eingabe sichtbar verfügbar macht.
-
-### WD-08A2 – bereit, noch nicht implementiert
-
-Als nächster Teilblock folgt ausschließlich die Viewport-Eingabe und sichtbare Darstellung von Linien auf der definierten Skizzenebene. Die in WD-08A1 geprüfte Datenstruktur bleibt dafür die persistente Quelle.
+- neuer Toolbar-Befehl `Skizze / Linie`
+- ohne vorhandene aktive Skizze wird automatisch ein persistentes `sketch`-Objekt erzeugt
+- eine ausgewählte Skizze kann direkt weiterverwendet werden
+- die lokale `XY`-Skizzenebene wird als eigenes objektgebundenes Raster sichtbar dargestellt
+- die Skizzenebene folgt dem normalen Objekt-Transform und liegt damit eindeutig im 3D-Raum
+- erster Pointer-Klick/-Tap setzt den Startpunkt
+- zweiter Pointer-Klick/-Tap erzeugt über den bestehenden Store-Core ein persistentes Liniensegment
+- zwischen Start- und aktuellem Pointerpunkt wird eine temporäre Vorschau gezeigt
+- persistierte Linien werden bei jedem Rebuild aus den gespeicherten Sketch-Daten neu aufgebaut
+- während der Linieneingabe bleiben TransformControls abgekoppelt, damit Zeichnen und Objekttransform nicht kollidieren
+- Beenden des Modus erfolgt über denselben Toolbar-Befehl `Linie beenden`
 
 ## Abgrenzung
 
@@ -66,8 +64,21 @@ Noch nicht enthalten:
 
 Für `Top` ist das bestehende Weltgrid bereits passend sichtbar. Für `Front` und `Side` wurde als gewünschte spätere Verbesserung festgehalten, ebenfalls eine zur aktiven technischen Ansicht passende Rasterebene anzeigen bzw. zuschalten zu können.
 
-Diese Beobachtung wird **nicht** stillschweigend in WD-08A1 eingebaut und öffnet WD-07 nicht rückwirkend. Vor einer Umsetzung wird separat entschieden, ob das Raster ansichtsabhängig umgeschaltet wird oder ob ein Sketch-spezifisches Ebenenraster genügt.
+Diese Beobachtung wird nicht stillschweigend in WD-08A eingebaut und öffnet WD-07 nicht rückwirkend. Das in WD-08A2 eingeführte Sketch-Raster ist objektgebunden und dient ausschließlich der aktiven lokalen Skizzenebene; es ersetzt keine spätere Entscheidung über ansichtsabhängige Welt-Raster.
 
-## Exit WD-08A1
+## Gerätetest WD-08A2
 
-Erfüllt auf Ebene des strukturellen Core-Codepfads. WD-08A2 darf auf demselben Feature-Branch begonnen werden. `main` bleibt bis zum späteren Geräte-PASS unverändert.
+Vor PASS sind mindestens folgende Punkte auf iPhone/iPad Safari zu prüfen:
+
+1. `Skizze / Linie` erzeugt eine neue Skizze und aktiviert den Zeichenmodus.
+2. Die lokale Sketch-Ebene ist sichtbar.
+3. Erster Tap setzt den Startpunkt; zweiter Tap erzeugt eine sichtbare Linie.
+4. Mehrere Linien können nacheinander erzeugt werden.
+5. `Linie beenden` beendet den Zeichenmodus sauber.
+6. Undo entfernt das zuletzt erzeugte Liniensegment; Redo stellt es wieder her.
+7. Speichern und Laden erhält Skizze und Linien sichtbar und datenidentisch.
+8. Bestehende Primitive, Auswahl, Transform, feste Ansichten und Fit/Fokus bleiben funktionsfähig.
+
+## Exit WD-08A
+
+WD-08A wird erst mit explizitem Gerätetest-PASS geschlossen. Erst danach beginnt WD-08B – Rechteck / Polygon.
