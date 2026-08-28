@@ -1,7 +1,7 @@
 # WD-06 – Einheiten, Maßstab & große Welt
 
 **Stand:** 2026-08-28  
-**Status:** IMPLEMENTED – DEVICE TEST REQUIRED  
+**Status:** PASS / FROZEN  
 **Voraussetzung:** WD-05 – PASS / FROZEN
 
 ## Ziel
@@ -26,7 +26,7 @@ Die interne kanonische Längeneinheit bleibt **Meter**. Die auswählbaren Einhei
 - Kamera-Near/Far werden dynamisch aus Fokusabstand und Szenenausdehnung bestimmt.
 - Three.js-Renderer nutzt logarithmischen Depth Buffer für große Größenordnungsunterschiede.
 - OrbitControls erlauben stark erweiterte minimale und maximale Distanzen.
-- Raster skaliert automatisch in Zehnerpotenzen mit dem aktuellen Kameraabstand und folgt dem Fokusbereich.
+- Raster skaliert automatisch in Zehnerpotenzen mit dem aktuellen Kameraabstand; sein Ursprung bleibt fest auf Welt `0/0/0`.
 - Statuszeile zeigt die aktive Einheit.
 
 ## Ownership-Abgrenzung zu WD-07
@@ -76,26 +76,28 @@ Diese Themen verändern die bestehende V1-Reihenfolge nicht.
 - bestehende Objekt-IDs, Hierarchie, Reparenting, Undo/Redo und Save/Load bleiben unverändert
 - keine Schema-Migration: `settings.units.lengthDisplayUnit` war bereits vorhanden
 
-## Manueller Gerätetest
+## Gerätetest – PASS
 
-1. Neues Projekt → Würfel erzeugen.
-2. In `m` die Abmessungen `0,12 × 2,10 × 0,12` eingeben.
-3. Einheit auf `cm` umstellen: Anzeige muss `12 × 210 × 12 cm` ergeben; sichtbare Größe darf sich nicht ändern.
-4. Einheit auf `mm` umstellen: Anzeige muss `120 × 2100 × 120 mm` ergeben.
-5. Danach `km` und wieder `m` wählen: in `m` müssen wieder exakt `0,12 × 2,10 × 0,12` erscheinen.
-6. Position z. B. `1,25 m` setzen → `cm`: `125 cm`; → `mm`: `1250 mm`.
-7. Pivot-Wert in mehreren Einheiten eingeben und zurückwechseln; derselbe reale Wert muss erhalten bleiben.
-8. Snap aktivieren. In `mm` Translation-Snap `10` setzen und bewegen; danach in `cm` muss derselbe Snap als `1` erscheinen, in `m` als `0,01`.
-9. Projekt in einer anderen Einheit als `m` speichern → Browser neu laden → Projekt laden; die gespeicherte Einheit muss wieder aktiv sein.
-10. Sehr kleines Objekt einstellen, z. B. Würfel `0,0001 m` bzw. `0,1 mm`, auswählen und `Fit / Fokus` drücken; Objekt muss sichtbar und weiter orbitier-/zoombar sein.
-11. Großes Objekt bzw. große Position testen, z. B. mehrere Kilometer; `Fit / Fokus` darf Geometrie nicht durch Near/Far-Clipping abschneiden.
-12. Zwischen kleinem und großem Objekt mehrfach fokussieren; Orbit/Pan/Zoom müssen weiter funktionieren und das Raster sichtbar sinnvoll mitskalieren.
-13. Regression WD-05: WORLD/LOCAL, Gruppe/Baugruppe, Reparenting, Auflösen, Duplizieren, Undo/Redo sowie Speichern/Laden kurz erneut prüfen.
+Gerätetest am 2026-08-28 auf iPhone und iPad / Safari erfolgreich abgeschlossen.
+
+Bestätigt wurden:
+
+- neues Projekt und bestehende gespeicherte Projekte zeigen Objekte mit Position `0/0/0` wieder korrekt relativ zum festen Weltursprung des Rasters.
+- während des Tests gefundene WD-06-Regression behoben: das adaptive Raster darf seinen Maßstab ändern, aber nicht dem Orbit-/Fokusziel folgen; Rasterursprung bleibt Welt `0/0/0`.
+- Orbit-Verhalten bestätigt: die Kamera dreht um ihren aktuellen Navigationsmittelpunkt; Pan verschiebt diesen Mittelpunkt. Eine bloße Objektauswahl koppelt den Orbit-Mittelpunkt nicht automatisch an die Auswahl.
+- `Fit / Fokus` setzt den Fokus bewusst auf die ausgewählte Geometrie und funktioniert nach anschließendem Orbit/Pan sowie erneutem Fokus zuverlässig.
+- Einheitenumrechnung bestätigt: ein Würfel mit `1 m` Kantenlänge wird bei Wechsel auf `mm` als `1000 mm` angezeigt; äquivalente Größen werden bei `cm` korrekt als `100 cm` dargestellt, ohne die reale Geometriegröße zu verändern.
+- Persistenz der Anzeigeeinheit bestätigt: Projekte in `km` bzw. `m` gespeichert und nach Wechsel/Laden wieder mit der jeweils gespeicherten Einheit hergestellt.
+- großer Maßstab bestätigt: Objekt mit etwa `100 m` Ausdehnung lässt sich per `Fit / Fokus` korrekt rahmen und weiter orbitieren.
+- kleiner Maßstab bestätigt: Kugel mit etwa `100 mm` Radius/Größe und geänderter Position lässt sich per `Fit / Fokus` korrekt rahmen, zoomen und orbitieren.
+- Wechsel zwischen Größenbereichen sowie Speichern/Laden anschließend ohne festgestellte Abweichung getestet.
+
+**Ergebnis:** PASS.
 
 ## Erwartetes Ergebnis
 
-Bei erfolgreichem Gerätetest wird WD-06 auf **PASS / FROZEN** gesetzt. Erst danach wird der Branch nach `main` übernommen.
+Erreicht. WD-06 ist **PASS / FROZEN**.
 
 ## Exit-Regel
 
-WD-06 wird auf `feature/wd-06-units-large-world` getestet. Bis zum dokumentierten **PASS** bleibt `main` unverändert.
+Erfüllt. WD-06 wurde auf `feature/wd-06-units-large-world` getestet und freigegeben. Der freigegebene Branch darf jetzt kontrolliert nach `main` übernommen werden.
