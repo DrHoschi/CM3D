@@ -1,7 +1,7 @@
 # WD-09 – Extrude-Basis
 
 **Stand:** 2026-08-28  
-**Status:** WD-09A IMPLEMENTED – CORE CHECK REQUIRED  
+**Status:** WD-09A CORE CHECK PASS – WD-09B READY  
 **Voraussetzung:** WD-08 – PASS / FROZEN
 
 ## Ziel
@@ -56,19 +56,23 @@ Noch nicht enthalten:
 - Boolean-Operationen
 - parametrisches Nachbearbeiten eines Extrude-Features
 
-## Core-Check WD-09A
+## Core-Check WD-09A – PASS
 
-Vor Übergang zu WD-09B sind mindestens folgende Fälle zu prüfen:
+Die Profilableitung wurde gegen die vorgesehenen Kernfälle geprüft. Ergebnis:
 
-1. ein von WD-08B erzeugtes Rechteck ergibt genau ein gültiges Profil mit vier Punkten und vier Linien.
-2. ein einfaches geschlossenes Polygon ergibt genau ein gültiges Profil in stabiler Umlaufreihenfolge.
-3. ein einzelnes offenes Liniensegment ergibt kein Profil und einen eindeutigen `OPEN_OR_BRANCHING_COMPONENT`-Hinweis.
-4. ein offener Linienzug ergibt kein Profil.
-5. eine verzweigte Kontur ergibt kein Profil.
-6. eine selbstschneidende Kontur wird abgelehnt.
-7. zwei getrennte geschlossene Konturen werden als mehrere Profile erkannt, aber durch `getSingleExtrudableProfile` für WD-09A blockiert.
-8. die Profilableitung verändert keinerlei Sketch-Daten.
+1. **Rechteck → PASS**: eine geschlossene Vierkantkontur ergibt genau ein gültiges Profil mit vier Punkten und vier Linien.
+2. **einfaches Polygon → PASS**: eine geschlossene Polygonkontur ergibt genau ein gültiges Profil in deterministischer Umlaufreihenfolge.
+3. **einzelne offene Linie → PASS / korrekt blockiert**: kein Profil; Diagnose `OPEN_OR_BRANCHING_COMPONENT`.
+4. **offener Linienzug → PASS / korrekt blockiert**: kein Profil; Endpunkte mit Grad 1 verhindern die Profilfreigabe.
+5. **verzweigter Linienzug → PASS / korrekt blockiert**: kein Profil; Verzweigungspunkte mit Grad ungleich 2 werden abgelehnt.
+6. **selbstschneidende Kontur → PASS / korrekt blockiert**: kein Profil; Diagnose `SELF_INTERSECTION`.
+7. **zwei getrennte geschlossene Konturen → PASS / bewusst blockiert**: `deriveClosedSketchProfiles` erkennt zwei Profile; `getSingleExtrudableProfile` liefert `MULTIPLE_PROFILES` und gibt WD-09B-V1 nicht frei.
+8. **keine Mutation der Sketch-Daten → PASS**: die Ableitung liest ausschließlich Punkte/Linien und erzeugt ein separates Ergebnisobjekt; sie schreibt keine Sketch-Daten zurück.
+
+Zusätzliche Integritätsbeobachtung: Null-Längen, fehlende Punktreferenzen, Nullfläche und nicht eindeutig ordnungsfähige Konturen besitzen bereits eigene deterministische Diagnosepfade.
+
+**Ergebnis:** WD-09A Core-Check = **PASS**.
 
 ## Exit WD-09A
 
-WD-09A ist abgeschlossen, wenn die oben genannten Core-Fälle reproduzierbar PASS sind. Erst danach beginnt WD-09B – erster echter Extrude-Körper aus genau einem geschlossenen Profil.
+Erfüllt. Die Profilableitung ist für den engen V1-Fall „genau eine einfache geschlossene Kontur“ freigegeben. WD-09B darf jetzt auf derselben Branch-Basis den ersten echten Extrude-Körper erzeugen. WD-09A wird dadurch nicht um Mehrfachprofile, Löcher, offene Linien oder Blech-/Offsetlogik erweitert.
