@@ -1,7 +1,7 @@
 # WD-05 – Präzisionsmodellierung & Objektstruktur
 
-**Stand:** 2026-08-27  
-**Status:** IMPLEMENTED – DEVICE TEST REQUIRED  
+**Stand:** 2026-08-28  
+**Status:** PASS / FROZEN  
 **Voraussetzung:** WD-04 – PASS / gesichert
 
 ## Scope
@@ -34,22 +34,16 @@ WD-05 erweitert ausschließlich die Präzisions- und Hierarchiebearbeitung des b
 - Undo/Redo bleibt für Pivot, Reparenting, Auflösen und numerische Transformänderungen aktiv
 - Projektformat bleibt CM3D Schema `0.1.0`; Snap und WORLD/LOCAL sind Runtime-/Workspace-State
 
-## Manueller Abnahmetest
+## Gerätetest / Abschluss
 
-1. Quader erzeugen und auf z. B. 0,12 × 2,10 × 0,12 m setzen.
-2. Snap einschalten, Translation = 0,10 m wählen und Objekt mehrfach mit Move verschieben; Position muss auf 0,10-m-Schritten landen.
-3. Rotation-Snap = 15° wählen und mit Rotate drehen; Winkel muss auf 15°-Schritten landen.
-4. Scale-Snap testen.
-5. WORLD wählen, ein gedrehtes Objekt entlang der globalen Achsen bewegen.
-6. LOCAL wählen und dasselbe Objekt entlang seiner lokalen Achsen bewegen.
-7. Inspector zwischen WORLD und LOCAL umschalten und prüfen, dass die angezeigten Werte entsprechend wechseln.
-8. Zwei Objekte gruppieren, Gruppe verschieben/drehen.
-9. Ein Kind auswählen und im Parent-Dropdown auf ROOT setzen; seine sichtbare Weltlage darf sich nicht ändern.
-10. Kind wieder in die Gruppe reparenten; Weltlage muss erneut erhalten bleiben.
-11. Gruppe bzw. Baugruppe auswählen und `Auflösen` drücken; Kinder müssen sichtbar an derselben Stelle bleiben.
-12. Pivot `Unterkante` und danach `Zentrum` testen; Gizmo-Ursprung muss entsprechend wechseln.
-13. Undo/Redo für Reparenting, Auflösen und Pivot prüfen.
-14. Speichern → Browser neu laden → Laden; Hierarchie und lokale Transformdaten müssen korrekt wiederhergestellt werden.
+Der manuelle Gerätetest auf iPad/Safari wurde erfolgreich abgeschlossen.
+
+Dabei wurden zwei Regressionen gefunden und vor Abschluss von WD-05 behoben:
+
+1. Three.js-Rebuild erzeugte sichtbare Geometrie-Reste. Lösung: dedizierter CM3D-Modell-Root und kontrolliertes Runtime-Cleanup vor dem Neuaufbau.
+2. Duplizieren von Gruppen/Baugruppen kopierte zunächst nur den Container. Lösung: rekursive Deep-Copy der vollständigen Kind-/Enkelstruktur mit neuen `objectId`-Werten und neu verdrahteten `parentId`-Beziehungen.
+
+Die Regressionen wurden im Gerätetest nachgeprüft. WD-05 wurde anschließend als bestandener Stand in `main` übernommen.
 
 ## Nicht-Scope
 
@@ -64,4 +58,4 @@ WD-05 erweitert ausschließlich die Präzisions- und Hierarchiebearbeitung des b
 
 ## Exit-Regel
 
-WD-05 wird erst nach erfolgreichem manuellen Gerätetest als PASS/FROZEN nach `main` übernommen.
+**Erfüllt.** WD-05 ist nach erfolgreichem Gerätetest **PASS / FROZEN** und fachlich geschlossen. Änderungen an WD-05 erfolgen nicht stillschweigend im Rahmen späterer Entwicklungsblöcke.
