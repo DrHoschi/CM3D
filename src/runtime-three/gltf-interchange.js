@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
-import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { createExternalGltfObject } from '../model/project.js';
 
 const EXTERNAL_GLTF_TYPE = 'external.gltf';
@@ -88,11 +88,6 @@ function externalUrisFromGltfText(text) {
   return [...new Set(uris)];
 }
 
-function assetFingerprint(asset) {
-  const parts = (asset.files || []).map(file => `${file.path || file.name}:${file.dataUrl?.length || 0}:${String(file.dataUrl || '').slice(-24)}`);
-  return `${asset.assetId}|${asset.entryFile}|${parts.join('|')}`;
-}
-
 function safeFileBase(value) {
   const clean = String(value || 'cm3d-export')
     .replace(/\.(glb|gltf)$/i, '')
@@ -115,7 +110,6 @@ function downloadBlob(blob, fileName) {
 }
 
 export function installGltfInterchange(runtime, store) {
-  const prototypeCache = new Map();
   const pendingHydrations = new Set();
   const baseCreateNode = runtime.createNode.bind(runtime);
 
@@ -147,12 +141,6 @@ export function installGltfInterchange(runtime, store) {
     return loader.parseAsync(text, '');
   }
 
-  async function loadPrototype(asset) {
-    const key = assetFingerprint(asset);
-    if (!prototypeCache.has(key)) prototypeCache.set(key, parseAsset(asset));
-    return prototypeCache.get(key);
-  }
-
   function registerPickables(root, objectId) {
     root.traverse(child => {
       if (!(child.isMesh || child.isLine || child.isPoints)) return;
@@ -168,10 +156,10 @@ export function installGltfInterchange(runtime, store) {
       return;
     }
     let task;
-    task = loadPrototype(asset)
+    task = parseAsset(asset)
       .then(gltf => {
         if (runtime.objectMap.get(object.objectId) !== node) return;
-        const imported = cloneSkinned(gltf.scene);
+        const imported = SkeletonUtils.clone(gltf.scene);
         imported.name = imported.name || object.name;
         imported.userData.cm3dImportedRoot = true;
         node.add(imported);
@@ -235,7 +223,6 @@ export function installGltfInterchange(runtime, store) {
     store.project.scene.rootObjectIds.push(object.objectId);
     store.touch();
     store.select(object.objectId, false);
-    prototypeCache.set(assetFingerprint(asset), Promise.resolve(parsed));
     store.pushHistory(before, 'GLB/GLTF importieren');
     store.emit('projectChanged');
     store.emit('selectionChanged');
@@ -250,7 +237,7 @@ export function installGltfInterchange(runtime, store) {
   function exportClone() {
     const root = new THREE.Group();
     root.name = 'CM3D_Export';
-    for (const child of runtime.modelRoot.children) root.add(cloneSkinned(child));
+    for (const child of runtime.modelRoot.children) root.add(SkeletonUtils.clone(child));
 
     const remove = new Set();
     root.traverse(node => {
