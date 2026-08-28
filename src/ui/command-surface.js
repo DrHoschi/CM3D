@@ -9,7 +9,48 @@ const CONTEXT_META={
   tools:['Werkzeuge','Einheiten und Hilfswerkzeuge']
 };
 
+async function makeIconsSafariSafe(){
+  const style=document.createElement('style');
+  style.textContent=`
+    .context-set[hidden]{display:none!important}
+    .icon-tile,.menu-item .cm-icon,.menu-inline .cm-icon,.context-check .cm-icon,.panel-icon,.tree-item .tree-type-icon,.tool-inspector-title .cm-icon{background:transparent!important;box-shadow:none!important}
+    .icon-tile{width:28px!important;height:28px!important}
+    .brand-icon{width:32px!important;height:32px!important}
+  `;
+  document.head.appendChild(style);
+
+  try{
+    const response=await fetch('./design/icons/cm3d-ui-icons-v3.svg',{cache:'no-store'});
+    if(!response.ok)throw new Error(`Icon-Sprite HTTP ${response.status}`);
+    const source=await response.text();
+    const template=document.createElement('template');
+    template.innerHTML=source.trim();
+    const sprite=template.content.firstElementChild;
+    if(!sprite)throw new Error('Icon-Sprite leer');
+    sprite.id='cm3d-inline-icon-sprite';
+    sprite.setAttribute('aria-hidden','true');
+    sprite.style.position='absolute';
+    sprite.style.width='0';
+    sprite.style.height='0';
+    sprite.style.overflow='hidden';
+    sprite.style.pointerEvents='none';
+    document.body.prepend(sprite);
+
+    for(const use of document.querySelectorAll('svg.cm-icon use')){
+      const href=use.getAttribute('href')||use.getAttribute('xlink:href')||'';
+      const hash=href.lastIndexOf('#');
+      if(hash<0)continue;
+      use.setAttribute('href',href.slice(hash));
+      use.removeAttribute('xlink:href');
+    }
+  }catch(error){
+    console.warn('CM3D V3 Icons konnten nicht Safari-sicher eingebettet werden.',error);
+  }
+}
+
 export function installCommandSurface(store){
+  makeIconsSafariSafe();
+
   const q=s=>document.querySelector(s);
   const sets=[...document.querySelectorAll('[data-context]')];
   const categoryButtons=[...document.querySelectorAll('[data-context-target]')];
@@ -17,70 +58,137 @@ export function installCommandSurface(store){
   const toolInspector=q('#tool-inspector');
   const extrudePanel=q('#tool-inspector-extrude');
   const extrudeSource=q('#extrude-source');
-  let activeContext='object';
+  let activeContext=null;
+
+  const hideTool=()=>{
+    if(toolInspector)toolInspector.hidden=true;
+    if(extrudePanel)extrudePanel.hidden=true;
+  };
 
   const closeMenus=except=>{
     for(const button of menuButtons){
       const panel=q(`#${button.dataset.menuToggle}`);
       if(panel===except)continue;
-      panel.hidden=true;button.classList.remove('active');button.setAttribute('aria-expanded','false');
+      panel.hidden=true;
+      button.classList.remove('active');
+      button.setAttribute('aria-expanded','false');
     }
   };
 
   const setContext=name=>{
-    if(!CONTEXT_META[name])return;
+    if(name!==null&&!CONTEXT_META[name])return;
     activeContext=name;
-    for(const set of sets)set.hidden=set.dataset.context!==name;
-    for(const button of categoryButtons)button.classList.toggle('active',button.dataset.contextTarget===name);
+
+    for(const set of sets){
+      const visible=name!==null&&set.dataset.context===name;
+      set.hidden=!visible;
+      set.style.display=visible?'flex':'none';
+    }
+
+    for(const button of categoryButtons){
+      button.classList.toggle('active',name!==null&&button.dataset.contextTarget===name);
+    }
+
+    if(name===null){
+      q('#context-title').textContent='Bereit';
+      q('#context-subtitle').textContent='Oben Funktion auswählen';
+      return;
+    }
+
     const [title,subtitle]=CONTEXT_META[name];
-    q('#context-title').textContent=title;q('#context-subtitle').textContent=subtitle;
+    q('#context-title').textContent=title;
+    q('#context-subtitle').textContent=subtitle;
   };
 
   for(const button of menuButtons){
     button.setAttribute('aria-expanded','false');
     button.addEventListener('click',event=>{
       event.stopPropagation();
-      const panel=q(`#${button.dataset.menuToggle}`),opening=panel.hidden;
-      closeMenus(panel);panel.hidden=!opening;button.classList.toggle('active',opening);button.setAttribute('aria-expanded',String(opening));
+      const panel=q(`#${button.dataset.menuToggle}`);
+      const opening=panel.hidden;
+      closeMenus(panel);
+      panel.hidden=!opening;
+      button.classList.toggle('active',opening);
+      button.setAttribute('aria-expanded',String(opening));
     });
   }
 
-  for(const button of categoryButtons)button.addEventListener('click',()=>{closeMenus();setContext(button.dataset.contextTarget);});
-  for(const item of document.querySelectorAll('[data-set-context]'))item.addEventListener('click',()=>{setContext(item.dataset.setContext);closeMenus();});
-  const proxies=[...document.querySelectorAll('[data-proxy-click]')];
-  for(const proxy of proxies)proxy.addEventListener('click',()=>q(`#${proxy.dataset.proxyClick}`)?.click());
-  const syncProxies=()=>{for(const proxy of proxies){const target=q(`#${proxy.dataset.proxyClick}`);proxy.disabled=!!target?.disabled;}};
+  for(const button of categoryButtons){
+    button.addEventListener('click',()=>{
+      closeMenus();
+      setContext(button.dataset.contextTarget);
+    });
+  }
 
-  document.addEventListener('click',event=>{if(!event.target.closest('.menu-group'))closeMenus();});
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeMenus();hideTool();}});
+  for(const item of document.querySelectorAll('[data-set-context]')){
+    item.addEventListener('click',()=>{
+      setContext(item.dataset.setContext);
+      closeMenus();
+    });
+  }
+
+  const proxies=[...document.querySelectorAll('[data-proxy-click]')];
+  for(const proxy of proxies){
+    proxy.addEventListener('click',()=>q(`#${proxy.dataset.proxyClick}`)?.click());
+  }
+  const syncProxies=()=>{
+    for(const proxy of proxies){
+      const target=q(`#${proxy.dataset.proxyClick}`);
+      proxy.disabled=!!target?.disabled;
+    }
+  };
+
+  document.addEventListener('click',event=>{
+    if(!event.target.closest('.menu-group'))closeMenus();
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){
+      closeMenus();
+      hideTool();
+    }
+  });
 
   const showExtrude=()=>{
     const object=store.getObject(store.selection.activeObjectId);
-    if(object?.type!=='sketch'){alert('Bitte zuerst eine geschlossene Skizze im Objektbaum auswählen.');return;}
+    if(object?.type!=='sketch'){
+      alert('Bitte zuerst eine geschlossene Skizze im Objektbaum auswählen.');
+      return;
+    }
     setContext('sketch');
     if(extrudeSource)extrudeSource.textContent=object.name||object.objectId;
-    toolInspector.hidden=false;extrudePanel.hidden=false;
+    toolInspector.hidden=false;
+    extrudePanel.hidden=false;
     q('#extrude-depth')?.focus();
   };
-  const hideTool=()=>{if(toolInspector)toolInspector.hidden=true;if(extrudePanel)extrudePanel.hidden=true;};
+
   q('#start-extrude')?.addEventListener('click',showExtrude);
   q('#modeling-extrude')?.addEventListener('click',showExtrude);
   q('#cancel-extrude')?.addEventListener('click',hideTool);
   q('#extrude-sketch')?.addEventListener('click',()=>setTimeout(hideTool,0));
   q('#show-material-inspector')?.addEventListener('click',()=>q('#material-fields')?.scrollIntoView({behavior:'smooth',block:'center'}));
 
+  q('#new-project')?.addEventListener('click',()=>setTimeout(()=>setContext(null),0));
   q('#new-sketch')?.addEventListener('click',()=>setTimeout(()=>setContext('sketch'),0));
 
   store.subscribe(event=>{
     if(event.type!=='selectionChanged'&&event.type!=='projectChanged'&&event.type!=='projectLoaded')return;
+
     const object=store.getObject(store.selection.activeObjectId);
-    if(!object){if(activeContext==='sketch'||activeContext==='scene')setContext('object');hideTool();return;}
+    if(!object){
+      if(event.type==='projectChanged'||event.type==='projectLoaded'||activeContext==='sketch'||activeContext==='scene'||activeContext==='transform')setContext(null);
+      hideTool();
+      setTimeout(syncProxies,0);
+      return;
+    }
+
     if(object.type==='sketch')setContext('sketch');
     else if(object.type==='group'||object.type==='assembly')setContext('scene');
-    else if(activeContext==='sketch'||activeContext==='scene')setContext('transform');
+    else if(event.type==='selectionChanged')setContext('transform');
+
     if(object.type!=='sketch')hideTool();
     setTimeout(syncProxies,0);
   });
 
-  setContext(activeContext);syncProxies();
+  setContext(null);
+  syncProxies();
 }
