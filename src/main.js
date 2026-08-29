@@ -13,6 +13,7 @@ import { installSketchMultiSelection } from './ui/sketch-multiselect.js';
 import { installSketchGizmo } from './ui/sketch-gizmo.js';
 import { installFeatureOperationsTree } from './ui/feature-operations-tree.js';
 import { installFeatureParametersInspector } from './ui/feature-parameters-inspector.js';
+import { installObjectVisibility } from './ui/object-visibility.js';
 
 const store = new AppStore();
 const viewport = document.querySelector('#viewport');
@@ -55,6 +56,7 @@ const sketchMultiSelection = installSketchMultiSelection(store, runtime, appUI);
 const sketchGizmo = installSketchGizmo(store, runtime);
 const featureOperationsTree = installFeatureOperationsTree(store, appUI);
 const featureParametersInspector = installFeatureParametersInspector(store, appUI);
+const objectVisibility = installObjectVisibility(store, runtime, appUI);
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
@@ -62,4 +64,4 @@ if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',ev
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});
 syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector };
+window.cm3d = { store, runtime, gltfInterchange, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility };
