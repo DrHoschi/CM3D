@@ -1,8 +1,25 @@
 # WD-12A – Gerätetest
 
-**Status:** TEST PENDING  
+**Status:** PASS / FROZEN  
 **Zielgerät:** iPad/iPhone Safari  
 **Branch:** `feature/wd-12a-sketch-editing-v1`
+
+## Praktische Abnahme 2026-08-29
+
+Der Anwender hat WD-12A auf dem iPad praktisch getestet und keine Fehler im vorgesehenen Funktionsumfang festgestellt.
+
+Explizit bestätigt:
+
+- Punkt-/Linienelemente lassen sich auswählen und über den Inspector bearbeiten.
+- Koordinatenänderungen werden in der Skizze sichtbar übernommen.
+- Eine abhängige Extrusion aktualisiert sich mit der bearbeiteten Skizze.
+- Die übrigen praktisch getesteten WD-12A-Funktionen zeigten keinen festgestellten Fehler.
+
+Nicht als fehlgeschlagener Test zu werten:
+
+- Direktes Ziehen eines Punktes oder einer Linie per Finger/Gizmo ist in WD-12A noch nicht implementiert und war deshalb nicht Bestandteil der Abnahme. Das wird als Folgefunktion WD-12B vorgesehen.
+
+Die detaillierte Prüfliste bleibt als Regressionstest erhalten; einzelne Unterpunkte werden nicht nachträglich als separat bestätigt markiert, wenn sie nicht einzeln protokolliert wurden.
 
 ## A – Objektbaum
 
@@ -74,7 +91,7 @@ Erwartung:
 
 1. Geschlossenes Rechteck zeichnen.
 2. Rechteck extrudieren.
-3. Skizzenpunkt auswählen und verschieben, Kontur aber geschlossen lassen.
+3. Skizzenpunkt auswählen und über den Inspector verschieben, Kontur aber geschlossen lassen.
 
 Erwartung:
 
@@ -115,4 +132,4 @@ Danach die Kontur wieder gültig herstellen bzw. Undo verwenden:
 
 ## Abnahmeregel
 
-WD-12A wird erst nach bestandenem Gerätetest auf **PASS / FROZEN** gesetzt.
+Praktischer iPad-Gerätetest bestanden. **WD-12A = PASS / FROZEN.**
