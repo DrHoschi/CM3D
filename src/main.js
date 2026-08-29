@@ -18,6 +18,7 @@ import { installObjectVisibility } from './ui/object-visibility.js';
 import { installObjectLocking } from './ui/object-locking.js';
 import { installProjectLifecycle } from './ui/project-lifecycle.js';
 import { installProjectSettings } from './ui/project-settings.js';
+import { installCameraObjectPreview } from './ui/camera-object-preview.js';
 
 const store = new AppStore();
 const viewport = document.querySelector('#viewport');
@@ -65,13 +66,14 @@ const objectVisibility = installObjectVisibility(store, runtime, appUI);
 const objectLocking = installObjectLocking(store, runtime, appUI);
 const projectLifecycle = installProjectLifecycle(store, appUI);
 const projectSettings = installProjectSettings(store, appUI);
+const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
 
 // The newest WD block owns the visible build marker. Older install modules may
 // still carry their historical marker, so set the current branch marker once
 // all inherited modules have finished installing.
-document.title = 'CyberMotion 3D – WD-16';
+document.title = 'CyberMotion 3D – WD-17';
 const buildLabel = document.querySelector('.brand small');
-if (buildLabel) buildLabel.textContent = 'WD-16';
+if (buildLabel) buildLabel.textContent = 'WD-17';
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
@@ -79,4 +81,4 @@ if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',ev
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});
 syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, projectLifecycle, projectSettings };
+window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, projectLifecycle, projectSettings, cameraObjectPreview };
