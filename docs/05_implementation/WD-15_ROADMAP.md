@@ -24,11 +24,14 @@ Zuordnung:
 - `CM3D-F005` – Speichern unter
 - `CM3D-F007` – Projekt schließen
 
-Ziel:
+Verbindliche Semantik:
 
-- `Speichern unter` erzeugt bewusst einen neuen Projektstand mit neuer stabiler `projectId`, ohne den bisherigen gespeicherten Stand zu überschreiben;
-- Projektname kann für den neuen Stand festgelegt werden;
-- der neue Stand wird danach zum aktiven Projekt;
+- normales `Speichern` bleibt der bestehende schnelle Browser-/`localStorage`-Speicher unter der aktuellen `projectId`;
+- `Speichern unter…` bedeutet dateibasiertes Speichern auf das Gerät/den Rechner und **nicht** das Erzeugen eines weiteren `localStorage`-Projektstands;
+- der Benutzer kann einen Dateinamen festlegen;
+- gespeichert wird die vollständige CM3D-Projektdatei im bestehenden `.cm3d.json`-Format;
+- `projectId` und Projektinhalt bleiben beim Dateispeichern unverändert;
+- vorhandener Projektdatei-Export und `Speichern unter…` verwenden denselben Serialisierungs-/Downloadpfad;
 - `Projekt schließen` beendet den aktuellen Projektkontext kontrolliert und führt in einen definierten leeren/Startzustand;
 - ungespeicherte Änderungen dürfen nicht stillschweigend verloren gehen;
 - bestehendes Speichern/Laden und Projektdatei-Import/Export bleiben kompatibel;
