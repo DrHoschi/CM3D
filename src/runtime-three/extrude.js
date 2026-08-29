@@ -13,6 +13,9 @@ export function installExtrudeRuntime(runtime) {
     for (let i=1;i<points.length;i++) shape.lineTo(points[i].x, points[i].y);
     shape.closePath();
     const geometry = new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false,steps:1});
+    const direction = object.data?.direction ?? 'positive';
+    if (direction === 'negative') geometry.translate(0,0,-depth);
+    if (direction === 'symmetric') geometry.translate(0,0,-depth/2);
     geometry.computeVertexNormals();
     return geometry;
   };
