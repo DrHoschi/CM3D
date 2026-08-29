@@ -109,6 +109,7 @@ Damit ist WD-12B **PASS / FROZEN**.
 ## Bewusst nachgelagert
 
 - endgültige Platzierung der Mehrfachauswahl in der kontextuellen Werkzeug-/Auswahlbedienung;
+- UI-Aufräumung von Objektbaum, Inspector und kontextueller Werkzeug-/Auswahlleiste;
 - Rotation oder Skalierung einzelner Skizzenelemente;
 - Constraints und parametrische Maße;
 - Trim / Extend / Fillet;
