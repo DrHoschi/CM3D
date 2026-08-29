@@ -1,6 +1,6 @@
 # WD-11C – Auswahl / Teilprojekt Export + CM3D-Objekte dazuladen/mergen
 
-**Status:** IMPLEMENTED / DEVICE TEST PENDING  
+**Status:** PASS / FROZEN  
 **Branch:** `feature/wd-11c-selection-partial-project-merge`  
 **Basis:** `feature/wd-11b-glb-gltf-import-export` (WD-11B Gerätetest PASS)  
 **Funktionsbezug:** CM3D-F077 + Teilprojekt-/Objekt-Merge
@@ -101,8 +101,10 @@ Der iOS/Safari-Dateidialog für `Objekte dazuladen` verwendet wie der korrigiert
 - OBJ/STL;
 - Bibliotheksverwaltung.
 
-## Abnahme
+## Gerätetest / Abnahme
 
-WD-11C bleibt bis zum Gerätetest **IMPLEMENTED / DEVICE TEST PENDING**.
+Gerätetest am **2026-08-29 auf iPad** abgeschlossen.
 
-Die Prüfliste liegt in `WD-11C_TEST_CHECKLIST.md`.
+Rückmeldung des Anwenders: WD-11C lief auf dem iPad; es konnten keine fehlerhaften Funktionen festgestellt werden.
+
+Damit ist der WD-11C-Funktionsblock als **PASS / FROZEN** abgenommen. Die detaillierte Prüfliste bleibt als Regression- und Wiederholungstest erhalten; nicht einzeln bestätigte Unterpunkte werden dort nicht nachträglich als separat getestet markiert.
