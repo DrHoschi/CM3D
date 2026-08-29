@@ -3,6 +3,7 @@ import { createExtrudeFromSketch } from './application/extrude.js';
 import { ThreeRuntime } from './runtime-three/runtime.js';
 import { installExtrudeRuntime } from './runtime-three/extrude.js';
 import { installGltfInterchange } from './runtime-three/gltf-interchange.js';
+import { installViewportReferenceSystem } from './runtime-three/viewport-reference-system.js';
 import { AppUI } from './ui/app.js';
 import { installMaterialPanel } from './ui/material-panel.js';
 import { installCommandSurface } from './ui/command-surface.js';
@@ -24,6 +25,7 @@ const viewport = document.querySelector('#viewport');
 const runtime = new ThreeRuntime(viewport, store);
 installExtrudeRuntime(runtime);
 const gltfInterchange = installGltfInterchange(runtime, store);
+const viewportReferenceSystem = installViewportReferenceSystem(runtime);
 const appUI = new AppUI(store);
 installMaterialPanel(store);
 
@@ -70,4 +72,4 @@ if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',ev
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});
 syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, projectLifecycle, projectSettings };
+window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, projectLifecycle, projectSettings };
