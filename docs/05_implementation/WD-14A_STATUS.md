@@ -1,6 +1,6 @@
 # WD-14A – Sichtbarkeit Core
 
-**Status:** IMPLEMENTED / DEVICE TEST REQUIRED  
+**Status:** PASS / FROZEN  
 **Branch:** `feature/wd-14a-visibility-core`  
 **Basis:** WD-13B PASS / FROZEN (`fb066fd9376f402befea3c247d6ec02e3b4f3f18`)  
 **Funktion:** `CM3D-F011` – Sichtbarkeit
@@ -47,8 +47,30 @@ Da `flags.visible` im bestehenden SceneGraph-Objekt gespeichert wird, läuft Sav
 - globale Sichtbarkeitsfilter;
 - Solo/Isolate-Modus.
 
-## Abnahme
+## Geräteabnahme
 
-Vor PASS / FROZEN ist der praktische iPad-/Safari-Test nach `WD-14A_TEST_CHECKLIST.md` erforderlich.
+**Datum:** 2026-08-29  
+**Gerät:** iPad / Safari / GitHub Pages  
+**Ergebnis:** PASS
 
-**Aktueller Status: IMPLEMENTED / DEVICE TEST REQUIRED.**
+Geprüft und bestanden:
+
+- neues Projekt erzeugt;
+- zwei Objekte platziert;
+- einzelnes Objekt ausgeblendet;
+- Projekt gespeichert und neu geladen;
+- ausgeblendetes Objekt korrekt erhalten und wieder eingeblendet;
+- Extrusion erzeugt und ausgeblendet;
+- Projekt gespeichert und neu geladen;
+- ausgeblendete Extrusion korrekt erhalten;
+- Undo und Redo der Sichtbarkeitsänderung funktionieren.
+
+Es wurden keine Blocker für CM3D-F011 festgestellt.
+
+## Freeze
+
+WD-14A ist fachlich und praktisch abgenommen.
+
+**Aktueller Status: PASS / FROZEN.**
+
+Änderungen an WD-14A erfolgen ab jetzt nur kontrolliert über einen neuen Entwicklungsblock bzw. eine dokumentierte Revision.
