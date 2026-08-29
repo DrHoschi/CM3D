@@ -1,7 +1,7 @@
 # WD-17 – Kameraobjekt & Kamera-Vorschau
 
 **Stand:** 2026-08-29  
-**Status:** IMPLEMENTED / DEVICE TEST REQUIRED  
+**Status:** PASS / FROZEN  
 **Branch:** `feature/wd-17-camera-object-preview`  
 **Basis:** WD-16 PASS / FROZEN (`ec2fd895cde21c0ec46da754e0059f2ad5bff077`)  
 **Funktionen:** `CM3D-F063` – Kameraobjekt; `CM3D-F064` – Kamera-Vorschau
@@ -22,7 +22,8 @@ Das Kameraobjekt:
 - wird zunächst an der aktuellen Editor-Kameraposition und -ausrichtung erzeugt;
 - kann wie andere Szenenobjekte ausgewählt, verschoben, gedreht, dupliziert, gelöscht, gesperrt und gespeichert werden;
 - besitzt persistent die Perspektivparameter `fov`, `near` und `far`;
-- wird im Viewport mit einer Kamera-/Frustum-Hilfsdarstellung dargestellt.
+- wird im Viewport mit einer Kamera-/Frustum-Hilfsdarstellung dargestellt;
+- mehrere Kameraobjekte können gleichzeitig im Projekt vorhanden sein.
 
 Das bestehende Projektschema bleibt `0.1.0`; der Validator akzeptiert den neuen Objekttyp über die vorhandene generische Objektstruktur.
 
@@ -57,6 +58,16 @@ Kameraobjekt und Kameraparameter liegen innerhalb der normalen Projektstruktur u
 - WD-15A `Speichern unter…`;
 - Projektdatei-Import/Export.
 
+## Geräteabnahme
+
+**Datum:** 2026-08-29  
+**Gerät/Umgebung:** iPad / Safari / GitHub Pages  
+**Ergebnis:** PASS
+
+Im realen Gerätetest wurden Kameraobjekte in einer bestehenden größeren Szene platziert und aus unterschiedlichen Positionen verwendet. Die Kamera-Vorschau sowie die Rückkehr zur Editoransicht funktionierten. Der Test umfasste außerdem Speichern und erneutes Laden; die Kameraobjekte blieben erhalten. Im geprüften Projekt waren gleichzeitig zwei Kameraobjekte vorhanden und persistent vorhanden.
+
+Die vom Benutzer bereitgestellten Screenshots zeigen sowohl die Kamera-/Frustum-Darstellungen innerhalb der normalen Editoransicht als auch den aktiven Vorschauzustand `Vorschau beenden`.
+
 ## Nicht Bestandteil
 
 - mehrere parallele Vorschaufenster;
@@ -67,8 +78,8 @@ Kameraobjekt und Kameraparameter liegen innerhalb der normalen Projektstruktur u
 - Lichtobjekte;
 - Render-Pipeline.
 
-## Abnahme
+## Freeze
 
-Vor PASS / FROZEN ist der praktische iPad-/Safari-Test nach `WD-17_TEST_CHECKLIST.md` erforderlich.
+WD-17 ist nach bestandenem realem iPad-/Safari-Gerätetest **PASS / FROZEN**.
 
-**Aktueller Status: IMPLEMENTED / DEVICE TEST REQUIRED.**
+Neue Funktionalität oder Änderungen an diesem Block erfolgen nur über einen nachfolgenden dokumentierten Entwicklungsblock. WD-17 selbst wird nicht weiter erweitert.
