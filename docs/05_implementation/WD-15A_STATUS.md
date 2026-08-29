@@ -8,7 +8,9 @@
 
 ## Ziel
 
-Der bestehende lokale Mehrprojekt-Speicher wird um einen vollständigen V1-Projekt-Lifecycle ergänzt, ohne ein zweites Persistenzmodell einzuführen.
+WD-15A ergänzt den bestehenden Projekt-Lifecycle um ein echtes dateibasiertes `Speichern unter…` sowie ein kontrolliertes `Projekt schließen`.
+
+Das normale `Speichern` bleibt bewusst der schnelle lokale Browser-Speicher über `localStorage`. `Speichern unter…` ist davon getrennt und schreibt die vollständige CM3D-Projektdatei auf das Gerät bzw. stellt sie dem Browser als Datei-Download bereit. Damit ist der Pfad auch für Projekte geeignet, die langfristig nicht im Browser-Speicher gehalten werden sollen.
 
 ## Speichern unter
 
@@ -16,42 +18,47 @@ Der bestehende lokale Mehrprojekt-Speicher wird um einen vollständigen V1-Proje
 
 Ablauf:
 
-1. aktuelles Projekt wird vollständig kopiert;
-2. Benutzer vergibt einen Namen;
-3. die Kopie erhält eine neue stabile `projectId`;
-4. `createdAt` und `modifiedAt` werden für den neuen Stand neu gesetzt;
-5. die Kopie wird über denselben bestehenden `saveProject()`-Pfad gespeichert;
-6. erst nach erfolgreichem Speichern wird die Kopie als aktives Projekt geladen;
-7. der bisherige gespeicherte Projektstand bleibt unverändert erhalten.
+1. Benutzer wählt `Datei → Speichern unter…`;
+2. ein Dateiname kann frei angegeben werden;
+3. die vollständige aktuelle Projektstruktur wird validiert und als `.cm3d.json` serialisiert;
+4. die Datei wird über den bestehenden Projektdatei-Download auf das Gerät ausgegeben;
+5. die bestehende `projectId` bleibt unverändert;
+6. es wird kein zusätzlicher `localStorage`-Projektstand erzeugt.
 
-Objekt-, Material-, Asset- und Feature-IDs innerhalb der Projektkopie bleiben erhalten. Die Trennung der beiden Projektstände erfolgt über die neue Projekt-ID.
+Die Dateiendung `.cm3d.json` wird automatisch ergänzt. Ein bereits eingegebener Suffix `.cm3d.json` wird nicht doppelt angehängt.
 
-Wird der Dialog abgebrochen oder ist der Name leer, entsteht kein neuer Speicherstand.
+Der vorhandene Projektdatei-Export und `Speichern unter…` verwenden denselben technischen Serialisierungs-/Downloadpfad. Damit existieren keine zwei konkurrierenden Dateiformate.
+
+## Normales Speichern
+
+Unverändert:
+
+- `Speichern` schreibt den aktuellen Projektstand unter seiner bestehenden `projectId` in den lokalen Browser-Speicher;
+- dieser Pfad ist für schnellen Arbeits-/Testbetrieb gedacht;
+- `Speichern unter…` ersetzt diesen lokalen Pfad nicht.
 
 ## Projekt schließen
 
 `Projekt schließen` liegt ebenfalls im Datei-Menü.
 
-Vor dem Schließen erscheint immer eine Bestätigung mit Hinweis auf mögliche ungespeicherte Änderungen. Bei Abbruch bleibt das aktuelle Projekt unverändert aktiv.
+Vor dem Schließen erscheint eine Bestätigung mit Hinweis auf mögliche ungespeicherte Änderungen. Bei Abbruch bleibt das aktuelle Projekt unverändert aktiv.
 
 Nach Bestätigung:
 
 - wird der aktuelle Arbeitskontext beendet;
 - Auswahl sowie Undo/Redo werden über den bestehenden `newProject()`-Pfad zurückgesetzt;
 - ein frischer leerer Arbeitsbereich wird bereitgestellt;
-- kein gespeicherter Projektstand wird gelöscht;
-- vorhandene gespeicherte Projekte bleiben im Projekt-Dropdown verfügbar und können anschließend wieder geladen werden.
-
-Ein eigener `null`-Projektzustand wird bewusst nicht in das bestehende Datenmodell eingeführt. Der definierte geschlossene Zustand ist ein frischer leerer Arbeitsbereich mit neuer Projekt-ID.
+- kein gespeicherter lokaler Projektstand und keine heruntergeladene Datei wird gelöscht;
+- vorhandene gespeicherte Projekte bleiben im Projekt-Dropdown verfügbar.
 
 ## Kompatibilität
 
 Unverändert bleiben:
 
-- normales `Speichern` unter der aktuellen `projectId`;
-- Laden gespeicherter Projekte;
+- normales lokales `Speichern` und Laden;
 - Löschen gespeicherter Browser-Stände;
-- CM3D-Projektdatei Import/Export;
+- Projektdatei-Import;
+- bestehender Projektdatei-Export;
 - Schema `0.1.0`;
 - WD-14A Sichtbarkeit und WD-14B Sperren.
 
@@ -61,7 +68,7 @@ Unverändert bleiben:
 - Dirty-State-/Änderungsstern;
 - Autosave/Recovery;
 - Cloud-Speicherung;
-- Liste zuletzt verwendeter Projekte außerhalb des bestehenden lokalen Index.
+- direkter nativer Dateisystemzugriff auf allen Browsern; die konkrete Zielauswahl wird vom jeweiligen Browser/Betriebssystem bestimmt.
 
 ## Abnahme
 
