@@ -48,9 +48,9 @@ export function installSketchGizmo(store,runtime){
     hit.position.copy(dir).multiplyScalar(AXIS_LENGTH/2);hit.userData.cm3dSketchGizmoAxis=axis;group.add(hit);state.pickables.push(hit);return group;
   };
 
-  const rebuildGizmo=()=>{
+  const rebuildGizmo=(align=true)=>{
     disposeGizmo();const selected=selectedElement(),node=selected?runtime.objectMap.get(selected.sketchId):null;if(!selected||!node){runtime.orbit.enableRotate=state.previousEnableRotate;return;}
-    alignCameraToSketch();runtime.orbit.enableRotate=false;
+    if(align)alignCameraToSketch();runtime.orbit.enableRotate=false;
     const anchor=selectedAnchorLocal();if(!anchor)return;
     const group=new THREE.Group();group.name='CM3D_SKETCH_GIZMO';group.renderOrder=1000;group.add(makeAxis('x'),makeAxis('y'));
     const center=new THREE.Mesh(new THREE.PlaneGeometry(HANDLE_SIZE,HANDLE_SIZE),new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false,side:THREE.DoubleSide}));center.userData.cm3dSketchGizmoAxis='xy';center.renderOrder=1002;group.add(center);state.pickables.push(center);
@@ -87,20 +87,19 @@ export function installSketchGizmo(store,runtime){
     }else{
       const a=sketch.data.points?.[drag.initial.startPointId],b=sketch.data.points?.[drag.initial.endPointId];if(a&&b){a.x=drag.initial.a.x+dx;a.y=drag.initial.a.y+dy;b.x=drag.initial.b.x+dx;b.y=drag.initial.b.y+dy;}
     }
-    store.refreshDependentExtrudesFromSketch?.(drag.selected.sketchId);store.touch();runtime.rebuild();store.emit('sketchGizmoPreview',{sketchId:drag.selected.sketchId,kind:drag.selected.kind,elementId:drag.selected.elementId});rebuildGizmo();event.preventDefault();event.stopImmediatePropagation();
+    store.refreshDependentExtrudesFromSketch?.(drag.selected.sketchId);store.touch();runtime.rebuild();store.emit('sketchGizmoPreview',{sketchId:drag.selected.sketchId,kind:drag.selected.kind,elementId:drag.selected.elementId});rebuildGizmo(false);event.preventDefault();event.stopImmediatePropagation();
   };
 
   const finishDrag=event=>{
     const drag=state.drag;if(!drag||event.pointerId!==drag.pointerId)return;state.drag=null;runtime.renderer.domElement.releasePointerCapture?.(event.pointerId);runtime.orbit.enabled=true;runtime.orbit.enableRotate=false;
     const after=store.snapshot();if(JSON.stringify(drag.before)!==JSON.stringify(after))store.pushHistory(drag.before,drag.selected.kind==='point'?'Skizzenpunkt per Gizmo verschieben':'Skizzenlinie per Gizmo verschieben');
-    store.emit('geometryChanged',{objectId:drag.selected.sketchId,sketchDependencySynced:true});store.emit('selectionChanged');rebuildGizmo();event.preventDefault();event.stopImmediatePropagation();
+    store.emit('geometryChanged',{objectId:drag.selected.sketchId,sketchDependencySynced:true});store.emit('selectionChanged');rebuildGizmo(false);event.preventDefault();event.stopImmediatePropagation();
   };
 
   const canvas=runtime.renderer.domElement;canvas.addEventListener('pointerdown',startDrag,true);window.addEventListener('pointermove',updateDrag,true);window.addEventListener('pointerup',finishDrag,true);window.addEventListener('pointercancel',finishDrag,true);
 
   store.subscribe(event=>{
-    if(['selectionChanged','projectChanged','projectLoaded','geometryChanged','objectChanged'].includes(event.type)&&!state.drag)setTimeout(rebuildGizmo,0);
-    if(event.type==='sketchGizmoPreview')return;
+    if(['selectionChanged','projectChanged','projectLoaded','geometryChanged','objectChanged'].includes(event.type)&&!state.drag)setTimeout(()=>rebuildGizmo(event.type==='selectionChanged'),0);
   });
 
   document.title='CyberMotion 3D – WD-12B';const label=document.querySelector('.brand small');if(label)label.textContent='WD-12B';
