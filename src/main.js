@@ -66,6 +66,13 @@ const objectLocking = installObjectLocking(store, runtime, appUI);
 const projectLifecycle = installProjectLifecycle(store, appUI);
 const projectSettings = installProjectSettings(store, appUI);
 
+// The newest WD block owns the visible build marker. Older install modules may
+// still carry their historical marker, so set the current branch marker once
+// all inherited modules have finished installing.
+document.title = 'CyberMotion 3D – WD-16';
+const buildLabel = document.querySelector('.brand small');
+if (buildLabel) buildLabel.textContent = 'WD-16';
+
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
 if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();if(!store.getObject(store.selection.activeObjectId))return;runtime.focusSelection();});}
