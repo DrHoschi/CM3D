@@ -1,7 +1,7 @@
 # WD-15B – Projekt-Einstellungen
 
 **Stand:** 2026-08-29  
-**Status:** IMPLEMENTED / DEVICE TEST REQUIRED  
+**Status:** PASS / FROZEN  
 **Branch:** `feature/wd-15b-project-settings`  
 **Basis:** WD-15A PASS / FROZEN (`cecdca0a455f58c957f2e3c9c402cb63c24d015b`)  
 **Funktion:** `CM3D-F006` – Projekt-Einstellungen
@@ -54,6 +54,23 @@ Da beide Werte bereits innerhalb der Projektstruktur liegen, werden sie automati
 - WD-15A `Speichern unter…` als `.cm3d.json`;
 - Projektdatei-Import/Export.
 
+## Geräteabnahme
+
+**Datum:** 2026-08-29  
+**Gerät/Umgebung:** iPad / Safari / GitHub Pages  
+**Ergebnis:** PASS
+
+Praktisch bestätigt wurde:
+
+- Projekt-Einstellungen können geändert werden;
+- geänderte Werte lassen sich speichern;
+- nach erneutem Laden bleiben die Werte erhalten;
+- die Längeneinheit kann sowohl über die Projekt-Einstellungen als auch über den bestehenden Bereich `Werkzeuge` geändert werden;
+- der Inspector übernimmt die jeweilige Einheit unmittelbar und konsistent;
+- die Umrechnung erfolgt wie vorgesehen ohne Änderung der realen Objektgeometrie.
+
+Der Benutzer bestätigte den Ablauf ausdrücklich als passend und sauber funktionierend.
+
 ## Nicht Bestandteil
 
 - Grid-/Rasterparameter;
@@ -63,8 +80,8 @@ Da beide Werte bereits innerhalb der Projektstruktur liegen, werden sie automati
 - Benutzerkonto-/Cloud-Einstellungen;
 - neue Schema-Version.
 
-## Abnahme
+## Freeze
 
-Vor PASS / FROZEN ist der praktische iPad-/Safari-Test nach `WD-15B_TEST_CHECKLIST.md` erforderlich.
+WD-15B ist nach bestandenem realem iPad-/Safari-Gerätetest **PASS / FROZEN**.
 
-**Aktueller Status: IMPLEMENTED / DEVICE TEST REQUIRED.**
+`CM3D-F006 – Projekt-Einstellungen` ist damit für den aktuellen V1-Pflichtkern abgeschlossen. Weitere Änderungen erfolgen nur über einen neuen dokumentierten Entwicklungsblock oder einen klar abgegrenzten Regression-Fix.
