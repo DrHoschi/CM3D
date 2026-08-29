@@ -169,7 +169,7 @@ export function installObjectLocking(store, runtime, ui) {
     const anyLocked = blockedSelection() || blockedSketchSelection();
     for (const selector of ['#tool-move','#tool-rotate','#tool-scale','#apply-parent','#pivot-center','#pivot-bottom']) {
       const control = document.querySelector(selector);
-      if (control && activeLocked) control.disabled = true;
+      if (control) control.disabled = activeLocked;
     }
     for (const selector of ['#delete-object','#group-selected','#assembly-selected','#ungroup-selected']) {
       const control = document.querySelector(selector);
