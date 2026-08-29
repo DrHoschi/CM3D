@@ -52,7 +52,13 @@ function addToolButton() {
 export function installInspectorDiagnostics(store, runtime, ui) {
   const panel = createPanel();
   const button = addToolButton();
-  if (!panel || !button) return null;
+  const host = document.querySelector('.inspector-panel');
+  if (!panel || !button || !host) return null;
+
+  const normalInspectorChildren = [...host.children].filter(child => child !== panel);
+  const setNormalInspectorVisible = visible => {
+    for (const child of normalInspectorChildren) child.hidden = !visible;
+  };
 
   const statusOut = panel.querySelector('#diagnostics-status');
   const selectionOut = panel.querySelector('#diagnostics-selection');
@@ -68,7 +74,7 @@ export function installInspectorDiagnostics(store, runtime, ui) {
     if (messages.length > MAX_MESSAGES) messages.splice(0, messages.length - MAX_MESSAGES);
     renderStatus();
   };
-  const pushEvent = (event) => {
+  const pushEvent = event => {
     events.push({ time: stamp(), type: event?.type || 'unknown', objectId: event?.objectId ?? null });
     if (events.length > MAX_EVENTS) events.splice(0, events.length - MAX_EVENTS);
     renderConsole();
@@ -130,13 +136,16 @@ export function installInspectorDiagnostics(store, runtime, ui) {
   };
 
   const open = () => {
+    setNormalInspectorVisible(false);
     panel.hidden = false;
     button.classList.add('active');
     renderAll();
   };
   const close = () => {
     panel.hidden = true;
+    setNormalInspectorVisible(true);
     button.classList.remove('active');
+    ui.render?.();
   };
 
   button.addEventListener('click', () => panel.hidden ? open() : close());
