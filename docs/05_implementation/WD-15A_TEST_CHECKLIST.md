@@ -3,18 +3,19 @@
 **Zielplattform:** iPad / Safari / GitHub Pages  
 **Status vor Test:** IMPLEMENTED / DEVICE TEST REQUIRED
 
-## A – Speichern unter
+## A – Speichern unter als Datei
 
-1. Vorhandenes Projekt laden oder neues Projekt mit mindestens zwei Objekten erstellen und normal speichern.
-2. `Datei → Speichern unter…` wählen.
-3. Einen deutlich anderen Projektnamen vergeben.
-4. Prüfen: neuer Projektstand erscheint zusätzlich im Projekt-Dropdown.
-5. Prüfen: alter Projektstand bleibt ebenfalls vorhanden.
-6. Im neuen aktiven Projekt ein Objekt verändern und normal speichern.
-7. Alten Projektstand laden und prüfen: die nachträgliche Änderung aus der Kopie ist dort nicht vorhanden.
-8. Neuen Projektstand wieder laden und prüfen: die Änderung ist dort vorhanden.
-9. `Speichern unter…` erneut öffnen und abbrechen → kein zusätzlicher Projektstand darf entstehen.
-10. `Speichern unter…` mit leerem Namen versuchen → kein zusätzlicher Projektstand darf entstehen.
+1. Vorhandenes Projekt laden oder neues Projekt mit mindestens zwei Objekten erstellen.
+2. Optional einmal normal `Speichern` verwenden und merken: dieser Stand liegt im lokalen Projekt-Dropdown.
+3. `Datei → Speichern unter…` wählen.
+4. Einen eindeutigen Dateinamen vergeben, z. B. `WD15A-Test`.
+5. Prüfen: Safari/iPad bietet die erzeugte Projektdatei als Download/Datei an; Dateiname endet auf `.cm3d.json`.
+6. Prüfen: durch `Speichern unter…` erscheint **kein zusätzlicher** Projektstand im lokalen Projekt-Dropdown.
+7. Projekt nach dem Download verändern und erneut `Speichern unter…` unter einem anderen Dateinamen ausgeben.
+8. Eine heruntergeladene `.cm3d.json` über den vorhandenen Projektdatei-Import wieder öffnen.
+9. Prüfen: Inhalt, Objektstruktur und Projektzustand entsprechen dem Zeitpunkt dieser gespeicherten Datei.
+10. `Speichern unter…` öffnen und abbrechen → keine Datei und kein lokaler Speicherstand darf erzeugt werden.
+11. Einen Namen mit bereits angehängtem `.cm3d.json` verwenden → Endung darf nicht doppelt erscheinen.
 
 ## B – Projekt schließen
 
@@ -23,17 +24,18 @@
 3. Prüfen: aktuelles Projekt bleibt vollständig erhalten und aktiv.
 4. `Projekt schließen` erneut wählen und bestätigen.
 5. Prüfen: Objektbaum ist leer, Auswahl ist leer, Undo/Redo sind zurückgesetzt.
-6. Prüfen: zuvor gespeicherte Projekte stehen weiterhin im Projekt-Dropdown.
-7. Den vorherigen gespeicherten Projektstand erneut laden.
+6. Prüfen: zuvor lokal gespeicherte Projekte stehen weiterhin im Projekt-Dropdown.
+7. Einen vorherigen gespeicherten Projektstand oder eine gespeicherte Projektdatei erneut laden/importieren.
 8. Prüfen: Inhalt ist vollständig wieder vorhanden.
 
 ## C – Regression
 
-1. Normales `Speichern` und `Laden` funktioniert weiterhin.
-2. Undo/Redo innerhalb eines aktiven Projekts funktioniert weiterhin.
-3. Sichtbarkeit aus WD-14A funktioniert weiterhin.
-4. Sperren/Entsperren aus WD-14B funktioniert weiterhin.
-5. CM3D-Projektdatei Import/Export bleibt bedienbar.
+1. Normales `Speichern` und `Laden` über Browser-Storage funktioniert weiterhin.
+2. `CM3D-Projektdatei exportieren` funktioniert weiterhin und verwendet dasselbe `.cm3d.json`-Format.
+3. Projektdatei-Import funktioniert weiterhin.
+4. Undo/Redo innerhalb eines aktiven Projekts funktioniert weiterhin.
+5. Sichtbarkeit aus WD-14A funktioniert weiterhin.
+6. Sperren/Entsperren aus WD-14B funktioniert weiterhin.
 
 ## PASS-Kriterium
 
