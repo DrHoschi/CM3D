@@ -21,11 +21,6 @@ Die nachfolgende detaillierte Prüfliste bleibt als Regressionstest erhalten. Ni
 
 ## A – Ebenenausrichtung
 
-1. Skizze anlegen und Rechteck zeichnen.
-2. Einen Punkt auswählen.
-
-Erwartung:
-
 - [ ] Kamera richtet sich bei der ersten Elementauswahl senkrecht auf die Skizzenebene aus.
 - [ ] Ausgewähltes Element bleibt gut sichtbar.
 - [ ] Freie Kameradrehung ist während der Elementbearbeitung deaktiviert.
@@ -68,11 +63,6 @@ Erwartung:
 - [ ] Mehrfachauswahl verwendet einen gemeinsamen gesnappten Verschiebevektor.
 
 ## F – Extrusion live
-
-1. Geschlossene Skizze extrudieren.
-2. Danach einen Punkt, eine Linie oder eine Mehrfachauswahl der Quellskizze per Gizmo ziehen.
-
-Erwartung:
 
 - [ ] Extrusionsform folgt sichtbar der Skizzenänderung.
 - [ ] Keine alte Extrusionsgeometrie bleibt stehen.
