@@ -11,8 +11,10 @@ function safeFileStem(name) {
   return stem || 'CM3D-Projekt';
 }
 
-export function projectFileName(project) {
-  return `${safeFileStem(project?.project?.name)}${PROJECT_FILE_EXTENSION}`;
+export function projectFileName(project, requestedName = null) {
+  const source = requestedName ?? project?.project?.name;
+  const stem = safeFileStem(source).replace(/\.cm3d\.json$/i, '');
+  return `${stem}${PROJECT_FILE_EXTENSION}`;
 }
 
 export function serializeProjectFile(project) {
@@ -21,19 +23,20 @@ export function serializeProjectFile(project) {
   return JSON.stringify(project, null, 2);
 }
 
-export function downloadProjectFile(project) {
+export function downloadProjectFile(project, requestedName = null) {
   const json = serializeProjectFile(project);
+  const fileName = projectFileName(project, requestedName);
   const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = projectFileName(project);
+  anchor.download = fileName;
   anchor.style.display = 'none';
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
   setTimeout(() => URL.revokeObjectURL(url), 0);
-  return { bytes: new Blob([json]).size, fileName: projectFileName(project) };
+  return { bytes: blob.size, fileName };
 }
 
 export function parseProjectFileText(text) {
