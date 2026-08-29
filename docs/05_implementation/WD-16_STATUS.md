@@ -1,7 +1,7 @@
 # WD-16 – Viewport-Referenzsystem abschließen
 
 **Stand:** 2026-08-29  
-**Status:** IMPLEMENTED / DEVICE TEST REQUIRED  
+**Status:** PASS / FROZEN  
 **Branch:** `feature/wd-16-viewport-reference-system`  
 **Basis:** V1-Restabgleich `acf449595f7d4096405340ecccb386c24af15b7b` auf WD-15B PASS / FROZEN  
 **Funktion:** `CM3D-F023` – Raster und Achsen
@@ -26,6 +26,22 @@ Im Viewport wird am Weltursprung ein XYZ-Achsensystem dargestellt:
 
 Das bereits vorhandene GridHelper-Raster und dessen dynamische Skalierung werden in WD-16 nicht neu implementiert oder verändert. WD-16 ergänzt ausschließlich die bisher fehlende Achsenreferenz.
 
+## Geräteabnahme
+
+**Datum:** 2026-08-29  
+**Gerät/Umgebung:** iPad / Safari / GitHub Pages  
+**Ergebnis:** PASS
+
+Praktisch bestätigt wurden:
+
+- sichtbares XYZ-Achsensystem am Weltursprung;
+- korrekte Farblogik X rot, Y grün, Z blau;
+- sichtbare X/Y/Z-Beschriftung;
+- Darstellung im leeren Projekt sowie zusammen mit vorhandenen Modellobjekten;
+- korrekte sichtbare Build-Kennung `WD-16` nach Behebung der geerbten WD-15B-Überschreibung.
+
+Der Build-Label-Fehler war kein Fehler der Achsenfunktion selbst. Er wurde vor dem Freeze separat korrigiert.
+
 ## Nicht Bestandteil
 
 - Kameraobjekte oder Kamera-Vorschau;
@@ -35,8 +51,8 @@ Das bereits vorhandene GridHelper-Raster und dessen dynamische Skalierung werden
 - Diagnose/Scene JSON/Selection-Panels;
 - Änderungen am Projektformat.
 
-## Abnahme
+## Freeze
 
-Vor PASS / FROZEN ist ein praktischer iPad-/Safari-Test erforderlich.
+WD-16 ist nach bestandenem realem iPad-/Safari-Gerätetest **PASS / FROZEN**.
 
-**Aktueller Status: IMPLEMENTED / DEVICE TEST REQUIRED.**
+`CM3D-F023 – Raster und Achsen` ist damit für V1 abgeschlossen. Neue Änderungen an diesem Block erfolgen nur über einen nachfolgenden dokumentierten Entwicklungsblock.
