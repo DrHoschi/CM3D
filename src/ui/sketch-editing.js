@@ -103,7 +103,10 @@ export function installSketchEditing(store, runtime, ui) {
     const ax = Number(next?.ax), ay = Number(next?.ay), bx = Number(next?.bx), by = Number(next?.by);
     if (![ax, ay, bx, by].every(Number.isFinite)) return false;
     if (a.x === ax && a.y === ay && b.x === bx && b.y === by) return false;
-    a.x = ax; a.y = ay; b.x = bx; b.y = by;
+    a.x = ax;
+    a.y = ay;
+    b.x = bx;
+    b.y = by;
     return true;
   });
 
@@ -111,7 +114,8 @@ export function installSketchEditing(store, runtime, ui) {
     const selected = store.selection.sketchElement;
     if (!selected) return false;
     const { sketchId, kind, elementId } = selected;
-    const changed = commitSketchMutation(sketchId, kind === 'line' ? 'Skizzenlinie löschen' : 'Skizzenpunkt löschen', sketch => {
+    store.selection.sketchElement = null;
+    return commitSketchMutation(sketchId, kind === 'line' ? 'Skizzenlinie löschen' : 'Skizzenpunkt löschen', sketch => {
       if (kind === 'line') {
         const line = sketch.data?.lines?.[elementId];
         if (!line) return false;
@@ -131,14 +135,10 @@ export function installSketchEditing(store, runtime, ui) {
       delete sketch.data.points[elementId];
       return true;
     });
-    if (changed) store.selection.sketchElement = null;
-    return changed;
   };
 
   store.deleteSelected = () => store.selection.sketchElement ? store.deleteSketchElement() : baseDeleteSelected();
 
-  // Existing WD-08 sketch creation commands can also modify a sketch after an
-  // extrusion already exists. Keep those dependencies synchronized as well.
   let syncingGeometry = false;
   store.subscribe(event => {
     if (event.type !== 'geometryChanged' || event.sketchDependencySynced || syncingGeometry) return;
@@ -255,8 +255,6 @@ function installInspectorEditing(ui, store) {
   form.insertBefore(fieldset, geometry ?? form.firstChild);
 
   const q = selector => fieldset.querySelector(selector);
-  const pointEditor = q('#sketch-point-editor');
-  const lineEditor = q('#sketch-line-editor');
   const pointX = q('#sketch-point-x'), pointY = q('#sketch-point-y');
   const ax = q('#sketch-line-ax'), ay = q('#sketch-line-ay'), bx = q('#sketch-line-bx'), by = q('#sketch-line-by');
 
@@ -306,7 +304,9 @@ function renderSketchElementInspector(ui, store, fieldset) {
   const pointEditor = q('#sketch-point-editor');
   const lineEditor = q('#sketch-line-editor');
   const dependencyCount = Object.values(store.project.scene.objects).filter(object => object.type === 'feature.extrude' && object.data?.sourceSketchId === sketch.objectId).length;
-  q('#sketch-dependency-note').textContent = dependencyCount ? `${dependencyCount} abhängige Extrusion${dependencyCount === 1 ? '' : 'en'} wird/werden nach Änderungen automatisch aktualisiert. Wird das Profil offen oder ungültig, verschwindet die abhängige Geometrie bis die Kontur wieder gültig ist.` : 'Keine abhängige Extrusion.';
+  q('#sketch-dependency-note').textContent = dependencyCount
+    ? `${dependencyCount} abhängige Extrusion${dependencyCount === 1 ? '' : 'en'} wird/werden nach Änderungen automatisch aktualisiert. Wird das Profil offen oder ungültig, verschwindet die abhängige Geometrie bis die Kontur wieder gültig ist.`
+    : 'Keine abhängige Extrusion.';
   q('#sketch-element-id').textContent = selected.elementId;
   fieldset.hidden = false;
 
@@ -373,10 +373,9 @@ function installViewportEditing(runtime, store) {
   runtime.pick = event => {
     if (runtime.transform.dragging) return;
     runtime.pointerFromEvent(event);
-    const hits = runtime.raycaster.intersectObjects(runtime.pickables, false);
-    const elementHit = hits.find(hit => hit.object?.userData?.cm3dSketchElement);
-    if (elementHit) {
-      const element = elementHit.object.userData.cm3dSketchElement;
+    const first = runtime.raycaster.intersectObjects(runtime.pickables, false)[0];
+    const element = first?.object?.userData?.cm3dSketchElement;
+    if (element) {
       store.selectSketchElement(element.sketchId, element.kind, element.elementId);
       return;
     }
@@ -395,8 +394,10 @@ function sketchSpan(points) {
   if (!points.length) return 1;
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const point of points) {
-    minX = Math.min(minX, point.x); minY = Math.min(minY, point.y);
-    maxX = Math.max(maxX, point.x); maxY = Math.max(maxY, point.y);
+    minX = Math.min(minX, point.x);
+    minY = Math.min(minY, point.y);
+    maxX = Math.max(maxX, point.x);
+    maxY = Math.max(maxY, point.y);
   }
   return Math.max(maxX - minX, maxY - minY, 0.25);
 }
