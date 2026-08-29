@@ -56,7 +56,7 @@ WD-11A ist damit verbindlich **PASS / FROZEN** und darf nach `main` gemergt werd
 
 ## WD-11B – GLB/GLTF Import & Export
 
-**Status:** IMPLEMENTED / DEVICE TEST PENDING  
+**Status:** IMPLEMENTED / DEVICE RETEST REQUIRED  
 **Branch:** `feature/wd-11b-glb-gltf-import-export`  
 **Basis:** `docs/ui-contextual-command-surface-v0.2`  
 **Funktionsbezug:** CM3D-F072 + CM3D-F075
@@ -144,6 +144,21 @@ Die Quellbytes importierter GLB/GLTF-Dateien werden im aktuellen V1-Datenmodell 
 
 GLB/GLTF-Runtimeobjekte werden bei einem Scene-Rebuild aus den persistierten Asset-Daten neu geparst. Es wird bewusst kein wiederverwendeter Three.js-Geometriecache über Rebuilds hinweg gehalten, da die bestehende Runtime beim Neuaufbau alte Geometrien und Materialien freigibt. Dadurch bleiben insbesondere Undo/Redo, Duplizieren und Projektladen robust.
 
+### Gerätetest 2026-08-29 – erster Lauf
+
+Vom Gerät gemeldet:
+
+1. `GLB / GLTF importieren` öffnet den Dateidialog, vorhandene `.glb`-Dateien sind dort jedoch ausgegraut und nicht auswählbar. **FAIL**.
+2. `Fit / Fokus` reagiert nicht mehr. **REGRESSION / FAIL**.
+3. GLB/GLTF-Export wird separat weiter geprüft; noch kein abschließendes PASS.
+
+### Korrekturen nach erstem Gerätetest
+
+- Der native Dateidialog wird für den GLB/GLTF-Import nun bewusst **ohne `accept`-Filter** geöffnet. Hintergrund: iOS/Safari kann ansonsten gültige `.glb`-Dateien im Dateien-Dialog ausgrauen. Die Formatprüfung bleibt vollständig in CM3D und erfolgt erst nach der Benutzerauswahl.
+- `Fit / Fokus` ist wieder direkt mit `runtime.focusSelection()` verbunden. Der Buttonzustand wird zusätzlich aus der aktuellen CM3D-Auswahl synchronisiert, damit die UI-Neustrukturierung den bestehenden Fokuspfad nicht mehr blockiert.
+
+Beide Punkte benötigen nun einen erneuten Gerätetest.
+
 ### Folgeblock
 
 Nach erfolgreichem Gerätetest von WD-11B soll ein eigener kleiner Block folgen:
@@ -163,4 +178,4 @@ Damit wird `Projekt öffnen/ersetzen` weiterhin klar von `Objekte dazuladen/merg
 
 ### Abnahme
 
-WD-11B darf erst nach dem Gerätetest auf **PASS / FROZEN** gesetzt werden. Die verbindliche Prüfliste liegt in `WD-11B_TEST_CHECKLIST.md`.
+WD-11B darf erst nach dem erneuten Gerätetest auf **PASS / FROZEN** gesetzt werden. Die verbindliche Prüfliste liegt in `WD-11B_TEST_CHECKLIST.md`.
