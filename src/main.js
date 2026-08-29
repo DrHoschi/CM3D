@@ -9,6 +9,7 @@ import { installCommandSurface } from './ui/command-surface.js';
 import { installGltfPanel } from './ui/gltf-panel.js';
 import { installPartialProjectPanel } from './ui/partial-project-panel.js';
 import { installSketchEditing } from './ui/sketch-editing.js';
+import { installSketchGizmo } from './ui/sketch-gizmo.js';
 
 const store = new AppStore();
 const viewport = document.querySelector('#viewport');
@@ -67,6 +68,7 @@ installCommandSurface(store);
 installPartialProjectPanel(store);
 installGltfPanel(store, gltfInterchange);
 installSketchEditing(store, runtime, appUI);
+const sketchGizmo = installSketchGizmo(store, runtime);
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
@@ -84,4 +86,4 @@ store.subscribe(event=>{
 });
 syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange };
+window.cm3d = { store, runtime, gltfInterchange, sketchGizmo };
