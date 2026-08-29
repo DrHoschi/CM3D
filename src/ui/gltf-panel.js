@@ -13,12 +13,12 @@ export function installGltfPanel(store, interchange) {
   const menuBlock = document.createElement('div');
   menuBlock.innerHTML = `
     <div class="menu-separator"></div>
-    <div class="menu-inline column"><span>3D-Modell importieren</span><small class="muted">GLB oder GLTF; bei GLTF Abhängigkeiten gemeinsam auswählen</small></div>
+    <div class="menu-inline column"><span>3D-Modell importieren</span><small class="muted">GLB oder GLTF; Dateityp wird nach Auswahl geprüft</small></div>
     <button id="import-gltf-model" class="menu-item">
       <svg class="cm-icon"><use href="#import"></use></svg>
       <span>GLB / GLTF importieren</span>
     </button>
-    <input id="gltf-model-input" type="file" accept=".glb,.gltf,.bin,.png,.jpg,.jpeg,.webp,.ktx2,model/gltf-binary,model/gltf+json" multiple hidden/>
+    <input id="gltf-model-input" type="file" multiple hidden/>
     <div class="menu-separator"></div>
     <div class="menu-inline column"><span>3D-Modell exportieren</span><small class="muted">WD-11B: Ganze Szene</small></div>
     <button id="start-gltf-export" class="menu-item">
