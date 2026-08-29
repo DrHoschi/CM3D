@@ -234,10 +234,48 @@ export function installGltfInterchange(runtime, store) {
     await Promise.all([...pendingHydrations]);
   }
 
-  function exportClone() {
+  function selectionRootIds() {
+    const selected = [...new Set(store.selection.selectedObjectIds)].filter(id => store.getObject(id));
+    const selectedSet = new Set(selected);
+    return selected.filter(id => {
+      let parent = store.getObject(id)?.parentId ?? null;
+      while (parent) {
+        if (selectedSet.has(parent)) return false;
+        parent = store.getObject(parent)?.parentId ?? null;
+      }
+      return true;
+    });
+  }
+
+  function cloneAtWorldTransform(node) {
+    node.updateWorldMatrix(true, true);
+    const clone = SkeletonUtils.clone(node);
+    const p = new THREE.Vector3();
+    const q = new THREE.Quaternion();
+    const s = new THREE.Vector3();
+    node.matrixWorld.decompose(p, q, s);
+    clone.position.copy(p);
+    clone.quaternion.copy(q);
+    clone.scale.copy(s);
+    clone.updateMatrix();
+    return clone;
+  }
+
+  function exportClone(scope = 'scene') {
     const root = new THREE.Group();
-    root.name = 'CM3D_Export';
-    for (const child of runtime.modelRoot.children) root.add(SkeletonUtils.clone(child));
+    root.name = scope === 'selection' ? 'CM3D_Selection_Export' : 'CM3D_Export';
+    runtime.modelRoot.updateWorldMatrix(true, true);
+
+    if (scope === 'selection') {
+      const ids = selectionRootIds();
+      if (!ids.length) throw new Error('Bitte mindestens ein Objekt für den Auswahl-Export auswählen.');
+      for (const id of ids) {
+        const node = runtime.objectMap.get(id);
+        if (node) root.add(cloneAtWorldTransform(node));
+      }
+    } else {
+      for (const child of runtime.modelRoot.children) root.add(SkeletonUtils.clone(child));
+    }
 
     const remove = new Set();
     root.traverse(node => {
@@ -257,11 +295,14 @@ export function installGltfInterchange(runtime, store) {
     await waitForHydration();
     const format = String(options.format || 'glb').toLowerCase();
     if (!['glb', 'gltf'].includes(format)) throw new Error(`Unbekanntes Exportformat: ${format}`);
+    const scope = options.scope === 'selection' ? 'selection' : 'scene';
 
-    const root = exportClone();
+    const root = exportClone(scope);
     let renderableCount = 0;
     root.traverse(node => { if (node.isMesh || node.isLine || node.isPoints) renderableCount += 1; });
-    if (!renderableCount) throw new Error('Die Szene enthält keine exportierbare 3D-Geometrie. Skizzen allein werden nicht als GLB/GLTF exportiert.');
+    if (!renderableCount) throw new Error(scope === 'selection'
+      ? 'Die Auswahl enthält keine exportierbare 3D-Geometrie. Skizzen allein werden nicht als GLB/GLTF exportiert.'
+      : 'Die Szene enthält keine exportierbare 3D-Geometrie. Skizzen allein werden nicht als GLB/GLTF exportiert.');
 
     const exporter = new GLTFExporter();
     const result = await exporter.parseAsync(root, {
@@ -277,7 +318,7 @@ export function installGltfInterchange(runtime, store) {
       ? new Blob([result], { type: 'model/gltf-binary' })
       : new Blob([typeof result === 'string' ? result : JSON.stringify(result, null, 2)], { type: 'model/gltf+json' });
     downloadBlob(blob, fileName);
-    return { format, fileName, bytes: blob.size, renderableCount };
+    return { format, scope, fileName, bytes: blob.size, renderableCount };
   }
 
   return {
