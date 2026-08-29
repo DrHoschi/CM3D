@@ -1,6 +1,6 @@
 # WD-13A – Feature-/Operationsbaum Core
 
-**Status:** IMPLEMENTED / DEVICE TEST REQUIRED  
+**Status:** PASS / FROZEN  
 **Branch:** `feature/wd-13a-feature-operations-tree-core`  
 **Basis:** `feature/wd-12b-sketch-gizmo-plane-editing` (WD-12B PASS / FROZEN)
 
@@ -84,8 +84,28 @@ Mehrere vorhandene Extrusionen mit derselben `sourceSketchId` werden gemeinsam i
 
 Diese Punkte gehören in Folgeblöcke. Insbesondere ist **WD-13B – Feature-Parameter im Inspector** als direkter fachlicher Folgeblock vorgesehen.
 
+## Geräteabnahme
+
+**Datum:** 2026-08-29  
+**Gerät:** iPad / Safari / GitHub Pages  
+**Ergebnis:** PASS
+
+Praktisch bestätigt wurden:
+
+- Skizze mit Linien und Punkten bleibt korrekt im Objektbaum sichtbar;
+- zwei Extrusionen derselben Skizze erscheinen gemeinsam unter `Operationen (2)`;
+- verknüpfte Extrusionen werden nicht zusätzlich als Root-Objekte dargestellt;
+- Extrusion 1 und Extrusion 2 sind einzeln im Operationsbaum auswählbar;
+- der Inspector erkennt die Auswahl jeweils als `feature.extrude`;
+- Löschen einer Extrusion funktioniert;
+- Undo stellt den gelöschten Zustand korrekt zurück;
+- Redo funktioniert ebenfalls korrekt;
+- Projekt speichern und anschließend neu laden erhält Skizze, Operationen und Zuordnung korrekt.
+
 ## Abnahmestatus
 
-Implementierung ist im Branch vorhanden. Vor PASS / FROZEN ist ein praktischer Browser-/iPad-Test nach `WD-13A_TEST_CHECKLIST.md` erforderlich.
+WD-13A wurde praktisch auf dem iPad geprüft und abgenommen.
 
-**Aktueller Status: IMPLEMENTED / DEVICE TEST REQUIRED.**
+**Finaler Status: PASS / FROZEN.**
+
+Direkter Folgeblock: **WD-13B – Feature-Parameter im Inspector**.
