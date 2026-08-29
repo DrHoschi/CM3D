@@ -1,100 +1,117 @@
 # WD-12B – Skizzen-Gizmo & Ebenenbearbeitung
 
-**Status:** IMPLEMENTED / DEVICE TEST PENDING  
+**Status:** PASS / FROZEN  
 **Branch:** `feature/wd-12b-sketch-gizmo-plane-editing`  
 **Basis:** `feature/wd-12a-sketch-editing-v1` (WD-12A PASS / FROZEN)
 
 ## Ziel
 
-WD-12B ergänzt die in WD-12A eingeführte elementweise Skizzenbearbeitung um eine direkte, touch-taugliche Verschiebung von Punkten und Linien in der aktiven Skizzenebene.
+WD-12B ergänzt die in WD-12A eingeführte elementweise Skizzenbearbeitung um eine direkte, touch-taugliche Verschiebung von Punkten und Linien in der aktiven Skizzenebene sowie um Mehrfachselektion.
 
 ## 1 – Kamera auf Skizzenebene ausrichten
 
-Wird ein Skizzenpunkt oder eine Skizzenlinie ausgewählt:
+Bei der ersten Auswahl eines Skizzenelements wird die Kamera senkrecht auf die reale lokale XY-Ebene der Skizze ausgerichtet. Der Auswahlmittelpunkt dient dabei als Bearbeitungsziel und die lokale Y-Richtung der Skizze als Kamera-Up.
 
-- wird die Kamera senkrecht auf die reale lokale XY-Ebene der Skizze ausgerichtet;
-- der aktuelle Elementmittelpunkt wird als Bearbeitungsziel verwendet;
-- die lokale Y-Richtung der Skizze wird als Kamera-Up übernommen;
-- freie Kameradrehung wird deaktiviert.
+Dieses einmalige Ausrichten ist beabsichtigt und wurde im Gerätetest akzeptiert. Während und nach dem anschließenden Verschieben eines Punkts, einer Linie oder einer Mehrfachauswahl bleibt der Viewer stehen und zentriert nicht auf das verschobene Element nach.
 
-Damit bleibt die Skizzenebene während der Elementbearbeitung stabil. Außerhalb der Skizzenelement-Auswahl wird die bisherige Orbit-Drehung wieder freigegeben.
+Während der Elementbearbeitung bleibt freie Orbit-Drehung deaktiviert. Außerhalb der Skizzenelement-Auswahl wird die normale Kamerabedienung wieder freigegeben.
 
-## 2 – 2D-Gizmo
+## 2 – Move-artiges 2D-Gizmo
 
-Das Gizmo besitzt:
+Das Skizzen-Gizmo orientiert sich visuell am normalen Move-Werkzeug:
 
-- X-Achse;
-- Y-Achse;
-- zentralen XY-Griff.
+- rote X-Achse;
+- grüne Y-Achse;
+- gelbe XY-Fläche für freie diagonale Bewegung.
 
 Die sichtbaren Griffe besitzen vergrößerte unsichtbare Trefferbereiche für Touch-Bedienung.
 
-## 3 – Punkt verschieben
+## 3 – Einzelpunkt verschieben
 
-Bei ausgewähltem Punkt sitzt das Gizmo direkt auf dem Punkt.
+Bei einem ausgewählten Punkt sitzt das Gizmo auf dem Punkt.
 
 - X-Griff: nur lokale X-Richtung;
 - Y-Griff: nur lokale Y-Richtung;
-- Mittelpunkt: freie Bewegung in lokal X/Y.
+- gelbe XY-Fläche: freie Bewegung in lokal X/Y.
 
 Die Punkt-ID bleibt unverändert. Verbundene Linien folgen demselben Punkt.
 
-## 4 – Linie verschieben
+## 4 – Einzellinie verschieben
 
-Bei ausgewählter Linie sitzt das Gizmo in der Linienmitte.
+Bei einer ausgewählten Linie sitzt das Gizmo in der Linienmitte.
 
-Beim Verschieben werden beide referenzierten Endpunkte um denselben lokalen Delta-Wert verschoben. Damit bewegt sich die komplette Linie parallel, ohne ihre Länge oder Richtung durch die Verschiebung selbst zu ändern.
+Beim Verschieben werden beide referenzierten Endpunkte um denselben lokalen Delta-Wert verschoben. Damit bewegt sich die komplette Linie parallel. Topologisch gemeinsam genutzte Endpunkte bleiben echte gemeinsame Punkte.
 
-Sind die Endpunkte zugleich Bestandteil angrenzender Linien, bewegen sich diese topologisch verbundenen Linien mit.
+## 5 – Mehrfachselektion
 
-## 5 – Kamerasteuerung während Drag
+WD-12B unterstützt:
+
+- mehrere Punkte;
+- mehrere Linien;
+- gemischte Auswahl aus Punkten und Linien;
+- gemeinsames Move-Gizmo im Mittelpunkt der gesamten Auswahl.
+
+Für die Bewegung werden die tatsächlich betroffenen Punkt-IDs zuerst eindeutig gesammelt. Ein gemeinsamer Eckpunkt mehrerer ausgewählter Linien wird deshalb nur einmal verschoben.
+
+Die aktuell im Skizzen-Inspector platzierte Mehrfachauswahl-Umschaltung ist funktional, ihre endgültige Platzierung ist jedoch bewusst ein nachfolgender UI-Strukturpunkt und kein WD-12B-Abnahmefehler.
+
+## 6 – Kamerasteuerung während Drag
 
 Sobald ein Gizmo-Griff tatsächlich gezogen wird:
 
 - OrbitControls werden vollständig deaktiviert;
 - Pointer Capture bindet den aktiven Finger/Pointer an den Drag;
-- die Kamera wird während des Drags nicht dem wandernden Element nachgeführt;
-- beim Loslassen wird die Bedienung wieder freigegeben, freie Rotation bleibt solange deaktiviert, wie ein Skizzenelement aktiv ist.
+- die Kamera bleibt während des Drags fest;
+- nach dem Loslassen erfolgt keine erneute Zentrierung auf das verschobene Element.
 
-Damit konkurrieren Touch-Drag und Kamerasteuerung nicht miteinander.
+## 7 – Snap
 
-## 6 – Snap
+Ist CM3D-Snap aktiviert, wird `store.snap.translate` für die Verschiebung in der Skizzenebene verwendet.
 
-Ist das vorhandene CM3D-Snap aktiviert, verwendet WD-12B `store.snap.translate` für das Verschiebe-Delta in der Skizzenebene.
-
-- X/Y-Achsengriff: Snap nur auf der aktiven Achse;
-- XY-Griff: Snap auf X und Y.
+- X/Y-Achsengriff: Bewegung nur auf der aktiven Achse;
+- XY-Fläche: Snap auf X und Y;
+- Mehrfachauswahl: gemeinsamer gesnappter Verschiebevektor für die gesamte Auswahl.
 
 Ohne aktiviertes Snap ist die Bewegung frei.
 
-## 7 – Live-Aktualisierung abhängiger Extrusionen
+## 8 – Live-Aktualisierung abhängiger Extrusionen
 
-Während eines Gizmo-Drags wird die in WD-12A eingeführte Abhängigkeit erneut ausgewertet.
+Während eines Gizmo-Drags wird die in WD-12A eingeführte Skizzenabhängigkeit live erneut ausgewertet.
 
-- gültige geschlossene Kontur: `feature.extrude` erhält das aktuelle Profil und wird neu dargestellt;
-- offene/ungültige Kontur: veraltete Extrusionsgeometrie bleibt nicht sichtbar;
-- wird die Kontur wieder gültig, erscheint die Extrusion wieder aus dem aktuellen Profil.
+- gültige geschlossene Kontur: abhängige Extrusion folgt der aktuellen Skizze;
+- offene/ungültige Kontur: keine veraltete Extrusionsgeometrie bleibt sichtbar;
+- wird die Kontur wieder gültig, wird die aktuelle Extrusion erneut dargestellt.
 
-## 8 – Undo / Redo
+## 9 – Undo / Redo
 
-Ein kompletter Pointer-Drag erzeugt genau einen Historieneintrag:
+Ein kompletter Pointer-Drag erzeugt genau einen Historieneintrag. Das gilt für:
 
-- `Skizzenpunkt per Gizmo verschieben` oder
-- `Skizzenlinie per Gizmo verschieben`.
+- einzelnen Punkt;
+- einzelne Linie;
+- Mehrfachauswahl.
 
-Die Zwischenpositionen während des Drags erzeugen keine einzelnen Undo-Schritte. Der zugehörige Extrusionszustand gehört zum selben Historieneintrag.
+Zwischenpositionen während des Drags erzeugen keine eigenen Undo-Schritte. Der zugehörige Extrusionszustand gehört zum selben Historieneintrag.
 
-## Nicht Bestandteil von WD-12B
+## Gerätetest / Abnahme
 
+Praktischer Gerätetest am **2026-08-29 auf iPad**:
+
+- Punkte auswählbar und per Gizmo verschiebbar: PASS;
+- Linien auswählbar und per Gizmo verschiebbar: PASS;
+- Mehrfachselektion von Skizzenelementen und gemeinsames Verschieben: PASS;
+- Move-artiges Gizmo mit achsweiser und diagonaler XY-Bewegung: PASS;
+- Viewer richtet sich bei der ersten Auswahl auf die Skizzenebene aus: akzeptiertes Sollverhalten;
+- Viewer springt während bzw. nach dem Verschieben nicht hinterher: PASS;
+- im praktisch getesteten WD-12B-Umfang keine weiteren Fehler festgestellt.
+
+Damit ist WD-12B **PASS / FROZEN**.
+
+## Bewusst nachgelagert
+
+- endgültige Platzierung der Mehrfachauswahl in der kontextuellen Werkzeug-/Auswahlbedienung;
 - Rotation oder Skalierung einzelner Skizzenelemente;
-- Mehrfachauswahl mehrerer Punkte/Linien;
 - Constraints und parametrische Maße;
 - Trim / Extend / Fillet;
-- Drag kompletter Profilgruppen;
-- eigene Touch-Gesten für numerische Maßeingabe.
-
-## Abnahme
-
-WD-12B bleibt bis zum praktischen Gerätetest auf iPad/iPhone Safari **IMPLEMENTED / DEVICE TEST PENDING**.
+- weitergehende Profil-/Topologie-Werkzeuge.
 
 Die Prüfliste liegt in `WD-12B_TEST_CHECKLIST.md`.
