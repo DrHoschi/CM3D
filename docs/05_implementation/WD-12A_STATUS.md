@@ -1,6 +1,6 @@
 # WD-12A – Skizzenbearbeitung V1
 
-**Status:** IMPLEMENTED / DEVICE TEST PENDING  
+**Status:** PASS / FROZEN  
 **Branch:** `feature/wd-12a-sketch-editing-v1`  
 **Basis:** `feature/wd-11c-selection-partial-project-merge` (WD-11C PASS / FROZEN)
 
@@ -102,8 +102,17 @@ Der jeweilige Zustand abhängiger Extrusionen ist Bestandteil desselben Undo-/Re
 - Mehrfachauswahl mehrerer Skizzenlinien/-punkte;
 - Kurven, Kreise oder Bögen.
 
-## Abnahme
+## Gerätetest / Abnahme
 
-WD-12A bleibt bis zum Gerätetest auf iPad/iPhone Safari **IMPLEMENTED / DEVICE TEST PENDING**.
+Gerätetest am **2026-08-29 auf iPad** durchgeführt.
 
-Die Prüfliste liegt in `WD-12A_TEST_CHECKLIST.md`.
+Vom Anwender bestätigt:
+
+- elementweise Skizzenbearbeitung wurde praktisch getestet;
+- Punkt-/Linienkoordinaten lassen sich über den Inspector ändern;
+- die abhängige Extrusion aktualisiert sich passend zur geänderten Skizze;
+- im getesteten WD-12A-Umfang wurden keine weiteren Fehler festgestellt.
+
+Direktes Verschieben eines Punktes oder einer Linie per Finger/Gizmo war ausdrücklich **nicht Bestandteil von WD-12A** und ist deshalb kein Abnahmeblocker. Diese Bedienung wird als Folgeblock WD-12B vorgesehen.
+
+**Abnahme: PASS / FROZEN.**
