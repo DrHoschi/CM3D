@@ -8,6 +8,7 @@ import { installMaterialPanel } from './ui/material-panel.js';
 import { installCommandSurface } from './ui/command-surface.js';
 import { installGltfPanel } from './ui/gltf-panel.js';
 import { installPartialProjectPanel } from './ui/partial-project-panel.js';
+import { installSketchEditing } from './ui/sketch-editing.js';
 
 const store = new AppStore();
 const viewport = document.querySelector('#viewport');
@@ -15,7 +16,7 @@ const viewport = document.querySelector('#viewport');
 const runtime = new ThreeRuntime(viewport, store);
 installExtrudeRuntime(runtime);
 const gltfInterchange = installGltfInterchange(runtime, store);
-new AppUI(store);
+const appUI = new AppUI(store);
 installMaterialPanel(store);
 
 for (const button of document.querySelectorAll('[data-fixed-view]')) {
@@ -65,6 +66,7 @@ store.subscribe(event=>{
 installCommandSurface(store);
 installPartialProjectPanel(store);
 installGltfPanel(store, gltfInterchange);
+installSketchEditing(store, runtime, appUI);
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
