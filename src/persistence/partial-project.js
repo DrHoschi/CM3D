@@ -110,6 +110,9 @@ export function createPartialProject(store) {
       copy.parentId = null;
       copy.transform = worldRootTransform(store, source);
     }
+    if (copy.type === 'feature.extrude' && copy.data?.sourceSketchId && !included.has(copy.data.sourceSketchId)) {
+      copy.data.sourceSketchId = null;
+    }
     objects[id] = copy;
     for (const materialId of copy.materialIds || []) materialIds.add(materialId);
     if (copy.type === 'external.gltf' && copy.data?.assetId) assetIds.add(copy.data.assetId);
@@ -217,6 +220,7 @@ export function mergePartialProject(store, partial) {
   if (!result.valid) throw new Error(`CM3D-Objekte können nicht dazugeladen werden:\n${result.errors.join('\n')}`);
 
   const before = store.snapshot();
+  const previousSelection = structuredClone(store.selection);
   const maps = makeIdMaps(partial);
 
   for (const [oldId, material] of Object.entries(partial.materials || {})) {
@@ -245,6 +249,13 @@ export function mergePartialProject(store, partial) {
     store.project.scene.objects[copy.objectId] = copy;
   }
   store.project.scene.rootObjectIds.push(...importedRoots);
+
+  const mergedValidation = validateProject(store.project);
+  if (!mergedValidation.valid) {
+    store.project = before;
+    store.selection = previousSelection;
+    throw new Error(`CM3D-Objekte konnten wegen ungültiger Referenzen nicht dazugeladen werden. Das aktuelle Projekt wurde nicht verändert:\n${mergedValidation.errors.join('\n')}`);
+  }
 
   store.touch();
   store.selection.selectedObjectIds = [...importedRoots];
