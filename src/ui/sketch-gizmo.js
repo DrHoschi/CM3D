@@ -1,132 +1,26 @@
 import * as THREE from 'three';
 
-const AXIS_LENGTH=0.5;
-const AXIS_HEAD_LENGTH=0.12;
-const AXIS_HEAD_RADIUS=0.045;
-const PLANE_HANDLE_OFFSET=0.105;
-const PLANE_HANDLE_SIZE=0.16;
-const SNAP_EPS=1e-12;
-const X_COLOR=0xff3b30;
-const Y_COLOR=0x34c759;
-const XY_COLOR=0xffd60a;
+const AXIS_LENGTH=0.5,AXIS_HEAD_LENGTH=0.12,AXIS_HEAD_RADIUS=0.045,PLANE_HANDLE_OFFSET=0.105,PLANE_HANDLE_SIZE=0.16,SNAP_EPS=1e-12;
+const X_COLOR=0xff3b30,Y_COLOR=0x34c759,XY_COLOR=0xffd60a;
 
 export function installSketchGizmo(store,runtime){
-  const state={group:null,pickables:[],drag:null,alignedSketchId:null,previousEnableRotate:runtime.orbit.enableRotate};
-
-  const disposeGizmo=()=>{
-    if(!state.group)return;
-    state.group.traverse(node=>{node.geometry?.dispose?.();if(Array.isArray(node.material))node.material.forEach(m=>m?.dispose?.());else node.material?.dispose?.();});
-    state.group.parent?.remove(state.group);state.group=null;state.pickables=[];
-  };
-
-  const selectedElement=()=>store.selection.sketchElement??null;
-  const selectedSketch=()=>{const s=selectedElement();return s?store.getObject(s.sketchId):null;};
-
-  const selectedAnchorLocal=()=>{
-    const selected=selectedElement(),sketch=selectedSketch();if(!selected||sketch?.type!=='sketch')return null;
-    if(selected.kind==='point'){
-      const p=sketch.data?.points?.[selected.elementId];return p?new THREE.Vector3(p.x,p.y,0):null;
-    }
-    const line=sketch.data?.lines?.[selected.elementId],a=line?sketch.data.points?.[line.startPointId]:null,b=line?sketch.data.points?.[line.endPointId]:null;
-    return a&&b?new THREE.Vector3((a.x+b.x)/2,(a.y+b.y)/2,0):null;
-  };
-
-  const alignCameraToSketch=()=>{
-    const selected=selectedElement(),node=selected?runtime.objectMap.get(selected.sketchId):null;if(!selected||!node)return false;
-    node.updateWorldMatrix(true,false);
-    const anchorLocal=selectedAnchorLocal();if(!anchorLocal)return false;
-    const target=node.localToWorld(anchorLocal.clone());
-    const normal=new THREE.Vector3(0,0,1).transformDirection(node.matrixWorld).normalize();
-    const up=new THREE.Vector3(0,1,0).transformDirection(node.matrixWorld).normalize();
-    const distance=Math.max(runtime.camera.position.distanceTo(runtime.orbit.target),0.25);
-    runtime.orbit.target.copy(target);runtime.camera.up.copy(up);runtime.camera.position.copy(target).addScaledVector(normal,distance);runtime.camera.lookAt(target);runtime.orbit.update();runtime.updateCameraRange?.();runtime.updateGrid?.();
-    state.alignedSketchId=selected.sketchId;return true;
-  };
-
-  const makeAxis=(axis)=>{
-    const group=new THREE.Group();
-    const dir=axis==='x'?new THREE.Vector3(1,0,0):new THREE.Vector3(0,1,0),color=axis==='x'?X_COLOR:Y_COLOR;
-    const lineGeom=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),dir.clone().multiplyScalar(AXIS_LENGTH-AXIS_HEAD_LENGTH*0.45)]);
-    const line=new THREE.Line(lineGeom,new THREE.LineBasicMaterial({color,depthTest:false,transparent:true,opacity:1}));line.renderOrder=1000;group.add(line);
-    const cone=new THREE.Mesh(new THREE.ConeGeometry(AXIS_HEAD_RADIUS,AXIS_HEAD_LENGTH,16),new THREE.MeshBasicMaterial({color,depthTest:false}));
-    cone.position.copy(dir).multiplyScalar(AXIS_LENGTH);cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);cone.renderOrder=1001;group.add(cone);
-    const hit=new THREE.Mesh(new THREE.BoxGeometry(axis==='x'?AXIS_LENGTH+0.12:0.18,axis==='y'?AXIS_LENGTH+0.12:0.18,0.10),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
-    hit.position.copy(dir).multiplyScalar(AXIS_LENGTH/2);hit.userData.cm3dSketchGizmoAxis=axis;group.add(hit);state.pickables.push(hit);return group;
-  };
-
-  const makePlaneHandle=()=>{
-    const group=new THREE.Group();
-    const fill=new THREE.Mesh(new THREE.PlaneGeometry(PLANE_HANDLE_SIZE,PLANE_HANDLE_SIZE),new THREE.MeshBasicMaterial({color:XY_COLOR,transparent:true,opacity:0.42,depthTest:false,side:THREE.DoubleSide}));
-    fill.position.set(PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE/2,PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE/2,0);fill.renderOrder=1002;group.add(fill);
-    const edge=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(PLANE_HANDLE_OFFSET,PLANE_HANDLE_OFFSET,0),
-      new THREE.Vector3(PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE,PLANE_HANDLE_OFFSET,0),
-      new THREE.Vector3(PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE,PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE,0),
-      new THREE.Vector3(PLANE_HANDLE_OFFSET,PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE,0)
-    ]),new THREE.LineBasicMaterial({color:XY_COLOR,depthTest:false}));edge.renderOrder=1003;group.add(edge);
-    const hit=new THREE.Mesh(new THREE.PlaneGeometry(PLANE_HANDLE_SIZE+0.08,PLANE_HANDLE_SIZE+0.08),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
-    hit.position.copy(fill.position);hit.userData.cm3dSketchGizmoAxis='xy';group.add(hit);state.pickables.push(hit);return group;
-  };
-
-  const rebuildGizmo=(align=true)=>{
-    disposeGizmo();const selected=selectedElement(),node=selected?runtime.objectMap.get(selected.sketchId):null;if(!selected||!node){runtime.orbit.enableRotate=state.previousEnableRotate;return;}
-    if(align)alignCameraToSketch();runtime.orbit.enableRotate=false;
-    const anchor=selectedAnchorLocal();if(!anchor)return;
-    const group=new THREE.Group();group.name='CM3D_SKETCH_GIZMO';group.renderOrder=1000;group.add(makeAxis('x'),makeAxis('y'),makePlaneHandle());
-    node.add(group);group.position.copy(anchor);state.group=group;
-  };
-
-  const rayFromEvent=event=>{runtime.pointerFromEvent(event);return runtime.raycaster;};
-  const localPointOnSketch=(event,sketchId)=>{
-    const node=runtime.objectMap.get(sketchId);if(!node)return null;node.updateWorldMatrix(true,false);rayFromEvent(event);
-    const origin=node.getWorldPosition(new THREE.Vector3()),normal=new THREE.Vector3(0,0,1).transformDirection(node.matrixWorld);const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,origin);const world=new THREE.Vector3();if(!runtime.raycaster.ray.intersectPlane(plane,world))return null;return node.worldToLocal(world.clone());
-  };
-
-  const snapValue=(value)=>{if(!store.snap.enabled)return value;const step=Number(store.snap.translate);if(!Number.isFinite(step)||step<=SNAP_EPS)return value;return Math.round(value/step)*step;};
-
-  const startDrag=event=>{
-    if(!state.pickables.length)return false;rayFromEvent(event);const hit=runtime.raycaster.intersectObjects(state.pickables,false)[0];if(!hit)return false;
-    const selected=selectedElement(),sketch=selectedSketch();if(!selected||sketch?.type!=='sketch')return false;const start=localPointOnSketch(event,selected.sketchId);if(!start)return false;
-    const axis=hit.object.userData.cm3dSketchGizmoAxis;const before=store.snapshot();
-    let initial;
-    if(selected.kind==='point'){
-      const p=sketch.data.points[selected.elementId];initial={point:{x:p.x,y:p.y}};
-    }else{
-      const line=sketch.data.lines[selected.elementId],a=sketch.data.points[line.startPointId],b=sketch.data.points[line.endPointId];initial={lineId:line.lineId,startPointId:line.startPointId,endPointId:line.endPointId,a:{x:a.x,y:a.y},b:{x:b.x,y:b.y}};
-    }
-    state.drag={pointerId:event.pointerId,selected:structuredClone(selected),axis,start:{x:start.x,y:start.y},initial,before};
-    runtime.orbit.enabled=false;runtime.renderer.domElement.setPointerCapture?.(event.pointerId);event.preventDefault();event.stopImmediatePropagation();return true;
-  };
-
-  const updateDrag=event=>{
-    const drag=state.drag;if(!drag||event.pointerId!==drag.pointerId)return;const sketch=store.getObject(drag.selected.sketchId),p=localPointOnSketch(event,drag.selected.sketchId);if(sketch?.type!=='sketch'||!p)return;
-    let dx=p.x-drag.start.x,dy=p.y-drag.start.y;if(drag.axis==='x')dy=0;if(drag.axis==='y')dx=0;
-    if(drag.selected.kind==='point'){
-      const point=sketch.data.points?.[drag.selected.elementId];if(point){point.x=snapValue(drag.initial.point.x+dx);point.y=snapValue(drag.initial.point.y+dy);}
-    }else{
-      const a=sketch.data.points?.[drag.initial.startPointId],b=sketch.data.points?.[drag.initial.endPointId];
-      if(a&&b){
-        const snappedDx=snapValue(drag.initial.a.x+dx)-drag.initial.a.x,snappedDy=snapValue(drag.initial.a.y+dy)-drag.initial.a.y;
-        a.x=drag.initial.a.x+snappedDx;a.y=drag.initial.a.y+snappedDy;b.x=drag.initial.b.x+snappedDx;b.y=drag.initial.b.y+snappedDy;
-      }
-    }
-    store.refreshDependentExtrudesFromSketch?.(drag.selected.sketchId);store.touch();runtime.rebuild();store.emit('sketchGizmoPreview',{sketchId:drag.selected.sketchId,kind:drag.selected.kind,elementId:drag.selected.elementId});rebuildGizmo(false);event.preventDefault();event.stopImmediatePropagation();
-  };
-
-  const finishDrag=event=>{
-    const drag=state.drag;if(!drag||event.pointerId!==drag.pointerId)return;state.drag=null;runtime.renderer.domElement.releasePointerCapture?.(event.pointerId);runtime.orbit.enabled=true;runtime.orbit.enableRotate=false;
-    const after=store.snapshot();if(JSON.stringify(drag.before)!==JSON.stringify(after))store.pushHistory(drag.before,drag.selected.kind==='point'?'Skizzenpunkt per Gizmo verschieben':'Skizzenlinie per Gizmo verschieben');
-    store.emit('geometryChanged',{objectId:drag.selected.sketchId,sketchDependencySynced:true});store.emit('selectionChanged');rebuildGizmo(false);event.preventDefault();event.stopImmediatePropagation();
-  };
-
+  const state={group:null,pickables:[],drag:null,previousEnableRotate:runtime.orbit.enableRotate};
+  const selected=()=>store.getSelectedSketchElements?.()??(store.selection.sketchElement?[store.selection.sketchElement]:[]);
+  const primary=()=>selected().at(-1)??null;
+  const sketch=()=>{const p=primary();return p?store.getObject(p.sketchId):null;};
+  const uniquePointIds=(items,s)=>{const ids=new Set();for(const item of items){if(item.kind==='point')ids.add(item.elementId);else{const line=s.data?.lines?.[item.elementId];if(line){ids.add(line.startPointId);ids.add(line.endPointId);}}}return [...ids].filter(id=>s.data?.points?.[id]);};
+  const anchorLocal=()=>{const items=selected(),s=sketch();if(!items.length||s?.type!=='sketch')return null;const ids=uniquePointIds(items,s);if(!ids.length)return null;const sum=ids.reduce((v,id)=>{const p=s.data.points[id];v.x+=p.x;v.y+=p.y;return v;},{x:0,y:0});return new THREE.Vector3(sum.x/ids.length,sum.y/ids.length,0);};
+  const dispose=()=>{if(!state.group)return;state.group.traverse(n=>{n.geometry?.dispose?.();if(Array.isArray(n.material))n.material.forEach(m=>m?.dispose?.());else n.material?.dispose?.();});state.group.parent?.remove(state.group);state.group=null;state.pickables=[];};
+  const alignCameraToSketch=()=>{const p=primary(),node=p?runtime.objectMap.get(p.sketchId):null,a=anchorLocal();if(!p||!node||!a)return false;node.updateWorldMatrix(true,false);const target=node.localToWorld(a.clone()),normal=new THREE.Vector3(0,0,1).transformDirection(node.matrixWorld).normalize(),up=new THREE.Vector3(0,1,0).transformDirection(node.matrixWorld).normalize(),distance=Math.max(runtime.camera.position.distanceTo(runtime.orbit.target),0.25);runtime.orbit.target.copy(target);runtime.camera.up.copy(up);runtime.camera.position.copy(target).addScaledVector(normal,distance);runtime.camera.lookAt(target);runtime.orbit.update();runtime.updateCameraRange?.();runtime.updateGrid?.();return true;};
+  const makeAxis=axis=>{const g=new THREE.Group(),dir=axis==='x'?new THREE.Vector3(1,0,0):new THREE.Vector3(0,1,0),color=axis==='x'?X_COLOR:Y_COLOR;const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),dir.clone().multiplyScalar(AXIS_LENGTH-AXIS_HEAD_LENGTH*.45)]),new THREE.LineBasicMaterial({color,depthTest:false}));line.renderOrder=1000;g.add(line);const cone=new THREE.Mesh(new THREE.ConeGeometry(AXIS_HEAD_RADIUS,AXIS_HEAD_LENGTH,16),new THREE.MeshBasicMaterial({color,depthTest:false}));cone.position.copy(dir).multiplyScalar(AXIS_LENGTH);cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);cone.renderOrder=1001;g.add(cone);const hit=new THREE.Mesh(new THREE.BoxGeometry(axis==='x'?AXIS_LENGTH+.12:.18,axis==='y'?AXIS_LENGTH+.12:.18,.1),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));hit.position.copy(dir).multiplyScalar(AXIS_LENGTH/2);hit.userData.cm3dSketchGizmoAxis=axis;g.add(hit);state.pickables.push(hit);return g;};
+  const makePlane=()=>{const g=new THREE.Group(),pos=PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE/2,fill=new THREE.Mesh(new THREE.PlaneGeometry(PLANE_HANDLE_SIZE,PLANE_HANDLE_SIZE),new THREE.MeshBasicMaterial({color:XY_COLOR,transparent:true,opacity:.42,depthTest:false,side:THREE.DoubleSide}));fill.position.set(pos,pos,0);fill.renderOrder=1002;g.add(fill);const hit=new THREE.Mesh(new THREE.PlaneGeometry(PLANE_HANDLE_SIZE+.08,PLANE_HANDLE_SIZE+.08),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));hit.position.copy(fill.position);hit.userData.cm3dSketchGizmoAxis='xy';g.add(hit);state.pickables.push(hit);return g;};
+  const rebuildGizmo=(align=true)=>{dispose();const p=primary(),node=p?runtime.objectMap.get(p.sketchId):null;if(!p||!node){runtime.orbit.enableRotate=state.previousEnableRotate;return;}if(align)alignCameraToSketch();runtime.orbit.enableRotate=false;const a=anchorLocal();if(!a)return;const g=new THREE.Group();g.name='CM3D_SKETCH_GIZMO';g.add(makeAxis('x'),makeAxis('y'),makePlane());node.add(g);g.position.copy(a);state.group=g;};
+  const localPoint=(event,sketchId)=>{const node=runtime.objectMap.get(sketchId);if(!node)return null;node.updateWorldMatrix(true,false);runtime.pointerFromEvent(event);const origin=node.getWorldPosition(new THREE.Vector3()),normal=new THREE.Vector3(0,0,1).transformDirection(node.matrixWorld),plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,origin),world=new THREE.Vector3();if(!runtime.raycaster.ray.intersectPlane(plane,world))return null;return node.worldToLocal(world.clone());};
+  const snap=v=>{if(!store.snap.enabled)return v;const step=Number(store.snap.translate);return Number.isFinite(step)&&step>SNAP_EPS?Math.round(v/step)*step:v;};
+  const startDrag=event=>{if(!state.pickables.length)return false;runtime.pointerFromEvent(event);const hit=runtime.raycaster.intersectObjects(state.pickables,false)[0],items=selected(),p=primary(),s=sketch();if(!hit||!items.length||!p||s?.type!=='sketch')return false;const start=localPoint(event,p.sketchId);if(!start)return false;const ids=uniquePointIds(items,s),initial={};for(const id of ids){const pt=s.data.points[id];initial[id]={x:pt.x,y:pt.y};}state.drag={pointerId:event.pointerId,sketchId:p.sketchId,items:structuredClone(items),axis:hit.object.userData.cm3dSketchGizmoAxis,start:{x:start.x,y:start.y},initial,anchor:anchorLocal(),before:store.snapshot()};runtime.orbit.enabled=false;runtime.renderer.domElement.setPointerCapture?.(event.pointerId);event.preventDefault();event.stopImmediatePropagation();return true;};
+  const updateDrag=event=>{const d=state.drag;if(!d||event.pointerId!==d.pointerId)return;const s=store.getObject(d.sketchId),p=localPoint(event,d.sketchId);if(s?.type!=='sketch'||!p)return;let dx=p.x-d.start.x,dy=p.y-d.start.y;if(d.axis==='x')dy=0;if(d.axis==='y')dx=0;const sx=snap(d.anchor.x+dx)-d.anchor.x,sy=snap(d.anchor.y+dy)-d.anchor.y;for(const [id,start] of Object.entries(d.initial)){const pt=s.data.points?.[id];if(pt){pt.x=start.x+sx;pt.y=start.y+sy;}}store.refreshDependentExtrudesFromSketch?.(d.sketchId);store.touch();runtime.rebuild();store.emit('sketchGizmoPreview',{sketchId:d.sketchId,count:d.items.length});rebuildGizmo(false);event.preventDefault();event.stopImmediatePropagation();};
+  const finishDrag=event=>{const d=state.drag;if(!d||event.pointerId!==d.pointerId)return;state.drag=null;runtime.renderer.domElement.releasePointerCapture?.(event.pointerId);runtime.orbit.enabled=true;runtime.orbit.enableRotate=false;const after=store.snapshot();if(JSON.stringify(d.before)!==JSON.stringify(after))store.pushHistory(d.before,d.items.length>1?'Skizzenauswahl per Gizmo verschieben':d.items[0]?.kind==='point'?'Skizzenpunkt per Gizmo verschieben':'Skizzenlinie per Gizmo verschieben');store.emit('geometryChanged',{objectId:d.sketchId,sketchDependencySynced:true});store.emit('selectionChanged');rebuildGizmo(false);event.preventDefault();event.stopImmediatePropagation();};
   const canvas=runtime.renderer.domElement;canvas.addEventListener('pointerdown',startDrag,true);window.addEventListener('pointermove',updateDrag,true);window.addEventListener('pointerup',finishDrag,true);window.addEventListener('pointercancel',finishDrag,true);
-
-  store.subscribe(event=>{
-    if(['selectionChanged','projectChanged','projectLoaded','geometryChanged','objectChanged'].includes(event.type)&&!state.drag)setTimeout(()=>rebuildGizmo(event.type==='selectionChanged'),0);
-  });
-
-  document.title='CyberMotion 3D – WD-12B';const label=document.querySelector('.brand small');if(label)label.textContent='WD-12B';
-  rebuildGizmo();
-
-  return {alignCameraToSketch,rebuildGizmo};
+  store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','geometryChanged','objectChanged'].includes(event.type)&&!state.drag)setTimeout(()=>rebuildGizmo(event.type==='selectionChanged'),0);});
+  document.title='CyberMotion 3D – WD-12B';const label=document.querySelector('.brand small');if(label)label.textContent='WD-12B';rebuildGizmo();return{alignCameraToSketch,rebuildGizmo};
 }
