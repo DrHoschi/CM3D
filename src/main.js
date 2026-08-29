@@ -16,6 +16,7 @@ import { installFeatureParametersInspector } from './ui/feature-parameters-inspe
 import { installObjectVisibility } from './ui/object-visibility.js';
 import { installObjectLocking } from './ui/object-locking.js';
 import { installProjectLifecycle } from './ui/project-lifecycle.js';
+import { installProjectSettings } from './ui/project-settings.js';
 
 const store = new AppStore();
 const viewport = document.querySelector('#viewport');
@@ -61,6 +62,7 @@ const featureParametersInspector = installFeatureParametersInspector(store, appU
 const objectVisibility = installObjectVisibility(store, runtime, appUI);
 const objectLocking = installObjectLocking(store, runtime, appUI);
 const projectLifecycle = installProjectLifecycle(store, appUI);
+const projectSettings = installProjectSettings(store, appUI);
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
@@ -68,4 +70,4 @@ if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',ev
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});
 syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, projectLifecycle };
+window.cm3d = { store, runtime, gltfInterchange, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, projectLifecycle, projectSettings };
