@@ -1,8 +1,14 @@
 import * as THREE from 'three';
 
-const AXIS_LENGTH=0.45;
-const HANDLE_SIZE=0.09;
+const AXIS_LENGTH=0.5;
+const AXIS_HEAD_LENGTH=0.12;
+const AXIS_HEAD_RADIUS=0.045;
+const PLANE_HANDLE_OFFSET=0.105;
+const PLANE_HANDLE_SIZE=0.16;
 const SNAP_EPS=1e-12;
+const X_COLOR=0xff3b30;
+const Y_COLOR=0x34c759;
+const XY_COLOR=0xffd60a;
 
 export function installSketchGizmo(store,runtime){
   const state={group:null,pickables:[],drag:null,alignedSketchId:null,previousEnableRotate:runtime.orbit.enableRotate};
@@ -39,21 +45,34 @@ export function installSketchGizmo(store,runtime){
 
   const makeAxis=(axis)=>{
     const group=new THREE.Group();
-    const dir=axis==='x'?new THREE.Vector3(1,0,0):new THREE.Vector3(0,1,0);
-    const lineGeom=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),dir.clone().multiplyScalar(AXIS_LENGTH)]);
-    const line=new THREE.Line(lineGeom,new THREE.LineBasicMaterial({color:axis==='x'?0xff6b6b:0x74c0fc,depthTest:false,transparent:true,opacity:0.95}));line.renderOrder=1000;group.add(line);
-    const cone=new THREE.Mesh(new THREE.ConeGeometry(0.045,0.12,16),new THREE.MeshBasicMaterial({color:axis==='x'?0xff6b6b:0x74c0fc,depthTest:false}));
+    const dir=axis==='x'?new THREE.Vector3(1,0,0):new THREE.Vector3(0,1,0),color=axis==='x'?X_COLOR:Y_COLOR;
+    const lineGeom=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),dir.clone().multiplyScalar(AXIS_LENGTH-AXIS_HEAD_LENGTH*0.45)]);
+    const line=new THREE.Line(lineGeom,new THREE.LineBasicMaterial({color,depthTest:false,transparent:true,opacity:1}));line.renderOrder=1000;group.add(line);
+    const cone=new THREE.Mesh(new THREE.ConeGeometry(AXIS_HEAD_RADIUS,AXIS_HEAD_LENGTH,16),new THREE.MeshBasicMaterial({color,depthTest:false}));
     cone.position.copy(dir).multiplyScalar(AXIS_LENGTH);cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);cone.renderOrder=1001;group.add(cone);
-    const hit=new THREE.Mesh(new THREE.BoxGeometry(axis==='x'?AXIS_LENGTH:0.16,axis==='y'?AXIS_LENGTH:0.16,0.08),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
+    const hit=new THREE.Mesh(new THREE.BoxGeometry(axis==='x'?AXIS_LENGTH+0.12:0.18,axis==='y'?AXIS_LENGTH+0.12:0.18,0.10),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
     hit.position.copy(dir).multiplyScalar(AXIS_LENGTH/2);hit.userData.cm3dSketchGizmoAxis=axis;group.add(hit);state.pickables.push(hit);return group;
+  };
+
+  const makePlaneHandle=()=>{
+    const group=new THREE.Group();
+    const fill=new THREE.Mesh(new THREE.PlaneGeometry(PLANE_HANDLE_SIZE,PLANE_HANDLE_SIZE),new THREE.MeshBasicMaterial({color:XY_COLOR,transparent:true,opacity:0.42,depthTest:false,side:THREE.DoubleSide}));
+    fill.position.set(PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE/2,PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE/2,0);fill.renderOrder=1002;group.add(fill);
+    const edge=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(PLANE_HANDLE_OFFSET,PLANE_HANDLE_OFFSET,0),
+      new THREE.Vector3(PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE,PLANE_HANDLE_OFFSET,0),
+      new THREE.Vector3(PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE,PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE,0),
+      new THREE.Vector3(PLANE_HANDLE_OFFSET,PLANE_HANDLE_OFFSET+PLANE_HANDLE_SIZE,0)
+    ]),new THREE.LineBasicMaterial({color:XY_COLOR,depthTest:false}));edge.renderOrder=1003;group.add(edge);
+    const hit=new THREE.Mesh(new THREE.PlaneGeometry(PLANE_HANDLE_SIZE+0.08,PLANE_HANDLE_SIZE+0.08),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+    hit.position.copy(fill.position);hit.userData.cm3dSketchGizmoAxis='xy';group.add(hit);state.pickables.push(hit);return group;
   };
 
   const rebuildGizmo=(align=true)=>{
     disposeGizmo();const selected=selectedElement(),node=selected?runtime.objectMap.get(selected.sketchId):null;if(!selected||!node){runtime.orbit.enableRotate=state.previousEnableRotate;return;}
     if(align)alignCameraToSketch();runtime.orbit.enableRotate=false;
     const anchor=selectedAnchorLocal();if(!anchor)return;
-    const group=new THREE.Group();group.name='CM3D_SKETCH_GIZMO';group.renderOrder=1000;group.add(makeAxis('x'),makeAxis('y'));
-    const center=new THREE.Mesh(new THREE.PlaneGeometry(HANDLE_SIZE,HANDLE_SIZE),new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false,side:THREE.DoubleSide}));center.userData.cm3dSketchGizmoAxis='xy';center.renderOrder=1002;group.add(center);state.pickables.push(center);
+    const group=new THREE.Group();group.name='CM3D_SKETCH_GIZMO';group.renderOrder=1000;group.add(makeAxis('x'),makeAxis('y'),makePlaneHandle());
     node.add(group);group.position.copy(anchor);state.group=group;
   };
 
@@ -63,7 +82,7 @@ export function installSketchGizmo(store,runtime){
     const origin=node.getWorldPosition(new THREE.Vector3()),normal=new THREE.Vector3(0,0,1).transformDirection(node.matrixWorld);const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,origin);const world=new THREE.Vector3();if(!runtime.raycaster.ray.intersectPlane(plane,world))return null;return node.worldToLocal(world.clone());
   };
 
-  const snapDelta=(value)=>{if(!store.snap.enabled)return value;const step=Number(store.snap.translate);if(!Number.isFinite(step)||step<=SNAP_EPS)return value;return Math.round(value/step)*step;};
+  const snapValue=(value)=>{if(!store.snap.enabled)return value;const step=Number(store.snap.translate);if(!Number.isFinite(step)||step<=SNAP_EPS)return value;return Math.round(value/step)*step;};
 
   const startDrag=event=>{
     if(!state.pickables.length)return false;rayFromEvent(event);const hit=runtime.raycaster.intersectObjects(state.pickables,false)[0];if(!hit)return false;
@@ -81,11 +100,15 @@ export function installSketchGizmo(store,runtime){
 
   const updateDrag=event=>{
     const drag=state.drag;if(!drag||event.pointerId!==drag.pointerId)return;const sketch=store.getObject(drag.selected.sketchId),p=localPointOnSketch(event,drag.selected.sketchId);if(sketch?.type!=='sketch'||!p)return;
-    let dx=p.x-drag.start.x,dy=p.y-drag.start.y;if(drag.axis==='x')dy=0;if(drag.axis==='y')dx=0;dx=snapDelta(dx);dy=snapDelta(dy);
+    let dx=p.x-drag.start.x,dy=p.y-drag.start.y;if(drag.axis==='x')dy=0;if(drag.axis==='y')dx=0;
     if(drag.selected.kind==='point'){
-      const point=sketch.data.points?.[drag.selected.elementId];if(point){point.x=drag.initial.point.x+dx;point.y=drag.initial.point.y+dy;}
+      const point=sketch.data.points?.[drag.selected.elementId];if(point){point.x=snapValue(drag.initial.point.x+dx);point.y=snapValue(drag.initial.point.y+dy);}
     }else{
-      const a=sketch.data.points?.[drag.initial.startPointId],b=sketch.data.points?.[drag.initial.endPointId];if(a&&b){a.x=drag.initial.a.x+dx;a.y=drag.initial.a.y+dy;b.x=drag.initial.b.x+dx;b.y=drag.initial.b.y+dy;}
+      const a=sketch.data.points?.[drag.initial.startPointId],b=sketch.data.points?.[drag.initial.endPointId];
+      if(a&&b){
+        const snappedDx=snapValue(drag.initial.a.x+dx)-drag.initial.a.x,snappedDy=snapValue(drag.initial.a.y+dy)-drag.initial.a.y;
+        a.x=drag.initial.a.x+snappedDx;a.y=drag.initial.a.y+snappedDy;b.x=drag.initial.b.x+snappedDx;b.y=drag.initial.b.y+snappedDy;
+      }
     }
     store.refreshDependentExtrudesFromSketch?.(drag.selected.sketchId);store.touch();runtime.rebuild();store.emit('sketchGizmoPreview',{sketchId:drag.selected.sketchId,kind:drag.selected.kind,elementId:drag.selected.elementId});rebuildGizmo(false);event.preventDefault();event.stopImmediatePropagation();
   };
