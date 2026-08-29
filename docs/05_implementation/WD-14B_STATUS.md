@@ -1,6 +1,6 @@
 # WD-14B – Sperren/Entsperren Core
 
-**Status:** IMPLEMENTED / DEVICE TEST REQUIRED  
+**Status:** PASS / FROZEN  
 **Branch:** `feature/wd-14b-locking-core`  
 **Basis:** WD-14A PASS / FROZEN (`468db7d1b2ddfc555b7b9602549162f606ed2411`)  
 **Funktion:** `CM3D-F012` – Sperren/Entsperren
@@ -44,6 +44,8 @@ Auswahl und Fokus bleiben möglich. Sichtbarkeit bleibt unabhängig von der Sper
 
 Bei Auswahl eines gesperrten Objekts wird der 3D-Transform-Gizmo nicht angehängt. Die Inspector-Felder bleiben sichtbar, sind aber für die gesperrte Auswahl deaktiviert.
 
+Beim Entsperren werden Transform-Gizmo und Transform-Toolbar wieder vollständig freigegeben. Der während der Geräteabnahme gefundene WD-14B-Regressionsfehler, bei dem Move/Rotate/Scale nach dem Entsperren deaktiviert blieben, wurde mit Commit `504347ae1f36dbaf3c69648b0866f758c93d3de5` behoben.
+
 ## History / Persistenz
 
 Jede Sperrumschaltung erzeugt genau einen History-Eintrag:
@@ -53,6 +55,23 @@ Jede Sperrumschaltung erzeugt genau einen History-Eintrag:
 
 Da `flags.locked` im bestehenden SceneGraph gespeichert wird, bleiben Sperrzustände über Save/Load erhalten.
 
+## Geräteabnahme
+
+**Datum:** 2026-08-29  
+**Gerät:** iPad / Safari / GitHub Pages  
+**Ergebnis:** PASS
+
+Praktisch bestätigt:
+
+- Objekt sperren und entsperren;
+- gesperrtes Objekt kann nicht verschoben, gedreht oder skaliert werden;
+- Transform-Gizmo verschwindet bei gesperrtem Objekt;
+- nach Entsperren sind Verschieben, Drehen und Skalieren wieder vollständig verfügbar;
+- Save/Load erhält den Sperrzustand;
+- Undo/Redo für Sperren/Entsperren funktioniert.
+
+Keine offene Regression aus WD-14B in diesem Abnahmepfad.
+
 ## Nicht Bestandteil
 
 - rekursive Parent-Sperrvererbung;
@@ -61,8 +80,8 @@ Da `flags.locked` im bestehenden SceneGraph gespeichert wird, bleiben Sperrzust�
 - Feature Suppress/Unsuppress;
 - globale Lock-All/Unlock-All-Kommandos.
 
-## Abnahme
+## Abschluss
 
-Vor PASS / FROZEN ist der praktische iPad-/Safari-Test nach `WD-14B_TEST_CHECKLIST.md` erforderlich.
+**WD-14B = PASS / FROZEN.**
 
-**Aktueller Status: IMPLEMENTED / DEVICE TEST REQUIRED.**
+`CM3D-F012` – Sperren/Entsperren ist damit für den aktuellen V1-Kern abgeschlossen. Weitere Änderungen an WD-14B erfolgen nur über einen ausdrücklich neuen Folgeblock oder einen klar dokumentierten Regression-Fix.
