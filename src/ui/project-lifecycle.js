@@ -1,16 +1,4 @@
-import { saveProject } from '../persistence/storage.js';
-
-const freshProjectId = () => `prj_${crypto.randomUUID()}`;
-
-function copyForSaveAs(project, name) {
-  const copy = structuredClone(project);
-  const now = new Date().toISOString();
-  copy.project.projectId = freshProjectId();
-  copy.project.name = name;
-  copy.project.createdAt = now;
-  copy.project.modifiedAt = now;
-  return copy;
-}
+import { downloadProjectFile } from '../persistence/project-file.js';
 
 function menuButton(id, iconId, label, className = '') {
   const button = document.createElement('button');
@@ -32,21 +20,18 @@ export function installProjectLifecycle(store, ui) {
   saveAsButton.insertAdjacentElement('afterend', closeButton);
 
   const saveAs = () => {
-    const currentName = String(store.project?.project?.name || 'Neues CM3D Projekt');
-    const requested = prompt('Name für die neue Projektkopie:', `${currentName} Kopie`);
+    const currentName = String(store.project?.project?.name || 'CM3D-Projekt');
+    const requested = prompt('Dateiname für die CM3D-Projektdatei:', currentName);
     if (requested === null) return false;
-    const name = requested.trim();
-    if (!name) {
-      ui.setStatus('Speichern unter abgebrochen: Projektname darf nicht leer sein.');
+    const fileStem = requested.trim();
+    if (!fileStem) {
+      ui.setStatus('Speichern unter abgebrochen: Dateiname darf nicht leer sein.');
       return false;
     }
 
     try {
-      const copy = copyForSaveAs(store.project, name);
-      const result = saveProject(copy);
-      store.replaceProject(copy);
-      ui.refreshProjects(result.projectId);
-      ui.setStatus(`Projekt als „${name}“ gespeichert und aktiviert.`);
+      const result = downloadProjectFile(store.project, fileStem);
+      ui.setStatus(`Projektdatei gespeichert: ${result.fileName}`);
       return true;
     } catch (error) {
       ui.fail(error);
@@ -73,5 +58,5 @@ export function installProjectLifecycle(store, ui) {
   const buildLabel = document.querySelector('.brand small');
   if (buildLabel) buildLabel.textContent = 'WD-15A';
 
-  return { saveAs, closeProject, copyForSaveAs };
+  return { saveAs, closeProject };
 }
