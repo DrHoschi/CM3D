@@ -1,8 +1,11 @@
 # WD-11C – Gerätetest
 
-**Status:** TEST PENDING  
+**Status:** CORE DEVICE TEST PASS / REGRESSION CHECKLIST RETAINED  
 **Zielgerät:** iPad/iPhone Safari  
-**Branch:** `feature/wd-11c-selection-partial-project-merge`
+**Branch:** `feature/wd-11c-selection-partial-project-merge`  
+**Gerätetest:** 2026-08-29 auf iPad – Anwender meldet keine festgestellten Fehler.
+
+Diese Liste bleibt als detaillierte Regression- und Wiederholungsprüfung erhalten. Unterpunkte werden nur dann einzeln abgehakt, wenn sie ausdrücklich separat bestätigt wurden.
 
 ## A – Regression WD-11B
 
@@ -103,6 +106,6 @@ Erwartung:
 - [ ] Datei mit ungültigem CM3D-Format wird abgelehnt.
 - [ ] Bei einem Fehler bleibt der aktuelle Projektstand unverändert.
 
-## Abnahmeregel
+## Abnahmestand
 
-WD-11C wird erst nach bestandenem Gerätetest auf **PASS / FROZEN** gesetzt.
+Der Funktionsblock wurde am **2026-08-29 auf iPad** im praktischen Gerätetest ohne festgestellte Fehler genutzt und ist deshalb in `WD-11C_STATUS.md` als **PASS / FROZEN** dokumentiert.
