@@ -63,4 +63,21 @@ store.subscribe(event=>{
 
 installCommandSurface(store);
 installGltfPanel(store, gltfInterchange);
+
+const focusButton=document.querySelector('#focus-selection');
+const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
+if(focusButton){
+  focusButton.onclick=null;
+  focusButton.addEventListener('click',event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    if(!store.getObject(store.selection.activeObjectId))return;
+    runtime.focusSelection();
+  });
+}
+store.subscribe(event=>{
+  if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();
+});
+syncFocusButton();
+
 window.cm3d = { store, runtime, gltfInterchange };
