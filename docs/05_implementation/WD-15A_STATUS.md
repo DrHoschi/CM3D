@@ -1,7 +1,7 @@
 # WD-15A – Speichern unter & Projekt schließen
 
 **Stand:** 2026-08-29  
-**Status:** IMPLEMENTED / DEVICE TEST REQUIRED  
+**Status:** PASS / FROZEN  
 **Branch:** `feature/wd-15a-project-lifecycle`  
 **Basis:** WD-14B PASS / FROZEN (`e8fe400cdc1f5e1e69daa8628b18613e1d6a7ea6`)  
 **Funktionen:** `CM3D-F005` – Speichern unter; `CM3D-F007` – Projekt schließen
@@ -51,6 +51,16 @@ Nach Bestätigung:
 - kein gespeicherter lokaler Projektstand und keine heruntergeladene Datei wird gelöscht;
 - vorhandene gespeicherte Projekte bleiben im Projekt-Dropdown verfügbar.
 
+## Geräteabnahme
+
+**Datum:** 2026-08-29  
+**Gerät/Umgebung:** iPad / Safari / GitHub Pages  
+**Ergebnis:** PASS
+
+Praktisch bestätigt wurde insbesondere das korrigierte dateibasierte `Speichern unter…`: die CM3D-Projektdatei wird auf dem Gerät ausgegeben und der lokale Browser-Speicher bleibt davon getrennt. Der Benutzer bestätigte nach dem Gerätetest, dass der korrigierte Ablauf sauber funktioniert.
+
+Die während der Abnahme erkannte Fehlinterpretation der ersten WD-15A-Fassung – `Speichern unter…` als zusätzliche `localStorage`-Projektkopie – wurde vor der Freigabe entfernt. Verbindlich ist ausschließlich die dateibasierte Bedeutung.
+
 ## Kompatibilität
 
 Unverändert bleiben:
@@ -68,10 +78,11 @@ Unverändert bleiben:
 - Dirty-State-/Änderungsstern;
 - Autosave/Recovery;
 - Cloud-Speicherung;
-- direkter nativer Dateisystemzugriff auf allen Browsern; die konkrete Zielauswahl wird vom jeweiligen Browser/Betriebssystem bestimmt.
+- direkter nativer Dateisystemzugriff auf allen Browsern; die konkrete Zielauswahl wird vom jeweiligen Browser/Betriebssystem bestimmt;
+- GLB/GLTF-Hierarchie in eigenständige CM3D-Objekte auflösen. Dieser Ausbaupunkt ist vorgemerkt und wird nicht in WD-15A nachgezogen.
 
-## Abnahme
+## Freeze
 
-Vor PASS / FROZEN ist der praktische iPad-/Safari-Test nach `WD-15A_TEST_CHECKLIST.md` erforderlich.
+WD-15A ist nach bestandenem realem iPad-/Safari-Gerätetest **PASS / FROZEN**.
 
-**Aktueller Status: IMPLEMENTED / DEVICE TEST REQUIRED.**
+Neue Funktionalität oder Änderungen an diesem Block erfolgen nur über einen nachfolgenden dokumentierten Entwicklungsblock. WD-15A selbst wird nicht weiter erweitert.
