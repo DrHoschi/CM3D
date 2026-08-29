@@ -1,6 +1,6 @@
 # WD-13B – Feature-Parameter im Inspector
 
-**Status:** IMPLEMENTED / DEVICE TEST REQUIRED  
+**Status:** PASS / FROZEN  
 **Branch:** `feature/wd-13b-feature-parameters-inspector`  
 **Basis:** `feature/wd-13a-feature-operations-tree-core` (WD-13A PASS / FROZEN)
 
@@ -27,7 +27,7 @@ Es wird keine neue Extrusion erzeugt und keine zweite Feature-Struktur angelegt.
 
 ## Runtime-Verhalten
 
-Die Runtime wertet `data.direction` jetzt tatsächlich aus:
+Die Runtime wertet `data.direction` tatsächlich aus:
 
 - `positive`: Extrusion von der Skizzenebene in positive lokale Z-Richtung;
 - `negative`: Extrusion gleicher Tiefe in negative lokale Z-Richtung;
@@ -59,8 +59,16 @@ Da die Werte Bestandteil des bestehenden SceneGraph-Objekts sind, laufen Undo/Re
 - Boolean-Operationen;
 - weitere CAD-Features.
 
+## Geräteabnahme
+
+**Datum:** 2026-08-29  
+**Gerät:** iPad / Safari / GitHub Pages  
+**Ergebnis:** PASS
+
+Der praktische Gerätetest wurde vollständig durchgeführt und als erfolgreich bestätigt. Geprüft wurden die für WD-13B vorgesehenen Kernpfade, insbesondere nachträgliche Extrusionsparameter, wirksame Richtungsumschaltung, bestehende Feature-Identität, Undo/Redo sowie Persistenz über Speichern und Laden.
+
 ## Abnahme
 
-Vor PASS / FROZEN ist der praktische iPad-/Safari-Test nach `WD-13B_TEST_CHECKLIST.md` erforderlich.
+WD-13B ist praktisch geprüft und abgenommen.
 
-**Aktueller Status: IMPLEMENTED / DEVICE TEST REQUIRED.**
+**Finaler Status: PASS / FROZEN.**
