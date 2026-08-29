@@ -7,6 +7,7 @@ import { AppUI } from './ui/app.js';
 import { installMaterialPanel } from './ui/material-panel.js';
 import { installCommandSurface } from './ui/command-surface.js';
 import { installGltfPanel } from './ui/gltf-panel.js';
+import { installPartialProjectPanel } from './ui/partial-project-panel.js';
 
 const store = new AppStore();
 const viewport = document.querySelector('#viewport');
@@ -62,6 +63,7 @@ store.subscribe(event=>{
 });
 
 installCommandSurface(store);
+installPartialProjectPanel(store);
 installGltfPanel(store, gltfInterchange);
 
 const focusButton=document.querySelector('#focus-selection');
