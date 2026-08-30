@@ -12,7 +12,10 @@ WD-19 verbessert ausschließlich die Bedienbarkeit und Skalierbarkeit des besteh
 
 - Gruppen und Baugruppen mit Kindern erhalten einen Auf-/Zuklapp-Pfeil.
 - Zugeklappte Container verbergen nur ihre Baumdarstellung; Szene, Objektmodell und Auswahlzustand werden nicht verändert.
-- Auf-/Zuklappen erzeugt keinen Undo/Redo-Eintrag und verändert die Projektdatei nicht.
+- Der Collapse-Zustand wird **lokal pro Projekt** im Browser als Workspace-/UI-Zustand gemerkt und nach erneutem Laden wiederhergestellt.
+- Der Collapse-Zustand bleibt bewusst außerhalb der `.cm3d.json`-Projektdatei und erzeugt keinen Undo/Redo-Eintrag.
+- Wird ein Objekt im 3D-Viewer bzw. über die normale Auswahl selektiert, werden alle zugeklappten übergeordneten Gruppen/Baugruppen entlang seines Parent-Pfads automatisch aufgeklappt.
+- Die zugehörige Baumzeile wird anschließend möglichst in den sichtbaren Bereich gescrollt, damit die Position des ausgewählten Objekts in großen Strukturen unmittelbar erkennbar ist.
 - Sichtbarkeit und Sperren bleiben dieselben WD-14A/WD-14B-Operationen.
 - Sichtbarkeits- und Sperrbedienung wird als kompakte, transparente Zustandssteuerung dargestellt; die großen weißen Schaltflächen entfallen.
 - Baumzeilen wurden etwas kompakter, damit große Baugruppen besser handhabbar sind.
@@ -22,8 +25,8 @@ WD-19 verbessert ausschließlich die Bedienbarkeit und Skalierbarkeit des besteh
 
 - keine Änderung an `flags.visible` oder `flags.locked`
 - keine Änderung an Runtime-Sichtbarkeit oder Transform-Sperrlogik
-- keine Änderung an Gruppen-/Baugruppen-Datenmodell
-- keine Persistenz des reinen UI-Auf-/Zuklappzustands
+- keine Änderung am Gruppen-/Baugruppen-Datenmodell
+- Collapse-Zustand wird nicht fachlich im Projekt gespeichert und nicht exportiert
 - keine neuen Modellierungsfunktionen
 
 ## Freeze-Gate
