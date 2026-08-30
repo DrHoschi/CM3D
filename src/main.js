@@ -16,6 +16,7 @@ import { installFeatureOperationsTree } from './ui/feature-operations-tree.js';
 import { installFeatureParametersInspector } from './ui/feature-parameters-inspector.js';
 import { installObjectVisibility } from './ui/object-visibility.js';
 import { installObjectLocking } from './ui/object-locking.js';
+import { installObjectTreeScalability } from './ui/object-tree-scalability.js';
 import { installProjectLifecycle } from './ui/project-lifecycle.js';
 import { installProjectSettings } from './ui/project-settings.js';
 import { installCameraObjectPreview } from './ui/camera-object-preview.js';
@@ -65,17 +66,15 @@ const featureOperationsTree = installFeatureOperationsTree(store, appUI);
 const featureParametersInspector = installFeatureParametersInspector(store, appUI);
 const objectVisibility = installObjectVisibility(store, runtime, appUI);
 const objectLocking = installObjectLocking(store, runtime, appUI);
+const objectTreeScalability = installObjectTreeScalability(store, appUI);
 const projectLifecycle = installProjectLifecycle(store, appUI);
 const projectSettings = installProjectSettings(store, appUI);
 const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
 const inspectorDiagnostics = installInspectorDiagnostics(store, runtime, appUI);
 
-// The newest WD block owns the visible build marker. Older install modules may
-// still carry their historical marker, so set the current branch marker once
-// all inherited modules have finished installing.
-document.title = 'CyberMotion 3D – WD-18';
+document.title = 'CyberMotion 3D – WD-19';
 const buildLabel = document.querySelector('.brand small');
-if (buildLabel) buildLabel.textContent = 'WD-18';
+if (buildLabel) buildLabel.textContent = 'WD-19';
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
@@ -83,4 +82,4 @@ if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',ev
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});
 syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics };
+window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics };
