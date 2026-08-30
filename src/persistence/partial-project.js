@@ -1,4 +1,5 @@
 import { createProject, validateProject } from '../model/project.js';
+import { migrateAndValidateProject } from './project-schema.js';
 
 export const PARTIAL_FORMAT = 'CM3D_PARTIAL';
 export const PARTIAL_SCHEMA_VERSION = '0.1.0';
@@ -162,9 +163,8 @@ export function downloadPartialProject(store, fileName = '') {
   return { fileName:finalName, bytes:blob.size, objectCount:Object.keys(partial.objects).length, rootCount:partial.roots.length };
 }
 
-function fullProjectToPartial(project) {
-  const result = validateProject(project);
-  if (!result.valid) throw new Error(`Die Datei ist kein gültiges CM3D-Projekt:\n${result.errors.join('\n')}`);
+function fullProjectToPartial(projectCandidate) {
+  const project = migrateAndValidateProject(projectCandidate).project;
   const objects = structuredClone(project.scene.objects || {});
   const roots = [...(project.scene.rootObjectIds || [])].filter(id => objects[id]);
   return {
@@ -185,7 +185,12 @@ export function parseMergeFileText(text) {
   try { candidate = JSON.parse(String(text)); }
   catch { throw new Error('Die ausgewählte Datei enthält kein gültiges JSON. Das aktuelle Projekt wurde nicht verändert.'); }
 
-  const partial = candidate?.format === 'CM3D_PROJECT' ? fullProjectToPartial(candidate) : candidate;
+  let partial;
+  try {
+    partial = candidate?.format === 'CM3D_PROJECT' ? fullProjectToPartial(candidate) : candidate;
+  } catch (error) {
+    throw new Error(`Die Datei kann nicht als CM3D-Objektpaket dazugeladen werden. Das aktuelle Projekt wurde nicht verändert:\n${error.message}`);
+  }
   const result = validatePartialProject(partial);
   if (!result.valid) throw new Error(`Die Datei kann nicht als CM3D-Objektpaket dazugeladen werden. Das aktuelle Projekt wurde nicht verändert:\n${result.errors.join('\n')}`);
   return partial;
