@@ -55,9 +55,15 @@ export function installInspectorDiagnostics(store, runtime, ui) {
   const host = document.querySelector('.inspector-panel');
   if (!panel || !button || !host) return null;
 
+  // Author CSS on inspector children (for example form{display:flex}) can override
+  // the browser's native [hidden] rule. Hide the inherited inspector surface with
+  // an explicit important display rule while diagnostics owns the right panel.
   const normalInspectorChildren = [...host.children].filter(child => child !== panel);
   const setNormalInspectorVisible = visible => {
-    for (const child of normalInspectorChildren) child.hidden = !visible;
+    for (const child of normalInspectorChildren) {
+      if (visible) child.style.removeProperty('display');
+      else child.style.setProperty('display', 'none', 'important');
+    }
   };
 
   const statusOut = panel.querySelector('#diagnostics-status');
@@ -138,11 +144,13 @@ export function installInspectorDiagnostics(store, runtime, ui) {
   const open = () => {
     setNormalInspectorVisible(false);
     panel.hidden = false;
+    panel.style.removeProperty('display');
     button.classList.add('active');
     renderAll();
   };
   const close = () => {
     panel.hidden = true;
+    panel.style.setProperty('display', 'none', 'important');
     setNormalInspectorVisible(true);
     button.classList.remove('active');
     ui.render?.();
@@ -176,6 +184,7 @@ export function installInspectorDiagnostics(store, runtime, ui) {
   window.addEventListener('error', event => pushMessage('ERROR', event.message || 'Unbekannter Fensterfehler'));
   window.addEventListener('unhandledrejection', event => pushMessage('ERROR', event.reason?.message || String(event.reason || 'Unhandled Promise Rejection')));
 
+  panel.style.setProperty('display', 'none', 'important');
   pushMessage('INFO', 'WD-18 Diagnose bereit.');
   document.title = 'CyberMotion 3D – WD-18';
   const buildLabel = document.querySelector('.brand small');
