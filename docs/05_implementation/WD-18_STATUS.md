@@ -1,7 +1,7 @@
 # WD-18 – Inspector Diagnoseabschluss
 
-**Stand:** 2026-08-29  
-**Status:** IMPLEMENTED / DEVICE TEST REQUIRED  
+**Stand:** 2026-08-30  
+**Status:** PASS / FROZEN  
 **Branch:** `feature/wd-18-inspector-diagnostics`  
 **Basis:** WD-17 PASS / FROZEN (`7eb21e277c43a4d72d9da9129a473e620f0896de`)  
 **Funktionen:** `CM3D-F081` bis `CM3D-F084`
@@ -12,7 +12,7 @@ WD-18 schließt den V1-Diagnosekern ab, ohne neue Parallelzustände einzuführen
 
 ## F081 – Diagnose / Konsole
 
-Unter `Werkzeuge → Diagnose` steht im Inspector ein kompakter Diagnosebereich zur Verfügung.
+Unter `Werkzeuge → Diagnose` steht eine kompakte Diagnoseansicht zur Verfügung.
 
 Die Diagnoseansicht zeigt unter anderem:
 
@@ -22,7 +22,7 @@ Die Diagnoseansicht zeigt unter anderem:
 - Runtime-Nodes und Pickables;
 - aktuellen Transformmodus, WORLD/LOCAL und Snap-Zustand;
 - die letzten Store-Ereignisse mit Zeit und optionaler objectId;
-- Laufzeitfehler und unbehandelte Promise-Fehler werden zusätzlich in der Meldungshistorie sichtbar.
+- Laufzeitfehler und unbehandelte Promise-Fehler zusätzlich in der Meldungshistorie.
 
 ## F082 – Status / Meldungen
 
@@ -51,14 +51,32 @@ Die Ansicht zeigt den realen Store-Zustand:
 
 ## UI
 
-Der Einstieg erfolgt über `Werkzeuge → Diagnose`. Der Diagnosebereich wird rechts im Inspector eingeblendet und besteht aus vier auf-/zuklappbaren Abschnitten:
+Der Einstieg erfolgt über `Werkzeuge → Diagnose`.
+
+Im final abgenommenen Verhalten ersetzt die Diagnose temporär den normalen rechten Inspector:
+
+- Normalbetrieb: rechts ausschließlich der normale Objekt-/Feature-Inspector.
+- `Werkzeuge → Diagnose`: der normale Inspector wird vollständig ausgeblendet; rechts erscheint ausschließlich die Diagnose.
+- `Schließen`: die Diagnose verschwindet und der normale Inspector wird vollständig wiederhergestellt.
+
+Die Diagnose besteht aus vier auf-/zuklappbaren Abschnitten:
 
 1. Status / Meldungen
 2. Selection / Auswahlstatus
 3. Scene JSON
 4. Diagnose / Konsole
 
-Die Ansicht kann wieder geschlossen werden und verändert das Projekt nicht.
+Die Diagnose verändert das Projekt nicht.
+
+## Geräteabnahme
+
+**Datum:** 2026-08-30  
+**Gerät/Umgebung:** iPad / Safari / GitHub Pages  
+**Ergebnis:** PASS
+
+Im realen Gerätetest wurde insbesondere die nachgebesserte UI-Umschaltung bestätigt: Der normale Inspector ist im Normalbetrieb sichtbar; beim Öffnen der Diagnose wird er vollständig durch die Diagnoseansicht ersetzt. Die vier Diagnosebereiche sind vorhanden und die Rückkehr zum normalen Inspector erfolgt über `Schließen`.
+
+Die bereitgestellten Screenshots bestätigen beide Zustände auf dem realen iPad.
 
 ## Bewusst nicht Bestandteil
 
@@ -69,8 +87,8 @@ Die Ansicht kann wieder geschlossen werden und verändert das Projekt nicht.
 - Netzwerkdiagnose;
 - Objektbaum-Collapse und kompaktere Sichtbarkeits-/Lock-Icons. Diese UI-Punkte sind separat vorgemerkt und folgen nach dem V1-Abschlussrestcheck.
 
-## Abnahme
+## Freeze
 
-Vor PASS / FROZEN ist ein realer iPad-/Safari-Test nach `WD-18_TEST_CHECKLIST.md` erforderlich.
+WD-18 ist nach bestandenem realem iPad-/Safari-Gerätetest **PASS / FROZEN**.
 
-**Aktueller Status: IMPLEMENTED / DEVICE TEST REQUIRED.**
+Neue Änderungen an diesem Block erfolgen nur über einen nachfolgenden dokumentierten Entwicklungsblock. WD-18 selbst wird nicht weiter erweitert.
