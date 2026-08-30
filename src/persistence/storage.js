@@ -1,4 +1,5 @@
 import { validateProject } from '../model/project.js';
+import { migrateAndValidateProject } from './project-schema.js';
 
 const INDEX_KEY = 'cm3d.projects.index.v1';
 const PROJECT_PREFIX = 'cm3d.project.';
@@ -65,9 +66,11 @@ export function loadProject(projectId) {
   if (!raw) throw new Error('Gespeichertes CM3D-Projekt wurde nicht gefunden.');
   let candidate;
   try { candidate = JSON.parse(raw); } catch { throw new Error('Gespeicherte Projektdaten sind kein gültiges JSON.'); }
-  const result = validateProject(candidate);
-  if (!result.valid) throw new Error(`Projekt konnte nicht geladen werden:\n${result.errors.join('\n')}`);
-  return candidate;
+  try {
+    return migrateAndValidateProject(candidate).project;
+  } catch (error) {
+    throw new Error(`Projekt konnte nicht geladen werden:\n${error.message}`);
+  }
 }
 
 export function deleteSavedProject(projectId) {
