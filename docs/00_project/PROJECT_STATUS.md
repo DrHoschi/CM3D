@@ -1,98 +1,71 @@
 # CM3D – Projektstatus
 
-Stand: 2026-08-27
+Stand: 2026-08-30
 
-## Aktueller Stand
+## Aktueller Gesamtstand
 
-Repository `DrHoschi/CM3D` ist als zentrale Projektbasis eingerichtet.
+Repository `DrHoschi/CM3D` ist die zentrale Projektbasis.
 
-Die drei Ausgangsquellen wurden fachlich erfasst und gegeneinander geprüft:
+Der vollständige V1-Pflichtkern wurde anhand der harmonisierten Master-Funktionsliste geprüft und abgeschlossen. Der Abschlussrestcheck weist **0 offene** und **0 teilweise offene V1-Pflichtfunktionen** aus. WD-19 wurde anschließend als Bedien-/Skalierbarkeitsfolgeblock auf iPad/Safari getestet und auf PASS/FROZEN gesetzt. Die abschließende Dropdown-Menükorrektur wurde ebenfalls auf iPad/Safari bestätigt und in `main` übernommen.
 
-- Hauptfenster-Dokumentation V0.1
-- Funktionsmatrix V0.1
-- vollständiges Icon-Paket V3
+## Verbindlicher Release-Status
 
-AL-01 bis AL-06 wurden entschieden. Der Cross-Check ist PASS und es bestehen **0 offene Baseline-Blocker**.
+**CM3D V1 – COMPLETE / PASS / FROZEN**
 
-## Verbindlicher Dokumentationsstand
+Verbindliche V1-Basis:
 
-**CM3D V0.1 BASELINE – FROZEN**
+- `docs/03_functional-spec/CM3D_MASTER_FUNCTIONS_V0_1.md`
+- `docs/05_implementation/V1_ABSCHLUSSRESTCHECK_2026-08-30.md`
+- `docs/05_implementation/WD-19_STATUS.md`
+- aktueller eingefrorener V1-Stand auf `main`
 
-Verbindliche harmonisierte Funktionsquelle:
+Die ursprünglichen Quellabschriften und frühere Baseline-Dokumente bleiben als historische Ausgangsstände erhalten und werden nicht rückwirkend umgeschrieben.
 
-`docs/03_functional-spec/CM3D_MASTER_FUNCTIONS_V0_1.md`
+## Bedeutung des V1-Freeze
 
-Die ursprünglichen Quellabschriften bleiben als historische Ausgangsstände erhalten und werden nicht rückwirkend umgeschrieben.
+V1 ist der erste vollständige belastbare Designer-Kern von CyberMotion 3D. PASS/FROZEN bedeutet:
 
-## Entwicklungsreihenfolge ab Baseline
+- der definierte V1-Pflichtumfang ist funktional geschlossen;
+- bestätigte V1-Funktionen werden nicht ohne konkreten Fehlergrund verändert;
+- neue Produktfunktionen werden nicht mehr nachträglich in V1 hineingezogen;
+- Erweiterungen erfolgen kontrolliert als V2-Entwicklungsblöcke;
+- reale Gerätetests bleiben Bestandteil der Freigabe vor Freeze eines neuen Blocks.
 
-### WD-01 – Technisches Fundament & Datenmodell
+## Übergang zu V2
 
-WD-01 ist der nächste verbindliche Entwicklungsblock und wird **vor dem ersten eigentlichen Web-Prototyp** abgeschlossen.
+Nach dem V1-Freeze beginnt **noch nicht unmittelbar WD-20**. Zuerst wird der vollständige V2-Zielumfang fachlich und strukturell festgelegt.
 
-Zu entscheiden sind:
+Verbindliche Reihenfolge:
 
-1. Projektstruktur und Projektdatei
-2. SceneGraph und eindeutige Objekt-IDs
-3. Objektarten: Primitive, Sketch, Group, Assembly, Camera, Light usw.
-4. Parent-/Child-Hierarchie
-5. Position, Rotation und Scale
-6. Welt- gegenüber Objektkoordinaten
-7. internes Einheitensystem und mm/cm/m/km-Anzeige
-8. Materialzuordnung
-9. Selection-State
-10. Undo/Redo-Grundprinzip
-11. Save/Load und Versionsschema
-12. Trennung Datenmodell ↔ Three.js ↔ Benutzeroberfläche
+`V1 Freeze → V2 Scope Definition → V2 Funktionskatalog → Abhängigkeiten/Architektur → V2 Entwicklungsroadmap → WD-20`
 
-Verbindliches WD-01-Dokument:
+Die V2-Planung wird in `docs/06_v2_planning/V2_MASTER_PLAN.md` geführt.
 
-`docs/04_architecture/WD-01_TECHNISCHES_FUNDAMENT_DATENMODELL.md`
+## V2-Grundregel
 
-### WD-02 / P0.1 – erster End-to-End-Web-Prototyp
+V2 wird in zusammenhängenden Systemblöcken aufgebaut. Funktionen werden nicht zufällig einzeln implementiert, wenn dadurch dieselben Datenmodelle oder Bedienpfade später erneut umgebaut werden müssten.
 
-Der bisher als **P0.1 Minimal-Prototyp** bezeichnete Funktionskern wird eindeutig dem Entwicklungsblock **WD-02** zugeordnet.
+Insbesondere werden Skizzen-, Profil-, Körper- und Modifier-Funktionen als zusammenhängende Modellierungskette geplant.
 
-Zielkette:
+## V3-Backlog-Regel
 
-- Hauptfenster öffnen
-- 3D-Viewport
-- Würfel/Quader erzeugen
-- im Objektbaum anzeigen
-- auswählen
-- Position/Rotation/Skalierung verändern
-- speichern
-- Browser neu laden
-- Projekt laden
-- derselbe Würfel mit korrekter Identität, Hierarchie und Transform ist wieder vorhanden
-- Icon-Paket im UI eingebunden
+Neue Ideen, die während der V2-Entwicklung entstehen, werden grundsätzlich für V3 vorgemerkt. Eine neue Idee darf nur dann noch in V2 aufgenommen werden, wenn sie nachweislich notwendig ist, um einen bereits freigegebenen V2-Block korrekt, konsistent oder technisch tragfähig abzuschließen.
 
-Damit gilt:
-
-**P0.1 = WD-02 End-to-End-Prototyp.**
-
-WD-01 ist die notwendige Architekturvorstufe.
-
-### V1 – Pflichtkern
-
-Der vollständige erste belastbare Designer-Kern gemäß Master-Funktionsliste. WD-02/P0.1 ist ausdrücklich nur eine kleine, durchgängige Teilmenge davon.
+V3-Kandidaten werden getrennt in `docs/06_v2_planning/V3_BACKLOG.md` gesammelt.
 
 ## Statuskennzeichnung
 
 - `DRAFT` – in Bearbeitung
 - `REVIEW` – fachlich zur Prüfung bereit
-- `FROZEN` – verbindliche Baseline; Änderungen nur kontrolliert über neue Revision/Entscheidung
-- `APPROVED` – formell freigegebener Folge-/Release-Stand
+- `PASS` – festgelegte Prüfungen erfolgreich bestanden
+- `FROZEN` – verbindlicher, getesteter Stand; Änderungen nur kontrolliert über Folgeblock oder konkrete Regression
+- `APPROVED` – formell freigegebener Planungs-/Release-Stand
 - `ARCHIVED` – abgelöster historischer Stand
 
-Aktueller Gesamtstatus: **FROZEN / CM3D V0.1 BASELINE**
+Aktueller Gesamtstatus: **CM3D V1 – COMPLETE / PASS / FROZEN**
 
-## Nächster Entwicklungsblock
+## Nächster Schritt
 
-**WD-01 – Technisches Fundament & Datenmodell.**
+**V2-Masterplanung abschließen.**
 
-Erst nach Abschluss von WD-01 beginnt **WD-02 / P0.1** als erster echter Web-Prototyp.
-
-Verbindliche Reihenfolge:
-
-`CM3D V0.1 BASELINE – FROZEN → WD-01 → WD-02 / P0.1 → weiterer V1-Ausbau`
+Noch keine Vergabe von WD-20 und noch keine V2-Implementierung, bevor Scope, Funktionskatalog, Abhängigkeiten und Entwicklungsreihenfolge verbindlich festgelegt sind.
