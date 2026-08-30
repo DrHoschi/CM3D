@@ -55,6 +55,29 @@ export function installSelectionRefFoundation(store) {
   store.getSelectionRefs = () => store.selection.refs.map(ref => ({ ...ref }));
   store.getPrimarySelectionRef = () => store.selection.primaryRef ? { ...store.selection.primaryRef } : null;
 
+  store.selectRef = (ref, notify = true, additive = false) => {
+    if (!ref || !Object.values(SelectionTargetKind).includes(ref.targetKind)) return false;
+
+    let result = false;
+    if (ref.targetKind === SelectionTargetKind.OBJECT || ref.targetKind === SelectionTargetKind.SKETCH) {
+      if (!store.getObject?.(ref.targetId)) return false;
+      store.select(ref.targetId, notify, additive);
+      result = true;
+    } else {
+      const kind = ref.targetKind === SelectionTargetKind.SKETCH_POINT ? 'point' : 'line';
+      if (additive && store.setSketchMultiSelectEnabled) store.setSketchMultiSelectEnabled(true, false);
+      result = store.selectSketchElement?.(ref.ownerId, kind, ref.targetId, notify) === true;
+    }
+
+    sync();
+    return result;
+  };
+
+  store.clearSelectionRefs = (notify = true) => {
+    store.clearSelection(notify);
+    sync();
+  };
+
   const unsubscribe = store.subscribe(event => {
     if (['selectionChanged', 'projectChanged', 'projectLoaded'].includes(event.type)) sync();
   });
