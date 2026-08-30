@@ -1,5 +1,4 @@
 import { AppStore } from './application/store.js';
-import { installSelectionRefFoundation } from './application/selection-ref.js';
 import { createExtrudeFromSketch } from './application/extrude.js';
 import { ThreeRuntime } from './runtime-three/runtime.js';
 import { installExtrudeRuntime } from './runtime-three/extrude.js';
@@ -62,7 +61,6 @@ installPartialProjectPanel(store);
 installGltfPanel(store, gltfInterchange);
 installSketchEditing(store, runtime, appUI);
 const sketchMultiSelection = installSketchMultiSelection(store, runtime, appUI);
-const selectionRefFoundation = installSelectionRefFoundation(store);
 const sketchGizmo = installSketchGizmo(store, runtime);
 const featureOperationsTree = installFeatureOperationsTree(store, appUI);
 const featureParametersInspector = installFeatureParametersInspector(store, appUI);
@@ -74,14 +72,14 @@ const projectSettings = installProjectSettings(store, appUI);
 const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
 const inspectorDiagnostics = installInspectorDiagnostics(store, runtime, appUI);
 
-document.title = 'CyberMotion 3D – WD-20B.2';
+document.title = 'CyberMotion 3D – WD-20B.3';
 const buildLabel = document.querySelector('.brand small');
-if (buildLabel) buildLabel.textContent = 'WD-20B.2';
+if (buildLabel) buildLabel.textContent = 'WD-20B.3';
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
-if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();if(!store.getObject(store.selection.activeObjectId))return;runtime.focusSelection();});
+if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();if(!store.getObject(store.selection.activeObjectId))return;runtime.focusSelection();});}
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});
 syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, sketchMultiSelection, selectionRefFoundation, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics };
+window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics };
