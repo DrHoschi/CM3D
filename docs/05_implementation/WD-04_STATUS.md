@@ -1,7 +1,7 @@
 # WD-04 – Modellierungsgrundlagen
 
-**Stand:** 2026-08-27  
-**Status:** IMPLEMENTED – DEVICE TEST REQUIRED  
+**Stand:** 2026-08-30  
+**Status:** PASS / FROZEN  
 **Voraussetzung:** WD-03 – PASS / FROZEN
 
 ## Ziel
@@ -65,27 +65,18 @@ Damit kann beispielsweise ein Balken als Box mit X = 0.12 m, Y = 2.10 m und Z = 
 - Parent-/Child-Beziehungen werden aus `parentId` rekonstruiert
 - Raycast eines Primitive-Meshes verweist weiterhin auf die fachliche CM3D-`objectId`
 
-## Manueller Abnahmetest
+## Gerätetest / Abschluss
 
-1. Neues Projekt anlegen.
-2. Je einen Würfel, eine Kugel und einen Zylinder erzeugen.
-3. Box-Abmessungen z. B. auf X = 0.12, Y = 2.10, Z = 0.12 setzen.
-4. Kugelradius verändern.
-5. Zylinderradius und -höhe verändern.
-6. Speichern → Browser-Reload → Laden → alle Geometrien und Maße prüfen.
-7. Bei einem Primitive Pivot X/Y/Z verändern und prüfen, dass sich der sichtbare Körper relativ zum Gizmo-/Objektursprung verschiebt.
-8. Zwei Root-Objekte über die Häkchen markieren → `Gruppe` drücken.
-9. Prüfen: Im Objektbaum steht ein Group-Knoten mit den beiden Child-Objekten darunter.
-10. Gruppe auswählen und mit Move/Rotate/Scale verändern → beide Children müssen gemeinsam folgen.
-11. Undo/Redo für die Gruppenbildung sowie einen Gruppen-Transform prüfen.
-12. Neues Projekt bzw. neuen Teststand erstellen, zwei Root-Objekte markieren → `Baugruppe` drücken.
-13. Prüfen: `assembly` erscheint als eigener Typ und Children bleiben darunter erhalten.
-14. Projekt speichern → Browser-Reload → laden → Group-/Assembly-Hierarchie und Primitive müssen erhalten bleiben.
+WD-04 wurde praktisch geprüft und anschließend über PR #6 nach `main` übernommen.
+
+Der nachfolgende WD-05-Stand baut ausdrücklich auf **WD-04 PASS / gesichert** auf und wurde selbst auf iPad/Safari getestet und als PASS / FROZEN nach `main` übernommen.
+
+Der frühere Dateistatus `IMPLEMENTED – DEVICE TEST REQUIRED` war deshalb ein nicht nachgezogener Dokumentationszwischenstand. Diese Statuskorrektur ändert keine WD-04-Fachlogik und keinen V1-Code.
 
 ## Bewusste Grenzen
 
 - Gruppieren ist in WD-04 auf markierte Root-Objekte beschränkt.
-- kein Ungroup/Explode
+- kein Ungroup/Explode im ursprünglichen WD-04-Scope
 - kein Reparenting per Drag & Drop
 - keine Mehrfach-Transformation verschiedener unabhängiger Objekte
 - keine Boolean-Operationen
@@ -94,6 +85,8 @@ Damit kann beispielsweise ein Balken als Box mit X = 0.12 m, Y = 2.10 m und Z = 
 - keine komplexen Assembly-Constraints oder Sockets
 - keine Materialbearbeitung
 
+Spätere WD-Blöcke dürfen diese Grenzen kontrolliert erweitern; sie ändern nicht rückwirkend den abgeschlossenen WD-04-Scope.
+
 ## Exit-Regel
 
-WD-04 wird erst nach erfolgreichem manuellen Gerätetest als `PASS / FROZEN` nach `main` übernommen.
+**Erfüllt.** WD-04 ist **PASS / FROZEN** und Bestandteil des getesteten V1-Gesamtstands.
