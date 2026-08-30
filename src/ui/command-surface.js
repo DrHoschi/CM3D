@@ -163,9 +163,12 @@ export function installCommandSurface(store){
   undoButton?.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();runHistory('undo');});
   redoButton?.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();runHistory('redo');});
 
-  document.addEventListener('click',event=>{
+  // Close open menus as soon as the user presses anywhere outside the menu.
+  // Capture phase is intentional: object tree / viewer interactions may stop
+  // propagation later, especially on touch devices and Safari.
+  document.addEventListener('pointerdown',event=>{
     if(!event.target.closest('.menu-group'))closeMenus();
-  });
+  },true);
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'){
       closeMenus();
