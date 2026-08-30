@@ -1,296 +1,396 @@
 # CM3D – V2 Masterplanung
 
 **Stand:** 2026-08-30  
-**Status:** DRAFT – Scope Definition  
+**Status:** V2 SCOPE REVIEW – PASS  
 **Basis:** CM3D V1 COMPLETE / PASS / FROZEN + Master-Funktionsliste V0.1
 
-## 1. Ziel
+## 1. Ziel und Planungsregel
 
-V2 baut CyberMotion 3D vom belastbaren V1-Designer zu einem deutlich vollständigeren Modellierungs- und Konstruktionswerkzeug aus.
+V2 baut CyberMotion 3D vom belastbaren V1-Designer zu einem vollständigeren Modellierungs- und Konstruktionswerkzeug aus. Die Planung erfolgt vor der Implementierung und in zusammenhängenden Systemblöcken.
 
-Die Planung erfolgt bewusst vor der Implementierung. V2 wird nicht als Folge zufälliger Einzelwerkzeuge entwickelt, sondern als zusammenhängende Systemblöcke mit klaren Abhängigkeiten.
-
-Erst nach Abschluss und Freigabe dieser Masterplanung werden konkrete WD-Blöcke ab WD-20 nummeriert.
-
-## 2. Verbindliche Planungsregel
-
-Reihenfolge:
+Verbindliche Reihenfolge:
 
 `V2 Scope Definition → V2 Funktionskatalog → Abhängigkeiten/Architektur → V2 Entwicklungsroadmap → WD-20`
 
-Neue Ideen während der V2-Entwicklung werden grundsätzlich in den V3-Backlog aufgenommen. Aufnahme in V2 nur, wenn sie nachweislich notwendig ist, um einen bereits freigegebenen V2-Block korrekt oder technisch tragfähig abzuschließen.
+Neue, nicht blockierende Ideen während V2 gehen grundsätzlich in den V3-Backlog. Noch keine Implementierung, keine Entwicklungsroadmap und keine WD-20-Vergabe.
 
-## 3. Bereits in der bestehenden Masterliste für V1–V2 vorgesehene Funktionen
+## 2. Scope-Status
 
-Die bestehende FROZEN Masterliste enthält bereits folgende V1–V2-Kandidaten:
+Der fachliche Durchlauf der Systemblöcke A–K und der anschließende Gesamt-Quercheck sind abgeschlossen.
 
-- F003 Letzte Projekte
-- F015 Ebenen/Layers
-- F024 Darstellungsmodi
-- F025 Vierfachansicht
-- F031 Ursprung/Mittelpunkt
-- F032 Snap
-- F036 Lineal/Abstand
-- F038 Bemaßung anzeigen
-- F042 Kreis/Bogen
-- F043 Profile
-- F047 Kugel/Kegel/Ebene
-- F048 Rohr/Torus
-- F056 Texturen
-- F057 Metallisch
-- F058 Rauigkeit
-- F059 Transparenz
-- F060 Materialtypen/Presets
-- F061 Materialbibliothek
-- F062 Material entfernen
-- F065 Lichtobjekte
-- F066 Screenshot/Preview
-- F069 Objektbibliothek
-- F070 Zur Bibliothek hinzufügen
-- F071 Aus Bibliothek einfügen
-- F073 Import OBJ/STL
-- F076 Export OBJ/STL
-- F078 Export Baugruppe
-- F085 Events
-- F086 Performance
+**V2 SCOPE REVIEW = PASS**
 
-Diese IDs werden nicht stillschweigend verändert. Neue V2-Funktionen erhalten erst nach Abschluss des Funktionskatalogs kontrolliert neue IDs bzw. eine neue Revision der Masterliste.
+- offene Scope-Blocker: **0**
+- R1 Stabile Referenzen und Topologie: **BESCHLOSSEN**
+- R2 Recompute und Fehlerfortpflanzung: **BESCHLOSSEN**
+- R3 Native Daten, Bibliothek und Austauschformate: **BESCHLOSSEN**
+- R3a Zentraler Export-Workflow: **BESCHLOSSEN**
 
-## 4. V2-Systemblock A – Sketch-Kern und Topologie
+Die Einstufungen `MUSS`, `SOLL` und `V3` sind die freigegebene Grundlage für den als Nächstes zu erstellenden V2-Funktionskatalog. Bestehende F-IDs der FROZEN Masterliste werden dabei nicht stillschweigend verändert.
 
-V2 erweitert die bisherige Skizze von einer einfachen Geometriesammlung zu einer adressierbaren Sketch-Struktur.
+## 3. Herkunft bestehender Funktionen
 
-Geplanter Funktionsumfang:
+Bereits in der FROZEN Masterliste als V1–V2 geführt werden insbesondere F003, F015, F024, F025, F031, F032, F036, F038, F042, F043, F047, F048, F056–F062, F065, F066, F069–F071, F073, F076, F078, F085 und F086.
 
-- einzelne Sketch-Elemente auswählbar;
-- einzelne Linien separat löschen und bearbeiten;
-- Punkte und Endpunkte separat auswählbar;
-- Mehrfachauswahl von Sketch-Elementen und Punkten;
-- Linien, Rechteck/Polygon als vorhandene Grundelemente weiterverwenden;
-- Kreis und Bogen ergänzen;
-- Spline als neuer V2-Kandidat;
-- Sketch-Elemente besitzen stabile interne Identitäten;
-- Undo/Redo für Elementänderungen;
-- Inspector kann Eigenschaften des ausgewählten Sketch-Elements bzw. Punktes anzeigen und bearbeiten;
-- bestehende V1-Skizzen müssen kompatibel übernommen werden.
+Bewusst aus `Später` für den V2-MUSS-Scope vorgezogen werden nach Scope-Review insbesondere F033 (Body/Feature Mirror), F034 (Ausrichten), F037 (Winkel messen), F052 (Boolean Union/Subtract/Intersect) sowie der Bevel-Anteil von F053. Cut/Knife aus F053 bleibt V2-SOLL. F067/F068 bleiben V3.
 
-### Punkte verbinden
+Neue V2-Funktionen erhalten erst im V2-Funktionskatalog kontrollierte IDs bzw. eine kontrollierte Revision der Funktionsliste.
 
-Für zwei ausgewählte Endpunkte werden mindestens folgende Konzepte vorgesehen:
+## 4. Freigegebene V2-Scope-Matrix
 
-- Punkte geometrisch zusammenführen;
-- koinzidente Beziehung/Constraint als spätere bzw. erweiterte Variante;
-- visuell erkennbarer geschlossener Übergang.
+### A – Sketch-Kern und Topologie
 
-Weitere Constraints wie horizontal, vertikal, parallel, rechtwinklig oder tangential werden im V2-Funktionskatalog geprüft und nicht automatisch vorausgesetzt.
+**MUSS**
+- Sketch-Elemente einzeln auswählen, löschen und bearbeiten.
+- Punkte/Endpunkte auswählen; Mehrfachauswahl von Elementen und Punkten.
+- Endpunkte real geometrisch/topologisch verbinden.
+- Linie, Rechteck/Polygon, Kreis, Bogen und Spline.
+- stabile IDs für Sketch-Elemente und Punkte.
+- Inspector-Bearbeitung.
+- Undo/Redo-Integration.
+- V1-Skizzen kompatibel laden/migrieren.
 
-## 5. V2-Systemblock B – Konturen und Profile
+**SOLL**
+- grundlegende Constraints: horizontal, vertikal, parallel, rechtwinklig, tangential.
 
-Aus Sketch-Geometrie werden explizit erkennbare und auswählbare Profile.
+**V3**
+- vollständiger professioneller parametrischer Constraint-Solver.
 
-Geplanter Funktionsumfang:
+### B – Konturen, Profile und Pfade
 
-- automatische Erkennung geschlossener Konturen;
-- mehrere geschlossene Bereiche innerhalb einer einzigen Skizze;
-- gezielte Auswahl eines oder mehrerer geschlossener Bereiche;
-- Innenkonturen/Lochbereiche fachlich berücksichtigen;
-- offene Pfade von geschlossenen Profilen unterscheiden;
-- 3D-Features referenzieren konkrete Profile/Konturen und nicht nur pauschal die gesamte Skizze;
-- eine Skizze kann Quelle mehrerer unabhängiger 3D-Features sein.
+**MUSS**
+- geschlossene Konturen automatisch und topologisch korrekt erkennen.
+- mehrere Profile pro Skizze.
+- einzelne und mehrere Profile auswählen.
+- Innenkonturen/Löcher.
+- offene Pfade als eigenständige gültige Modellierungsquelle.
+- offene Pfade klar von geschlossenen Profilflächen unterscheiden.
+- Profilflächen im Viewer hervorheben/auswählen.
+- eine Skizze als Quelle mehrerer Features.
+- stabile Profil-/Pfadreferenzen.
+- abhängige Features nach Quellenänderung kontrolliert aktualisieren.
+- ungültige Profil-/Pfadreferenzen sichtbar behandeln.
+
+**SOLL**
+- komplex zerstörte Profilreferenzen soweit eindeutig möglich automatisch reparieren.
+
+**V3**
+- vollständiges professionelles Topological Naming für beliebige komplexe Topologieänderungen.
+
+Grundregel: Sketches enthalten Elemente; Elemente bilden Konturen/Pfade; geschlossene Konturen bilden auswählbare Profile; 3D-Features referenzieren konkrete Profile oder Pfade und nicht pauschal die gesamte Skizze.
+
+### C – Sketch-Bezugsebenen und Konstruktionsebenen
+
+**MUSS**
+- Sketch auf XY/XZ/YZ.
+- Sketch auf ausgewählter planarer Körperfläche.
+- lokales Sketch-Koordinatensystem aus der Bezugsfläche.
+- logische Bindung an die Referenzfläche.
+- freie planare Arbeitsebene.
+- parallele Offset-Ebene.
+- einfache Ebene über Punkte/Geometriebezüge.
+- Verwendung der Ebenen als Sketch- und Mirror-Bezug.
+
+**V3**
+- direktes Skizzieren auf gekrümmten Flächen.
+- Wrap/Projektionsmodellierung auf gekrümmten Flächen.
+
+### D – Sketch Templates / Sketch Library
+
+**MUSS**
+- Sketch als Template speichern und wieder einfügen.
+- Geometrie, offene Pfade und geschlossene Profile erhalten.
+- definierter Einfüge-/Basispunkt.
+- Position und Rotation beim Einfügen.
+- eingefügtes Template wird standardmäßig eine unabhängige bearbeitbare Kopie.
+
+**SOLL**
+- Skalierung beim Einfügen.
+- Maße/Constraints übernehmen, soweit in V2 vorhanden.
+- Vorschau/Thumbnail.
+- Kategorien/Namen/Tags.
+
+**V3**
+- dauerhaft verknüpfte Sketch-Template-Instanzen.
+
+### E – 2D-zu-3D-Featurekette
+
+**MUSS**
+- Extrude aus ausgewählten geschlossenen Profilen, auch Multi-Profil.
+- additive und subtraktive Extrusion/Tasche.
+- Extrusionsrichtung umkehren.
+- Thin Extrude als Extrusionsvariante für offene Pfade mit Dicke, Seite und optional zentrierter Dicke.
+- Revolve um eine definierte Achse, z. B. Sketch-/Konstruktionslinie und geeignete Referenzachse.
+- Sweep eines Profils entlang Linie/Bogen/Spline.
+- reproduzierbarer grundlegender Sweep-Orientierungsmodus.
+- Loft zwischen mehreren Profilen auf unterschiedlichen Ebenen.
+- stabile Feature-Quellenreferenzen.
+- kontrollierter Recompute und sichtbarer Invalid-Zustand.
+
+**SOLL**
+- symmetrische Extrusion.
+- Extrude bis Fläche/Objekt.
+- Draft/Taper.
+- definierter Sweep-Twist und erweiterte Orientierungsmodi.
+- Loft-Leitkurven.
+
+**V3**
+- komplexe parametrische Übergangs-/Kontinuitätssteuerung.
+
+### F – Körper- und Modifier-Modellierung
+
+**MUSS**
+- Boolean Union, Subtract, Intersect.
+- Bevel/Fase.
+- Fillet/Abrundung.
+- Mehrfachauswahl geeigneter Kanten.
+- Body/Feature Mirror.
+- lineares Pattern.
+- radiales Pattern.
+- minimale Feature-Abhängigkeitskette und sichtbare Feature-/Dependency-Struktur.
+
+**SOLL**
+- Shell/Hohlkörper.
+- Cut/Knife.
+- Sketch Mirror.
+
+**V3**
+- vollständig frei editierbarer/reorderbarer/suppressierbarer professioneller History-/Modifier-Stack.
+
+### G – Transformieren, Konstruieren und Messen
+
+**MUSS**
+- Ursprung/Pivot bearbeiten.
+- zentrales Snap-System: Raster, Punkt/Vertex, Kante, Fläche und Mittelpunkt.
+- Objekt an Objekt sowie an Fläche/Kante/Punkt ausrichten.
+- Abstand messen.
+- Winkel messen.
+- exakte Koordinaten/Positionen anzeigen.
+- sichtbare gespeicherte Bemaßungen.
+- Hilfs-/Konstruktionslinien.
+
+**SOLL/V3**
+- parametrisch steuernde Bemaßungen abhängig vom späteren Constraint-Umfang.
+
+**V3**
+- komplexe persistente 3D-Constraints zwischen Körpern.
+
+Messung und Bemaßung bleiben getrennte Konzepte: Messung ist eine Abfrage; Bemaßung ist gespeicherte sichtbare Projektinformation. Vollständig treibende parametrische Maße sind kein V2-MUSS.
+
+### H – Szene und große Projekte
+
+**MUSS**
+- Layers/Ebenen.
+- Sichtbarkeit und Sperre je Layer.
+- Objekte Layern zuweisen/zwischen Layern verschieben.
+- Suche im Objektbaum.
+- Reparenting/Umstrukturieren.
+- Mehrfachauswahl großer Objektmengen.
+- skalierbares Object-Tree-/Viewer-Verhalten für größere Baugruppen.
+
+**SOLL**
+- Objektbaumfilter.
+- Drag & Drop Reparenting.
+- interne GLB/GLTF-Hierarchie adressierbar machen.
+- bei unterstützter GLB-Hierarchie Unterobjekte separat sichtbar/sperrbar/transformierbar machen.
+
+**V3**
+- komplexe Referenz-/Instanzsysteme für sehr große Baugruppen.
+
+Die GLB/GLTF-Unterhierarchie ist ein starker V2-SOLL-Kandidat, aber kein Blocker des V2-Modellierungskerns.
+
+### I – Materialien, Darstellung und Licht
+
+**MUSS**
+- Texturen.
+- Metallic.
+- Roughness.
+- Transparenz.
+- Material-Presets.
+- Materialbibliothek.
+- Material entfernen/zurücksetzen.
+- ein Material auf mehrere Objekte anwenden.
+- wiederverwendbare/verknüpfte Materialdefinitionen sowie lokale Materialkopien/Varianten.
+- konstruktionsgeeignete Darstellungsmodi wie Shaded, Wireframe und/oder Shaded+Edges.
+
+**SOLL**
+- Objekt-/Flächenfarben unabhängig vom Material.
+- Vierfachansicht.
+- Lichtobjekte mit grundlegenden Parametern.
+- Screenshot/Preview.
+- einfache Umgebung/Hintergrunddarstellung.
+
+**V3**
+- fotorealistisches Rendering.
+- Render-Nachbearbeitung.
+- komplexe Node-/Shader-Netzwerke.
+
+Grundregel: V2 besitzt ein konsistentes Materialsystem mit wiederverwendbaren Materialdefinitionen sowie für Konstruktion geeignete Darstellungsmodi. Fotorealistisches Rendering, komplexe Shader-Netzwerke und Render-Nachbearbeitung sind kein V2-Kern.
+
+### J – Bibliotheken und Import/Export
+
+**MUSS**
+- Objektbibliothek.
+- eigenes 3D-Objekt und eigene Baugruppe zur Bibliothek hinzufügen.
+- Objekt/Baugruppe aus Bibliothek einfügen.
+- Bibliothekseinträge benennen/kategorisieren.
+- eingefügte Geometrie standardmäßig als unabhängige Kopie.
+- Sketch Templates als getrennten 2D-Bibliothekstyp.
+- OBJ- und STL-Import.
+- OBJ- und STL-Export.
+- ausgewähltes Objekt exportieren.
+- Baugruppe exportieren.
+- bestehenden GLB/GLTF-Import als Bestand erhalten.
+
+**SOLL**
+- Bibliotheks-Thumbnail/Vorschau.
+- Material-/Texturinformationen beim Export soweit vom Zielformat unterstützt erhalten.
+- GLB/GLTF-Export.
+- eigenes vollständiges CM3D/CMO/CMU-Austauschformat: Entscheidung bleibt offen und blockiert V2 nicht.
+
+**V3**
+- STEP/IGES.
+- dauerhaft verknüpfte Geometrieinstanzen.
+
+### K – Produktivität, Events, Diagnose und Performance
+
+**MUSS**
+- letzte Projekte und schnelles Wiederöffnen.
+- Event-/Interaktionsdiagnose.
+- Fehler und Warnungen nachvollziehbar anzeigen.
+- ungültige Features/Referenzen zentral auffindbar machen.
+- Performanceanzeige.
+- größere reale Projekte als V2-Testfälle.
+- Regressionstests für V1-Funktionen während des V2-Ausbaus.
+
+**SOLL**
+- Objekt-/Szenenstatistik.
+- detailliertere Profiler-Ansicht.
+- Diagnoseinformationen exportieren.
+
+**V3**
+- umfangreiches internes Developer-Debug-Panel.
+- vollautomatisches Performance-/LOD-Optimierungssystem.
+
+## 5. Querschnittliche Architektur-MUSS
+
+Diese Punkte sind keine parallelen Einzelwerkzeuge, sondern gemeinsame V2-Systemgrundlagen:
+
+1. zentrales Selection-System für Objekt, Feature, Fläche, Kante, Punkt, Sketch-Element, Profil und Pfad;
+2. stabiles Referenzsystem für adressierbare Geometrieelemente;
+3. Dependency Graph für Quellen- und Feature-Abhängigkeiten;
+4. deterministische Recompute-Reihenfolge;
+5. gemeinsames INVALID/UNRESOLVED/BLOCKED-System;
+6. gemeinsame Diagnoseanzeige für Referenz- und Featurefehler;
+7. Save/Load-Unterstützung sämtlicher neuer V2-Daten;
+8. kontrollierter V1→V2-Kompatibilitäts-/Migrationspfad;
+9. zentrale Undo/Redo-Integration;
+10. Viewer, Objektbaum und Inspector auf derselben Daten-/Selection-Basis;
+11. zentrales Snap-/Geometriereferenz-Prinzip statt werkzeugspezifischer Sonderlösungen.
+
+## 6. Verbindliche Scope-Regeln R1–R3a
+
+### R1 – Stabile Referenzen und Topologie
+
+V2 verwendet stabile logische Referenzen für Sketch-Elemente, Punkte, Profile, Pfade, Flächen, Kanten, Achsen und Arbeitsebenen.
+
+Nach einer Geometrieänderung darf eine bestehende Referenz nur weiterverwendet werden, wenn ihre logische Quelle eindeutig wiedererkannt werden kann. Ist keine eindeutige Zuordnung möglich, wird die Referenz `INVALID/UNRESOLVED`.
+
+Eine Referenz darf niemals stillschweigend auf eine andere, lediglich geometrisch ähnlich erscheinende Quelle umgebunden werden.
+
+### R2 – Recompute und Fehlerfortpflanzung
+
+V2 berechnet abhängige Features deterministisch in ihrer Abhängigkeitsreihenfolge neu.
+
+Wird eine Quelle oder ein Feature `INVALID/UNRESOLVED`, werden abhängige Features nicht mit veralteter oder ersatzweise ausgewählter Geometrie weiterberechnet. Sie erhalten einen nachvollziehbaren `BLOCKED/INVALID`-Zustand einschließlich Ursache.
+
+Wird die ursprüngliche Ursache wieder gültig, wird die Feature-Kette in Abhängigkeitsreihenfolge erneut berechnet.
 
 Beispiel:
 
-Eine Skizze enthält drei Rechtecke und einen Kreis. Für eine Extrusion kann nur Rechteck 1 gewählt werden; eine zweite Extrusion kann Rechteck 2 und den Kreis verwenden.
+`Sketch → Profile → Extrude → Fillet → Pattern`
 
-## 6. V2-Systemblock C – Sketch-Bezugsebenen
+Bei offenem/ungültigem Profil:
 
-Skizzen sollen nicht nur auf globalen XY/XZ/YZ-Ebenen erstellt werden können.
+`Sketch OK → Profile INVALID → Extrude BLOCKED → Fillet BLOCKED → Pattern BLOCKED`
 
-Geplanter V2-Umfang:
+Nach Reparatur wird die Kette kontrolliert von der Quelle nach vorne neu berechnet.
 
-- neue Skizze auf einer ausgewählten planaren Körperfläche;
-- lokale Sketch-Ebene wird aus der Fläche abgeleitet;
-- Sketch bleibt logisch an den Bezugsgegenstand gebunden;
-- Extrusion nach außen oder innen auf Basis dieser Skizze;
-- Grundlage für Aufbauten, Taschen und Bohrungs-/Ausschnittgeometrie.
+### R3 – Native Daten, Bibliothek und Austauschformate
 
-V2 wird zunächst auf planare Flächen begrenzt. Skizzen direkt auf gekrümmten Flächen sind nicht automatisch Bestandteil von V2.
+V2 trennt verbindlich zwischen nativen CM3D-Projektdaten, wiederverwendbaren Bibliotheksinhalten und externen Austauschformaten.
 
-## 7. V2-Systemblock D – Sketch Templates / Sketch Library
+- Native CM3D-Projektdaten enthalten die vollständige von CM3D unterstützte Modellstruktur einschließlich Sketches, Profile, Features, Referenzen, Abhängigkeiten, Hierarchie, Layer und Materialzuordnungen.
+- Bibliotheksinhalte sind kontrolliert wiederverwendbare CM3D-Inhalte wie Sketch Templates, Objekte, Baugruppen und Materialdefinitionen. Für jeden Bibliothekstyp gelten definierte Kopier-/Referenzregeln.
+- Fremd-/Austauschformate enthalten nur die Informationen, die das jeweilige Format tatsächlich bereitstellt. CM3D erfindet beim Import keine nicht vorhandene Feature-Historie oder Parametrik.
+- Beim Export werden nur Informationen übertragen, die das Zielformat unterstützt. OBJ/STL/GLB usw. ersetzen nicht das native CM3D-Projektformat.
+- V1-Projekte besitzen Bestandsschutz und müssen über einen kontrollierten V2-Lade-/Migrationspfad weiterverwendet werden können.
 
-Skizzen sollen als wiederverwendbare Vorlage gespeichert und erneut eingefügt werden können.
+Ein zusätzliches eigenes CMO/CMU-Austauschformat bleibt V2-SOLL / noch zu entscheiden und blockiert V2 nicht.
 
-Geplanter Inhalt eines Templates:
+### R3a – Einheitlicher Export-Einstieg
 
-- Sketch-Geometrie;
-- Elementstruktur;
-- Profile/Konturen;
-- sinnvolle lokale Bezugsdaten;
-- perspektivisch Maße/Constraints, sofern diese in V2 tatsächlich eingeführt werden.
+CyberMotion 3D besitzt einen zentralen Export-Einstieg und keine Sammlung einzelner Exportbefehle im Datei-Menü.
 
-Nicht Ziel ist der Export eines kompletten 3D-Projekts. Das Template ist bewusst eine wiederverwendbare 2D-Skizzenvorlage.
+`Datei → Exportieren…` öffnet einen zentralen Export-Workflow. Erst dort werden Exportgegenstand, Zielformat und formatspezifische Optionen gewählt.
 
-Typische Anwendungen:
+Mögliche Optionen umfassen abhängig vom Format beispielsweise Auswahl/Objekt/Baugruppe, Einheiten, Skalierung, Transformationen, Hierarchie und Materialien/Texturen.
 
-- Lochbilder;
-- Flanschkonturen;
-- Halterungen;
-- Profilquerschnitte;
-- standardisierte Ausschnitte.
+Ob dieser Workflow später als Dialog, Inspector-Modus oder Kombination umgesetzt wird, ist noch keine Scope-Entscheidung. Verbindlich ist: **ein zentraler Export-Befehl; Detailoptionen erst im nachgelagerten Export-Workflow.**
 
-## 8. V2-Systemblock E – 2D-zu-3D-Featurekette
+## 7. Bewusste V2-Grenzen
 
-Die vorhandene Extrusion wird auf die neue Profil-/Konturlogik umgestellt und anschließend erweitert.
+Folgende Funktionen blockieren den V2-Abschluss ausdrücklich nicht:
 
-Geplante Featurefamilie:
+- vollständiger Constraint-Solver;
+- vollständiger frei editierbarer professioneller History Tree;
+- Skizzieren/Wrap direkt auf gekrümmten Flächen;
+- komplexe dauerhaft verknüpfte Geometrieinstanzen;
+- STEP/IGES;
+- fotorealistisches Rendering und Render-Postprocessing;
+- komplexe Shader-Netzwerke;
+- vollständiges Developer-Profiling;
+- umfassende automatische LOD-/Performanceoptimierung;
+- vollständiges professionelles Topological Naming für beliebige Topologieänderungen.
 
-- Extrude auf ausgewählte Profile;
-- Extrude additiv;
-- Extrude subtraktiv / Tasche bzw. Ausschnitt;
-- Revolve/Rotation um eine Achse;
-- Sweep eines Profils entlang Linie/Bogen/Spline;
-- Loft zwischen mehreren Profilen;
-- Orientierung/Verdrehung entlang eines Sweep-Pfades als zu spezifizierende V2-Funktion.
+## 8. Scope-Review der vier Risikozonen
 
-Beispiel Sweep:
+### RZ-01 Sketch/Parametrik – PASS
 
-Ein rechteckiges Profil wird entlang eines Splines ausgetragen. Die Orientierung des Profils entlang des Pfades und eine mögliche definierte Verdrehung müssen explizit spezifiziert werden.
+Die V2-MUSS-Funktionen sind ohne vollständigen Constraint-Solver realisierbar. Topologisches Verbinden von Endpunkten ist erforderlich; vollständige treibende Parametrik ist es nicht.
 
-## 9. V2-Systemblock F – Körper- und Modifier-Modellierung
+### RZ-02 Topologie/Referenzen – PASS
 
-Die bisherige Masterliste führt Boolean und Bevel/Cut/Knife noch als `Später`. Für V2 wird geprüft, welche dieser Funktionen bewusst vorgezogen werden sollen, weil sie für eine zusammenhängende Modellierungsbasis notwendig sind.
+Durch R1 sind eindeutige logische Referenzen und der kontrollierte `INVALID/UNRESOLVED`-Fall verbindlich. Stilles Rebinding auf vermeintlich passende Geometrie ist ausgeschlossen.
 
-V2-Kandidaten:
+### RZ-03 Feature-Recompute – PASS
 
-- Boolean Union;
-- Boolean Subtract;
-- Boolean Intersect;
-- Bevel/Fase;
-- Fillet/Abrundung;
-- Shell/Hohlkörper;
-- Spiegeln;
-- lineares/radiales Pattern bzw. Array;
-- weitere nicht-destruktive oder nachvollziehbare Modifier nur nach gesonderter Bewertung.
+Durch R2 sind deterministische Abhängigkeitsreihenfolge, Fehlerfortpflanzung und Wiederanlauf nach Reparatur verbindlich.
 
-Noch keine dieser Erweiterungen ändert automatisch die FROZEN Masterliste. Das geschieht erst über die V2-Funktionskatalog-Freigabe.
+### RZ-04 Import/Export – PASS
 
-## 10. V2-Systemblock G – Transformieren, Konstruieren und Messen
+Durch R3/R3a sind native CM3D-Daten, Bibliotheksinhalte und Fremdformate getrennt; Bestandsschutz und zentraler Export-Workflow sind festgelegt.
 
-Aufbauend auf F031/F032/F036/F038:
+## 9. Nächster Schritt
 
-- Ursprung/Mittelpunkt/Pivot bearbeiten;
-- erweitertes Snap;
-- präzisere Konstruktionshilfen;
-- Abstand messen;
-- sichtbare Bemaßungen;
-- Ausrichten und Spiegeln als V2-Kandidaten bewerten;
-- Winkelmessung als Kandidat bewerten.
+Der V2-Scope ist fachlich freigegeben. Der nächste Schritt ist ausschließlich die Erstellung des **verbindlichen V2-Funktionskatalogs** und der kontrollierte Abgleich mit den bestehenden F-IDs der FROZEN V0.1-Masterliste.
 
-## 11. V2-Systemblock H – Szene und große Projekte
+Dabei gilt:
 
-Geplanter Ausbau:
+- bestehende F-IDs nicht stillschweigend umdeuten;
+- neue V2-Funktionen eindeutig identifizieren;
+- Funktionen aus `Später`, die bewusst nach V2 vorgezogen wurden, explizit kennzeichnen;
+- Doppelungen aus den Systemblöcken auflösen;
+- erst danach Abhängigkeiten/Architektur finalisieren;
+- erst danach Entwicklungsroadmap;
+- **noch kein WD-20**.
 
-- Layers/Ebenen;
-- Suche und Filter im Objektbaum als Kandidat;
-- Reparenting/Umstrukturieren als Kandidat;
-- weitere Skalierbarkeit großer Baugruppen;
-- GLB/GLTF-interne Hierarchie als eigenständigen Kandidaten spezifizieren.
+## 10. Aktueller Planungsstatus
 
-### GLB/GLTF-Hierarchie
-
-Der bereits vorgemerkte Wunsch, interne Nodes/Meshes einer importierten GLB/GLTF-Datei als adressierbare CM3D-Unterobjekte nutzbar zu machen, bleibt bewusst ein separater Planungsgegenstand. Er wird nicht ungeprüft mit Sketch- oder Modifier-Arbeiten vermischt.
-
-Zu prüfen:
-
-- Hierarchie übernehmen ohne vollständige Konvertierung in native Geometrie;
-- Unterobjekte separat auswählen;
-- Sichtbarkeit/Sperre/Transform je Unterobjekt;
-- optional löschen bzw. lösen;
-- saubere Export-/Save-Load-Semantik.
-
-## 12. V2-Systemblock I – Materialien, Darstellung und Licht
-
-Aufbauend auf F056–F066:
-
-- Texturen;
-- Metallic;
-- Roughness;
-- Transparenz;
-- Material-Presets;
-- Materialbibliothek;
-- Material entfernen;
-- Lichtobjekte;
-- Screenshot/Preview;
-- zusätzliche Darstellungsmodi;
-- Vierfachansicht.
-
-## 13. V2-Systemblock J – Bibliotheken und Import/Export
-
-Aufbauend auf F069–F078:
-
-- Objektbibliothek;
-- eigenes Objekt/Baugruppe zur Bibliothek hinzufügen;
-- aus Bibliothek einfügen;
-- Sketch Templates als separaten 2D-Bibliothekspfad;
-- OBJ/STL Import;
-- OBJ/STL Export;
-- Baugruppenexport;
-- weitere Austauschformate nur nach Scope-Entscheidung.
-
-## 14. V2-Systemblock K – Produktivität, Events und Performance
-
-Aufbauend auf F003/F085/F086:
-
-- letzte Projekte;
-- Events/Interaktionsdiagnose;
-- Performanceanzeige;
-- größere reale Projekte als Testfälle;
-- Regressionstests der V1-Grundfunktionen während des V2-Ausbaus.
-
-## 15. Architekturprinzipien für V2
-
-V2 soll folgende Grundsätze einhalten:
-
-1. Datenmodell vor UI-Patchwork.
-2. Stabile Identitäten für adressierbare Sketch-Elemente, Profile und Feature-Referenzen.
-3. Ein 3D-Feature referenziert seine konkrete Quelle nachvollziehbar.
-4. Bestehende V1-Projekte bleiben möglichst kompatibel.
-5. Undo/Redo wird nicht durch parallele Sonderlogik umgangen.
-6. Save/Load muss neue V2-Strukturen vollständig erhalten.
-7. Viewer, Objektbaum und Inspector verwenden dieselbe zentrale Auswahl-/Datenbasis.
-8. iPad/Safari bleibt verbindlicher Gerätetestpfad.
-9. PASS/FROZEN erst nach realem Test und Merge in `main`.
-10. Keine zufällige Vermischung unabhängiger Systemblöcke.
-
-## 16. Vorläufige Abhängigkeitskette
-
-Die fachlich wahrscheinlichste Kernreihenfolge lautet derzeit:
-
-`Sketch-Datenmodell → Element/Punkt-Auswahl → Konturen/Profile → Sketch auf Fläche → Extrude-Neubasis → Revolve → Spline/Pfade → Sweep → Loft → Körper/Modifier`
-
-Parallel bzw. danach können Szene/Layers, Materialien, Viewport, Bibliotheken sowie Import/Export in eigene Entwicklungsstränge eingeordnet werden.
-
-Diese Reihenfolge ist noch **keine WD-Roadmap**.
-
-## 17. Noch zu entscheiden vor WD-20
-
-- endgültiger V2-Scope;
-- welche bisherigen `Später`-Funktionen bewusst in V2 vorgezogen werden;
-- Umfang der Sketch-Constraints;
-- genaue Featurehistorie/Abhängigkeitslogik zwischen Sketch, Profil und Körper;
-- Add/Subtract-Semantik für Extrude;
-- Sweep-Orientierung und Verdrehungsmodell;
-- Loft-Mindestumfang;
-- Modifier-Mindestumfang;
-- GLB-Hierarchie: V2 oder V3;
-- Suche/Filter/Reparenting: V2 oder V3;
-- genaue Entwicklungsreihenfolge;
-- erst danach Vergabe WD-20 ff.
-
-## 18. Aktueller Planungsstatus
-
-**V2 Scope Definition: IN ARBEIT**
-
-Noch keine Implementierung.  
-Noch keine WD-20-Vergabe.  
-Noch kein V2-Freeze.
+**V2 Scope Definition: COMPLETE**  
+**V2 Scope Review: PASS**  
+**Open Scope Blockers: 0**  
+**Next: V2 Funktionskatalog + F-ID-Abgleich**  
+**Implementation: NOT STARTED**  
+**V2 Roadmap: NOT CREATED**  
+**WD-20: NOT ASSIGNED**
