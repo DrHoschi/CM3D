@@ -1,4 +1,4 @@
-import { validateProject } from '../model/project.js';
+import { migrateAndValidateProject, validateProject } from '../model/project.js';
 
 export const PROJECT_FILE_EXTENSION = '.cm3d.json';
 
@@ -46,11 +46,11 @@ export function parseProjectFileText(text) {
   } catch {
     throw new Error('Die ausgewählte Datei enthält kein gültiges JSON. Das aktuelle Projekt wurde nicht verändert.');
   }
-  const result = validateProject(candidate);
-  if (!result.valid) {
-    throw new Error(`Die Datei ist kein gültiges CM3D-Projekt. Das aktuelle Projekt wurde nicht verändert:\n${result.errors.join('\n')}`);
+  try {
+    return migrateAndValidateProject(candidate).project;
+  } catch (error) {
+    throw new Error(`Die Datei ist kein gültiges oder unterstütztes CM3D-Projekt. Das aktuelle Projekt wurde nicht verändert:\n${error.message}`);
   }
-  return candidate;
 }
 
 export async function readProjectFile(file) {
