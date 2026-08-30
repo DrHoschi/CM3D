@@ -1,5 +1,5 @@
 export const FORMAT = 'CM3D_PROJECT';
-export const SCHEMA_VERSION = '0.1.0';
+export const SCHEMA_VERSION = '0.2.0';
 
 const uuid = (prefix) => `${prefix}_${crypto.randomUUID()}`;
 const transform = () => ({ position:{x:0,y:0,z:0}, rotation:{x:0,y:0,z:0,w:1}, scale:{x:1,y:1,z:1}, pivot:{x:0,y:0,z:0} });
