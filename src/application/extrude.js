@@ -23,12 +23,16 @@ export function createExtrudeFromSketch(store, sketchId, depth = 1) {
   const materialId = Object.keys(store.project.materials ?? {})[0] ?? null;
   const objectId = uuid('obj');
   const profile = derived.profile;
+  const parentId = sketch.parentId ?? null;
+  const order = parentId === null
+    ? store.project.scene.rootObjectIds.length
+    : Object.values(store.project.scene.objects).filter(object => object.parentId === parentId).length;
   const object = {
     objectId,
     type:'feature.extrude',
     name:`Extrude ${sketch.name || 'Skizze'}`,
-    parentId:null,
-    order:store.project.scene.rootObjectIds.length,
+    parentId,
+    order,
     transform:structuredClone(sketch.transform),
     data:{
       sourceSketchId:sketch.objectId,
@@ -49,7 +53,7 @@ export function createExtrudeFromSketch(store, sketchId, depth = 1) {
   };
 
   store.project.scene.objects[objectId]=object;
-  store.project.scene.rootObjectIds.push(objectId);
+  if (parentId === null) store.project.scene.rootObjectIds.push(objectId);
   store.touch();
   store.select(objectId,false);
   store.pushHistory(before,'Skizze extrudieren');
