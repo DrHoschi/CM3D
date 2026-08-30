@@ -61,6 +61,20 @@ installPartialProjectPanel(store);
 installGltfPanel(store, gltfInterchange);
 installSketchEditing(store, runtime, appUI);
 const sketchMultiSelection = installSketchMultiSelection(store, runtime, appUI);
+
+const syncSelectionRefs=()=>{
+  const sketchElements=Array.isArray(store.selection.sketchElements)&&store.selection.sketchElements.length?store.selection.sketchElements:(store.selection.sketchElement?[store.selection.sketchElement]:[]);
+  const refs=sketchElements.length
+    ?sketchElements.map(item=>({targetKind:item.kind==='point'?'SKETCH_POINT':'SKETCH_ELEMENT',ownerId:item.sketchId,targetId:item.elementId}))
+    :store.selection.selectedObjectIds.map(objectId=>({targetKind:store.getObject(objectId)?.type==='sketch'?'SKETCH':'OBJECT',ownerId:objectId,targetId:objectId}));
+  store.selection.refs=refs;
+  store.selection.primaryRef=refs.length?refs[refs.length-1]:null;
+};
+store.getSelectionRefs=()=>store.selection.refs.map(ref=>({...ref}));
+store.getPrimarySelectionRef=()=>store.selection.primaryRef?{...store.selection.primaryRef}:null;
+store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded'].includes(event.type))syncSelectionRefs();});
+syncSelectionRefs();
+
 const sketchGizmo = installSketchGizmo(store, runtime);
 const featureOperationsTree = installFeatureOperationsTree(store, appUI);
 const featureParametersInspector = installFeatureParametersInspector(store, appUI);
@@ -72,9 +86,9 @@ const projectSettings = installProjectSettings(store, appUI);
 const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
 const inspectorDiagnostics = installInspectorDiagnostics(store, runtime, appUI);
 
-document.title = 'CyberMotion 3D – WD-20B.3';
+document.title = 'CyberMotion 3D – WD-20B.4';
 const buildLabel = document.querySelector('.brand small');
-if (buildLabel) buildLabel.textContent = 'WD-20B.3';
+if (buildLabel) buildLabel.textContent = 'WD-20B.4';
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
