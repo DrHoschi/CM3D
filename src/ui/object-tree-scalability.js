@@ -42,18 +42,34 @@ export function installObjectTreeScalability(store, ui) {
     const object = store.getObject(objectId);
     if (!object) return false;
     let changed = false;
-    let parentId = object.parentId;
-    while (parentId) {
-      if (collapsed.delete(parentId)) changed = true;
-      parentId = store.getObject(parentId)?.parentId ?? null;
+
+    const revealParentChain = startId => {
+      let parentId = startId;
+      while (parentId) {
+        if (collapsed.delete(parentId)) changed = true;
+        parentId = store.getObject(parentId)?.parentId ?? null;
+      }
+    };
+
+    // Feature operations are rendered below their source sketch in the tree,
+    // although they are not data-model children of that sketch.
+    if (object.type === 'feature.extrude' && object.data?.sourceSketchId) {
+      const sourceSketch = store.getObject(object.data.sourceSketchId);
+      if (sourceSketch) {
+        revealParentChain(sourceSketch.objectId);
+        revealParentChain(sourceSketch.parentId);
+      }
     }
+
+    revealParentChain(object.parentId);
+
     if (changed) {
       saveCollapsed();
       ui.renderTree();
     }
     queueMicrotask(() => {
       const row = [...ui.tree.querySelectorAll('.tree-item')]
-        .find(item => item.dataset.objectId === objectId);
+        .find(item => item.dataset.objectId === objectId || item.dataset.featureOperationId === objectId);
       row?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     });
     return changed;
