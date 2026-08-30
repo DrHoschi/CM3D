@@ -1,0 +1,45 @@
+{
+  "format": "CM3D_PROJECT",
+  "schemaVersion": "0.1.0",
+  "project": {
+    "projectId": "prj_wd20a_v1_regression",
+    "name": "WD-20A V1 Regression",
+    "createdAt": "2026-08-30T00:00:00.000Z",
+    "modifiedAt": "2026-08-30T00:00:00.000Z"
+  },
+  "settings": { "units": { "lengthDisplayUnit": "m" } },
+  "scene": {
+    "rootObjectIds": ["obj_wd20a_box"],
+    "objects": {
+      "obj_wd20a_box": {
+        "objectId": "obj_wd20a_box",
+        "type": "primitive.box",
+        "name": "V1 Testbox",
+        "parentId": null,
+        "order": 0,
+        "transform": {
+          "position": { "x": 1, "y": 2, "z": 3 },
+          "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 },
+          "scale": { "x": 1, "y": 1, "z": 1 },
+          "pivot": { "x": 0, "y": 0, "z": 0 }
+        },
+        "data": { "size": { "x": 1.25, "y": 2.5, "z": 3.75 } },
+        "materialIds": ["mat_wd20a_standard"],
+        "flags": { "visible": true, "locked": false },
+        "extensions": { "wd20aMarker": "preserve-me" }
+      }
+    }
+  },
+  "materials": {
+    "mat_wd20a_standard": {
+      "materialId": "mat_wd20a_standard",
+      "name": "Standard",
+      "type": "pbr.standard",
+      "properties": { "baseColor": "#b8bcc2", "metallic": 0, "roughness": 0.6, "opacity": 1 },
+      "textureRefs": {},
+      "extensions": {}
+    }
+  },
+  "assets": [],
+  "extensions": { "wd20aProjectMarker": "preserve-project-data" }
+}

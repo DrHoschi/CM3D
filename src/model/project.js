@@ -1,5 +1,6 @@
 export const FORMAT = 'CM3D_PROJECT';
-export const SCHEMA_VERSION = '0.1.0';
+export const LEGACY_SCHEMA_VERSION = '0.1.0';
+export const SCHEMA_VERSION = '0.2.0';
 
 const uuid = (prefix) => `${prefix}_${crypto.randomUUID()}`;
 const transform = () => ({ position:{x:0,y:0,z:0}, rotation:{x:0,y:0,z:0,w:1}, scale:{x:1,y:1,z:1}, pivot:{x:0,y:0,z:0} });
@@ -23,6 +24,37 @@ export const createSketchObject=(project,name='Skizze')=>baseObject(project,'ske
 export const createExternalGltfObject=(project,assetId,name='Importiertes Modell')=>baseObject(project,'external.gltf',name,{assetId,sourceFormat:'gltf'},false);
 export const createSketchPoint=(x=0,y=0)=>({pointId:uuid('pt'),x:Number(x),y:Number(y)});
 export const createSketchLine=(startPointId,endPointId)=>({lineId:uuid('ln'),startPointId,endPointId});
+
+export function migrateProjectToCurrent(candidate) {
+  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
+    throw new Error('Projektstruktur fehlt oder ist ungültig.');
+  }
+  if (candidate.format !== FORMAT) {
+    throw new Error(`Ungültiges CM3D-Format: ${candidate.format ?? 'fehlt'}.`);
+  }
+  const sourceVersion = candidate.schemaVersion;
+  if (typeof sourceVersion !== 'string' || !sourceVersion) {
+    throw new Error('schemaVersion fehlt.');
+  }
+  if (sourceVersion === SCHEMA_VERSION) {
+    return { project:structuredClone(candidate), migrated:false, fromVersion:sourceVersion, toVersion:SCHEMA_VERSION };
+  }
+  if (sourceVersion === LEGACY_SCHEMA_VERSION) {
+    const project = structuredClone(candidate);
+    project.schemaVersion = SCHEMA_VERSION;
+    return { project, migrated:true, fromVersion:sourceVersion, toVersion:SCHEMA_VERSION };
+  }
+  throw new Error(`Nicht unterstützte schemaVersion: ${sourceVersion}.`);
+}
+
+export function migrateAndValidateProject(candidate) {
+  const migration = migrateProjectToCurrent(candidate);
+  const result = validateProject(migration.project);
+  if (!result.valid) {
+    throw new Error(result.errors.join('\n'));
+  }
+  return migration;
+}
 
 export function validateProject(project) {
   const errors=[];

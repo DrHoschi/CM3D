@@ -1,4 +1,4 @@
-import { createProject, validateProject } from '../model/project.js';
+import { createProject, migrateAndValidateProject, validateProject } from '../model/project.js';
 
 export const PARTIAL_FORMAT = 'CM3D_PARTIAL';
 export const PARTIAL_SCHEMA_VERSION = '0.1.0';
@@ -162,9 +162,13 @@ export function downloadPartialProject(store, fileName = '') {
   return { fileName:finalName, bytes:blob.size, objectCount:Object.keys(partial.objects).length, rootCount:partial.roots.length };
 }
 
-function fullProjectToPartial(project) {
-  const result = validateProject(project);
-  if (!result.valid) throw new Error(`Die Datei ist kein gültiges CM3D-Projekt:\n${result.errors.join('\n')}`);
+function fullProjectToPartial(projectCandidate) {
+  let project;
+  try {
+    project = migrateAndValidateProject(projectCandidate).project;
+  } catch (error) {
+    throw new Error(`Die Datei ist kein gültiges oder unterstütztes CM3D-Projekt:\n${error.message}`);
+  }
   const objects = structuredClone(project.scene.objects || {});
   const roots = [...(project.scene.rootObjectIds || [])].filter(id => objects[id]);
   return {

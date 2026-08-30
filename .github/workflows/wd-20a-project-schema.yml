@@ -1,0 +1,26 @@
+name: WD-20A Project Schema Regression
+
+on:
+  push:
+    branches:
+      - feature/wd-20a-project-schema-migration
+  pull_request:
+    paths:
+      - 'src/model/project.js'
+      - 'src/persistence/project-file.js'
+      - 'src/persistence/storage.js'
+      - 'src/persistence/partial-project.js'
+      - 'tests/wd-20a-project-schema.mjs'
+      - 'test-assets/wd-20a/**'
+      - '.github/workflows/wd-20a-project-schema.yml'
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run WD-20A project schema regression
+        run: node tests/wd-20a-project-schema.mjs
