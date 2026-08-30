@@ -127,6 +127,13 @@ export function installCommandSurface(store){
     });
   }
 
+  // A completed dropdown action should never leave its menu open. Keep inline
+  // controls (for example project/sketch selects) open; only actionable buttons
+  // close the active dropdown, after their existing handler had a chance to run.
+  for(const item of document.querySelectorAll('.menu-popover button.menu-item')){
+    item.addEventListener('click',()=>setTimeout(()=>closeMenus(),0));
+  }
+
   const proxies=[...document.querySelectorAll('[data-proxy-click]')];
   for(const proxy of proxies){
     proxy.addEventListener('click',()=>q(`#${proxy.dataset.proxyClick}`)?.click());
