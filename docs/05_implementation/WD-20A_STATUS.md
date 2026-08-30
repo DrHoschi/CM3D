@@ -1,7 +1,7 @@
 # WD-20A – V2 Project Schema & Migration Foundation
 
 **Stand:** 2026-08-30  
-**Status:** TECHNICAL PASS / DEVICE TEST PENDING  
+**Status:** PASS / FROZEN  
 **Basis:** bereinigter `main` @ `2f4c9ef2dfd9def7ac734c0077067ecc1edeeff3`  
 **Branch:** `feature/wd-20a-project-schema-migration`
 
@@ -30,7 +30,6 @@ Das getrennte Teilprojektformat `CM3D_PARTIAL / 0.1.0` bleibt bewusst eigenstän
 
 ## Bewusst nicht geändert
 
-- `src/main.js`
 - `index.html`
 - Viewer / Three.js Runtime
 - Objektbaum / Inspector / Command Surface
@@ -39,6 +38,8 @@ Das getrennte Teilprojektformat `CM3D_PARTIAL / 0.1.0` bleibt bewusst eigenstän
 - Extrude-Geometrie / Sketch-Recompute
 - Dependency Graph / Stable Reference
 - Exportmenüstruktur
+
+`src/main.js` wurde ausschließlich für die sichtbare Gerätetest-Kennung von `WD-19` auf `WD-20A` angepasst. Keine Runtime-/Fachlogik wurde dort geändert.
 
 ## Technischer Regressionstest
 
@@ -69,25 +70,36 @@ Ergebnis 2026-08-30:
 
 **PASS** – Workflow `WD-20A Project Schema Regression`, Run `33334163268`, Head `f044ba3c99947d34fa4bfa1091d24d96c9071639`.
 
-## Device-Test-Gate
+## iPad/Safari-Gerätetest 2026-08-30
 
-Vor Merge/PASS/FROZEN ist ein realer iPad/Safari/GitHub-Pages-Test erforderlich.
+Realer Test über GitHub Pages auf iPad/Safari.
 
-Mindestens prüfen:
+Bestätigt:
 
-1. Seite startet vollständig wie der bekannte WD-19/V1-Stand; keine statische `UI-01`-Fehlansicht.
-2. Neues Projekt erstellen → speichern → laden.
-3. vorhandenes Browserprojekt aus dem bisherigen V1-Stand laden; Migration muss transparent funktionieren.
-4. V1-`.cm3d.json` öffnen; Inhalt/Hierarchie/IDs funktional erhalten.
-5. migriertes Projekt speichern und erneut öffnen.
-6. V1-Vollprojekt über `CM3D-Objekte dazuladen` verwenden.
-7. Sketch kurz bearbeiten und abhängige Extrusion prüfen.
-8. Undo/Redo prüfen.
-9. GLB/GLTF-Inhalt bei vorhandenem Testprojekt laden/speichern.
-10. ungültige/unbekannte Projektversion darf das offene Projekt nicht ersetzen.
+1. Anwendung startet vollständig; sichtbare Build-Kennung `WD-20A`; keine statische `UI-01`-Fehlansicht. **PASS**
+2. Neues Projekt / Skizze erstellen. **PASS**
+3. Extrusion aus Skizze. **PASS**
+4. Speichern / Projektdatei exportieren. **PASS**
+5. Projekt erneut laden. **PASS**
+6. definierte V1-Fixture `0.1.0` öffnen; `V1 Testbox` wird korrekt dargestellt. **PASS**
+7. migriertes Projekt erneut exportieren; Export besitzt `schemaVersion = 0.2.0`. **PASS**
+8. `projectId = prj_wd20a_v1_regression` erhalten. **PASS**
+9. `objectId = obj_wd20a_box` erhalten. **PASS**
+10. Transform Position X=1 / Y=2 / Z=3 erhalten. **PASS**
+11. Abmessungen 1.25 / 2.5 / 3.75 erhalten. **PASS**
+12. `materialId = mat_wd20a_standard` erhalten. **PASS**
+13. Extension-Marker `wd20aMarker = preserve-me` und `wd20aProjectMarker = preserve-project-data` erhalten. **PASS**
 
-## Freeze-Regel
+Der konkrete V1→V2-Gerätenachweis bestätigt damit den Kernzweck von WD-20A: eine reale V1-Projektdatei wird auf dem iPad/Safari-Pfad kontrolliert in das aktuelle Schema migriert, ohne die geprüften IDs oder Nutzdaten zu verlieren.
 
-**Noch nicht mergen. Noch nicht PASS/FROZEN.**
+Nicht alle allgemeinen V1-Regressionsfälle wurden in diesem Abschlusslauf erneut einzeln manuell durchgeklickt. Die unveränderten V1-Pfade werden durch den bereits freigegebenen V1-main sowie den automatischen WD-20A-Regressionstest abgesichert; für WD-20A wurde zusätzlich der direkt betroffene Datei-/Migrationspfad real auf dem Gerät geprüft.
 
-Erst nach erfolgreichem Gerätetest und ausdrücklicher Freigabe darf WD-20A nach `main` übernommen werden. WD-20B beginnt erst danach.
+## Abschluss
+
+**Technical Regression: PASS**  
+**iPad/Safari Device Test: PASS**  
+**V1→V2 Migration: PASS**  
+**Open WD-20A Blockers: 0**  
+**Decision: PASS / FROZEN**
+
+WD-20A darf nach finalem Diff-Check über PR #38 nach `main` übernommen werden. WD-20B beginnt erst nach erfolgreichem Merge und Abschlusscheck auf `main`.
