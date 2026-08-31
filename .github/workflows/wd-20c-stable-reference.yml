@@ -1,0 +1,21 @@
+name: WD-20C Stable Reference Regression
+
+on:
+  push:
+    branches:
+      - feature/wd-20c-stable-reference-invalid-state
+  pull_request:
+    paths:
+      - 'src/application/stable-reference.js'
+      - 'tests/wd-20c-stable-reference.mjs'
+      - '.github/workflows/wd-20c-stable-reference.yml'
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/wd-20c-stable-reference.mjs
