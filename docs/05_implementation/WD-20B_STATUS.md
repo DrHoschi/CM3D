@@ -1,7 +1,7 @@
 # WD-20B – Unified SelectionRef Foundation
 
-**Stand:** 2026-08-30  
-**Status:** IN PROGRESS – B.1 FOUNDATION  
+**Stand:** 2026-08-31  
+**Status:** PASS / FROZEN  
 **Basis:** `main` @ `d240bd151d285f7220c3dece3c4761c16a493d00` (WD-20A PASS / FROZEN)  
 **Branch:** `feature/wd-20b-unified-selection-ref`
 
@@ -13,24 +13,59 @@ Verbindliche konzeptionelle Form:
 
 `SelectionRef = { targetKind, ownerId, targetId, subTargetId? }`
 
-## B.1 – Compatibility Foundation
+## Ergebnis
 
-Erster bewusst kleiner Schritt:
+Die gemeinsame SelectionRef-Semantik ist für den bestehenden V1/V2-Auswahlumfang eingeführt und im laufenden Web-Client schrittweise integriert.
 
-- zentrale `SelectionTargetKind`-Definition eingeführt;
-- `SelectionRef`-Factory und Equality-Helfer eingeführt;
-- bestehende Objekt-/Sketch-/Sketch-Element-Auswahl wird in `store.selection.refs` gespiegelt;
-- `store.selection.primaryRef` bildet die primäre Auswahl ab;
-- `store.getSelectionRefs()` und `store.getPrimarySelectionRef()` stellen die neue gemeinsame Leseschnittstelle bereit;
-- Objekt, Sketch, Sketch-Linie und Sketch-Punkt werden semantisch unterschieden;
-- bestehende V1-Selektionsfunktionen bleiben in B.1 unverändert die operative Quelle;
-- keine Face-/Edge-/Vertex-/Feature-/Profile-/Path-Selektion wird in B.1 erfunden.
+Unterstützte TargetKinds:
 
-## Warum B.1 als Brücke
+- `OBJECT` – normales Szenenobjekt;
+- `SKETCH` – vollständige Skizze;
+- `SKETCH_ELEMENT` – Skizzenlinie;
+- `SKETCH_POINT` – Skizzenpunkt.
 
-Der reale V1-Code besitzt eine zentrale Objektselektion im `AppStore`, während `sketch-editing.js` und `sketch-multiselect.js` die Selection-Funktionen später zur Laufzeit erweitern. Ein direkter Big-Bang-Umbau würde gleichzeitig Objektbaum, Viewer, Inspector, Gizmo und Sketch-Multiselection berühren.
+Gemeinsame Leseschnittstellen:
 
-B.1 schafft deshalb zuerst eine zentrale, typisierte SelectionRef-Projektion über den bestehenden stabilen Zustand. Nach technischem und Gerätecheck können nachfolgende B.x-Schritte die Verbraucher kontrolliert auf diese Schnittstelle umstellen.
+- `store.selection.refs`;
+- `store.selection.primaryRef`;
+- `store.getSelectionRefs()`;
+- `store.getPrimarySelectionRef()`.
+
+Gemeinsame Schreibschnittstelle:
+
+- `store.selectRef(...)`.
+
+Die bestehenden Auswahlpfade wurden bewusst stufenweise migriert:
+
+- B.5 – normale Objektselektion;
+- B.7 – Sketch-Objektselektion;
+- B.9 – Sketch-Linienselektion;
+- B.10 – Sketch-Punktselektion.
+
+Single- und Multi-Selection-Verhalten bleibt erhalten.
+
+## Konsolidierungsentscheidung
+
+Die zentrale Semantik/Factory bleibt in `src/application/selection-ref.js` definiert und regressionstestbar.
+
+Die Browser-Runtime-Bridge bleibt für WD-20B bewusst direkt im bereits bewährten `src/main.js` integriert. Ein früher direkter zusätzlicher Modulimport führte auf GitHub Pages/iPad zu einem Browser-Startup-Abbruch. Der stabile Pfad wurde anschließend ohne neue Importkette wiederhergestellt und ab B.4 schrittweise erfolgreich erweitert.
+
+Für WD-20B gilt daher ausdrücklich:
+
+- keine erneute riskante Modul-Einhängung vor Freeze;
+- keine weitere Selection-Funktionalität hinzufügen;
+- keine Face-/Edge-/Vertex-/Feature-/Profile-/Path-Selektion vorziehen;
+- weitere strukturelle Zentralisierung erst in einem dafür freigegebenen Folgeblock, wenn sie ohne Browser-Regression möglich ist.
+
+## Zusätzliche Regressionkorrekturen innerhalb WD-20B
+
+### Objektbaum-Reveal
+
+Bei Auswahl einer Extrusion wird auch der virtuelle Baum-Pfad über `sourceSketchId` berücksichtigt. Liegt die Quellskizze in einer eingeklappten Gruppe/Baugruppe, wird der notwendige Containerpfad automatisch geöffnet, damit die ausgewählte Extrusion sichtbar bleibt.
+
+### Sichtbarkeit und Viewer-Picking
+
+Ausgeblendete Objekte – einschließlich Objekten unter einem ausgeblendeten Parent – werden beim Viewer-Picking ignoriert. Im Objektbaum bleiben sie weiterhin auswählbar. Sichtbarkeit und Lock bleiben getrennte Eigenschaften.
 
 ## Regression
 
@@ -49,19 +84,53 @@ Geprüft:
 
 Workflow: `.github/workflows/wd-20b-selection-ref.yml`
 
-## Sichtbarer Teststand
+Aktueller B.10-Head vor Statusabschluss:
 
-Build-Kennung: **WD-20B.1**
+`59d74de661e456fea7c15bf231e9501048ea2410`
 
-Die Kennung ist nur ein visueller Teststand innerhalb desselben WD-20B-Branches. Sie erzeugt keinen neuen Branch und keinen eigenen WD.
+GitHub Actions:
 
-## Noch offen in WD-20B
+- `WD-20B SelectionRef Regression` – PASS;
+- Run `33434882820` – conclusion `success`.
 
-- zentrale Schreiboperationen für SelectionRefs;
-- kontrollierte Ablösung der Runtime-Overrides aus den Sketch-UI-Modulen;
-- Migration der relevanten Viewer-/Tree-/Inspector-Verbraucher;
-- vollständige Single-/Multi-Selection-Invarianten;
-- Regression der bestehenden Objekt-/Sketch-Gerätefälle;
-- finaler WD-20B Device PASS / Freeze.
+## Gerätetest – iPad / Safari / GitHub Pages
 
-**WD-20B ist noch nicht PASS/FROZEN und darf noch nicht nach `main` gemergt werden.**
+Bestätigt:
+
+- Browser-Startup / Viewer – PASS;
+- normale Objektselektion – PASS;
+- Objektbaum ↔ Viewer ↔ Inspector – PASS;
+- Sketch-Auswahl – PASS;
+- Linienauswahl – PASS;
+- Punktauswahl – PASS;
+- Sketch-Multiselection – PASS;
+- Wechsel Punkt ↔ Linie ↔ Sketch ↔ Objekt – PASS;
+- Extrusionsauswahl öffnet notwendigen Gruppenpfad – PASS;
+- ausgeblendete Objekte blockieren Viewer-Picking nicht – PASS;
+- ausgeblendete Objekte bleiben im Objektbaum erreichbar – PASS.
+
+Letzter sichtbarer Geräte-Teststand: **WD-20B.10**.
+
+## Abgrenzung
+
+Nicht Bestandteil von WD-20B:
+
+- Face-/Edge-/Vertex-Selection;
+- allgemeines Reference-/Invalid-State-System;
+- Dependency Graph / Recompute;
+- Sketch-Snap-/Constraint-System;
+- Collider-/Collision-System.
+
+Diese Themen werden nicht in den WD-20B-Freeze hineingezogen.
+
+## Abschluss
+
+**Technical Regression: PASS**  
+**Device Test: PASS**  
+**SelectionRef Migration: PASS**  
+**Open WD-20B Blockers: 0**  
+**WD-20B: PASS / FROZEN**
+
+Nächster planmäßiger Entwicklungsblock nach formalem Merge:
+
+**WD-20C – Stable Reference + Invalid State Foundation**
