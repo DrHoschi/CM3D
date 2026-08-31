@@ -75,8 +75,7 @@ store.getPrimarySelectionRef=()=>store.selection.primaryRef?{...store.selection.
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded'].includes(event.type))syncSelectionRefs();});
 syncSelectionRefs();
 
-// WD-20B.9: scene objects, sketch objects and sketch lines write through SelectionRef.
-// Sketch points deliberately remain on their proven V1 element-selection path.
+// WD-20B.10: scene objects, sketch objects, sketch lines and sketch points now write through SelectionRef.
 const legacyObjectSelect=store.select.bind(store);
 const legacySketchElementSelect=store.selectSketchElement.bind(store);
 store.selectRef=(ref,notify=true,additive=false)=>{
@@ -85,6 +84,13 @@ store.selectRef=(ref,notify=true,additive=false)=>{
     const sketch=store.getObject(ref.ownerId);
     if(sketch?.type!=='sketch'||!sketch.data?.lines?.[ref.targetId])return false;
     const result=legacySketchElementSelect(ref.ownerId,'line',ref.targetId,notify);
+    syncSelectionRefs();
+    return result;
+  }
+  if(ref.targetKind==='SKETCH_POINT'){
+    const sketch=store.getObject(ref.ownerId);
+    if(sketch?.type!=='sketch'||!sketch.data?.points?.[ref.targetId])return false;
+    const result=legacySketchElementSelect(ref.ownerId,'point',ref.targetId,notify);
     syncSelectionRefs();
     return result;
   }
@@ -106,6 +112,7 @@ store.select=(id,notify=true,additive=false)=>{
 };
 store.selectSketchElement=(sketchId,kind,elementId,notify=true)=>{
   if(kind==='line')return store.selectRef({targetKind:'SKETCH_ELEMENT',ownerId:sketchId,targetId:elementId},notify,false);
+  if(kind==='point')return store.selectRef({targetKind:'SKETCH_POINT',ownerId:sketchId,targetId:elementId},notify,false);
   return legacySketchElementSelect(sketchId,kind,elementId,notify);
 };
 
@@ -120,9 +127,9 @@ const projectSettings = installProjectSettings(store, appUI);
 const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
 const inspectorDiagnostics = installInspectorDiagnostics(store, runtime, appUI);
 
-document.title = 'CyberMotion 3D – WD-20B.9';
+document.title = 'CyberMotion 3D – WD-20B.10';
 const buildLabel = document.querySelector('.brand small');
-if (buildLabel) buildLabel.textContent = 'WD-20B.9';
+if (buildLabel) buildLabel.textContent = 'WD-20B.10';
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
