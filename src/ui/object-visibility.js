@@ -27,6 +27,15 @@ export function installObjectVisibility(store, runtime, ui) {
     return object ? store.setObjectVisible(objectId, !visible(object)) : false;
   };
 
+  const isEffectivelyVisible = objectId => {
+    let object = store.getObject(objectId);
+    while (object) {
+      if (!visible(object)) return false;
+      object = object.parentId ? store.getObject(object.parentId) : null;
+    }
+    return true;
+  };
+
   const baseTreeNode = ui.treeNode.bind(ui);
   ui.treeNode = (object, depth) => {
     const wrap = baseTreeNode(object, depth);
@@ -77,11 +86,27 @@ export function installObjectVisibility(store, runtime, ui) {
     return result;
   };
 
+  // WD-20B.8: hidden scene objects must not intercept viewport picking.
+  // Tree selection remains unchanged so hidden objects can still be selected and shown again there.
+  const basePick = runtime.pick.bind(runtime);
+  runtime.pick = event => {
+    const allPickables = runtime.pickables;
+    runtime.pickables = allPickables.filter(node => {
+      const objectId = node?.userData?.cm3dObjectId;
+      return objectId ? isEffectivelyVisible(objectId) : true;
+    });
+    try {
+      return basePick(event);
+    } finally {
+      runtime.pickables = allPickables;
+    }
+  };
+
   document.title = 'CyberMotion 3D – WD-14A';
   const buildLabel = document.querySelector('.brand small');
   if (buildLabel) buildLabel.textContent = 'WD-14A';
   applyAllRuntimeVisibility();
   ui.render();
 
-  return { visible, applyAllRuntimeVisibility };
+  return { visible, isEffectivelyVisible, applyAllRuntimeVisibility };
 }
