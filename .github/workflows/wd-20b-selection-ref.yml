@@ -1,0 +1,23 @@
+name: WD-20B SelectionRef Regression
+
+on:
+  push:
+    branches:
+      - feature/wd-20b-unified-selection-ref
+  pull_request:
+    paths:
+      - 'src/application/selection-ref.js'
+      - 'src/main.js'
+      - 'tests/wd-20b-selection-ref.mjs'
+      - '.github/workflows/wd-20b-selection-ref.yml'
+
+jobs:
+  selection-ref-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run WD-20B SelectionRef regression
+        run: node tests/wd-20b-selection-ref.mjs
