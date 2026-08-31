@@ -75,13 +75,15 @@ store.getPrimarySelectionRef=()=>store.selection.primaryRef?{...store.selection.
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded'].includes(event.type))syncSelectionRefs();});
 syncSelectionRefs();
 
-// WD-20B.5: only ordinary scene-object selection writes through SelectionRef.
-// Sketch objects and sketch elements deliberately stay on the proven V1 paths for now.
+// WD-20B.7: ordinary scene objects and sketch objects now write through SelectionRef.
+// Sketch lines and points deliberately remain on their proven V1 element-selection paths.
 const legacyObjectSelect=store.select.bind(store);
 store.selectRef=(ref,notify=true,additive=false)=>{
-  if(!ref||ref.targetKind!=='OBJECT')return false;
+  if(!ref||!['OBJECT','SKETCH'].includes(ref.targetKind))return false;
   const object=store.getObject(ref.targetId);
-  if(!object||object.type==='sketch')return false;
+  if(!object)return false;
+  if(ref.targetKind==='SKETCH'&&object.type!=='sketch')return false;
+  if(ref.targetKind==='OBJECT'&&object.type==='sketch')return false;
   legacyObjectSelect(ref.targetId,notify,additive);
   syncSelectionRefs();
   return true;
@@ -89,8 +91,9 @@ store.selectRef=(ref,notify=true,additive=false)=>{
 store.select=(id,notify=true,additive=false)=>{
   if(!id)return legacyObjectSelect(id,notify,additive);
   const object=store.getObject(id);
-  if(object?.type==='sketch')return legacyObjectSelect(id,notify,additive);
-  return store.selectRef({targetKind:'OBJECT',ownerId:id,targetId:id},notify,additive);
+  if(!object)return legacyObjectSelect(id,notify,additive);
+  const targetKind=object.type==='sketch'?'SKETCH':'OBJECT';
+  return store.selectRef({targetKind,ownerId:id,targetId:id},notify,additive);
 };
 
 const sketchGizmo = installSketchGizmo(store, runtime);
@@ -104,9 +107,9 @@ const projectSettings = installProjectSettings(store, appUI);
 const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
 const inspectorDiagnostics = installInspectorDiagnostics(store, runtime, appUI);
 
-document.title = 'CyberMotion 3D – WD-20B.6';
+document.title = 'CyberMotion 3D – WD-20B.7';
 const buildLabel = document.querySelector('.brand small');
-if (buildLabel) buildLabel.textContent = 'WD-20B.6';
+if (buildLabel) buildLabel.textContent = 'WD-20B.7';
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
