@@ -8,6 +8,10 @@ import {
   resolveStableReference,
   blockReferenceResolution
 } from '../src/application/stable-reference.js';
+import {
+  syncExtrudeSourceReference,
+  syncAllExtrudeSourceReferences
+} from '../src/application/extrude.js';
 
 const objects = {
   obj_box: { objectId:'obj_box', type:'primitive.box' },
@@ -17,7 +21,10 @@ const objects = {
   },
   obj_feature: { objectId:'obj_feature', type:'feature.extrude' }
 };
-const store = { getObject(id){ return objects[id] ?? null; } };
+const store = {
+  project:{ scene:{ objects } },
+  getObject(id){ return objects[id] ?? null; }
+};
 
 const sketchRef = createStableReference(ReferenceTargetKind.SKETCH, 'obj_sketch', 'obj_sketch');
 assert.deepEqual(sketchRef, { targetKind:'SKETCH', ownerId:'obj_sketch', targetId:'obj_sketch' });
@@ -50,5 +57,39 @@ assert.equal(unresolved.state, ReferenceState.UNRESOLVED);
 const blocked = blockReferenceResolution(unresolved, 'UPSTREAM_INVALID', 'Vorgelagerte Referenz ist ungültig.');
 assert.equal(blocked.state, ReferenceState.BLOCKED);
 assert.equal(blocked.diagnostics.at(-1).code, 'UPSTREAM_INVALID');
+
+// WD-20C.2: legacy sourceSketchId is bridged without replacement or rebinding.
+const legacyExtrude = {
+  objectId:'obj_extrude_legacy',
+  type:'feature.extrude',
+  data:{ sourceSketchId:'obj_sketch' },
+  extensions:{}
+};
+objects[legacyExtrude.objectId] = legacyExtrude;
+const legacyResolution = syncExtrudeSourceReference(store, legacyExtrude);
+assert.deepEqual(legacyExtrude.data.sourceSketchRef, {
+  targetKind:'SKETCH', ownerId:'obj_sketch', targetId:'obj_sketch'
+});
+assert.equal(legacyExtrude.data.sourceSketchId, 'obj_sketch');
+assert.equal(legacyResolution.state, ReferenceState.RESOLVED);
+assert.equal(legacyExtrude.extensions.sourceSketchReference.state, ReferenceState.RESOLVED);
+
+// Missing targets keep the original stable ID and become MISSING.
+const missingExtrude = {
+  objectId:'obj_extrude_missing',
+  type:'feature.extrude',
+  data:{ sourceSketchId:'obj_deleted_sketch' },
+  extensions:{}
+};
+objects[missingExtrude.objectId] = missingExtrude;
+const missingExtrudeResolution = syncExtrudeSourceReference(store, missingExtrude);
+assert.equal(missingExtrude.data.sourceSketchRef.targetId, 'obj_deleted_sketch');
+assert.equal(missingExtrude.data.sourceSketchId, 'obj_deleted_sketch');
+assert.equal(missingExtrudeResolution.state, ReferenceState.MISSING);
+assert.equal(missingExtrude.extensions.sourceSketchReference.state, ReferenceState.MISSING);
+
+const all = syncAllExtrudeSourceReferences(store);
+assert.equal(all.some(item => item.objectId === 'obj_extrude_legacy' && item.resolution.state === ReferenceState.RESOLVED), true);
+assert.equal(all.some(item => item.objectId === 'obj_extrude_missing' && item.resolution.state === ReferenceState.MISSING), true);
 
 console.log('WD-20C StableReference regression: PASS');
