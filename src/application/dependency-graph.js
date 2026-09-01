@@ -77,3 +77,15 @@ export function buildDependencyGraph(store) {
     }
   };
 }
+
+export function visitDependents(store, sourceObjectId, visitor) {
+  const graph = buildDependencyGraph(store);
+  const changed = [];
+  for (const edge of graph.dependentsOf(sourceObjectId)) {
+    const dependent = store?.getObject?.(edge.dependentObjectId) ?? null;
+    if (!dependent) continue;
+    visitor(dependent, edge, graph);
+    changed.push(dependent.objectId);
+  }
+  return changed;
+}
