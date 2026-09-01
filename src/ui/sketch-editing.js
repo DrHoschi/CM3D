@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { getSingleExtrudableProfile } from '../model/sketch-profile.js';
+import { buildDependencyGraph, visitDependents } from '../application/dependency-graph.js';
 
 const cloneProfile = profile => ({
   signature: profile.signature,
@@ -49,9 +50,8 @@ export function installSketchEditing(store, runtime, ui) {
     const sketch = store.getObject(sketchId);
     if (sketch?.type !== 'sketch') return [];
     const derived = getSingleExtrudableProfile(sketch);
-    const changed = [];
-    for (const object of Object.values(store.project.scene.objects)) {
-      if (object.type !== 'feature.extrude' || object.data?.sourceSketchId !== sketchId) continue;
+    return visitDependents(store, sketchId, object => {
+      if (object.type !== 'feature.extrude') return;
       object.extensions ??= {};
       if (derived.valid) {
         object.data.profile = cloneProfile(derived.profile);
@@ -63,9 +63,7 @@ export function installSketchEditing(store, runtime, ui) {
           diagnostics: derived.diagnostics.map(item => ({ code: item.code, message: item.message }))
         };
       }
-      changed.push(object.objectId);
-    }
-    return changed;
+    });
   };
 
   store.refreshDependentExtrudesFromSketch = refreshDependentExtrudes;
@@ -303,7 +301,7 @@ function renderSketchElementInspector(ui, store, fieldset) {
   const q = selector => fieldset.querySelector(selector);
   const pointEditor = q('#sketch-point-editor');
   const lineEditor = q('#sketch-line-editor');
-  const dependencyCount = Object.values(store.project.scene.objects).filter(object => object.type === 'feature.extrude' && object.data?.sourceSketchId === sketch.objectId).length;
+  const dependencyCount = buildDependencyGraph(store).dependentsOf(sketch.objectId).length;
   q('#sketch-dependency-note').textContent = dependencyCount
     ? `${dependencyCount} abhängige Extrusion${dependencyCount === 1 ? '' : 'en'} wird/werden nach Änderungen automatisch aktualisiert. Wird das Profil offen oder ungültig, verschwindet die abhängige Geometrie bis die Kontur wieder gültig ist.`
     : 'Keine abhängige Extrusion.';
