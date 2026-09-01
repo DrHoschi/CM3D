@@ -127,9 +127,9 @@ const projectSettings = installProjectSettings(store, appUI);
 const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
 const inspectorDiagnostics = installInspectorDiagnostics(store, runtime, appUI);
 
-document.title = 'CyberMotion 3D – WD-20B.10';
+document.title = 'CyberMotion 3D – WD-20C.2';
 const buildLabel = document.querySelector('.brand small');
-if (buildLabel) buildLabel.textContent = 'WD-20B.10';
+if (buildLabel) buildLabel.textContent = 'WD-20C.2';
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
