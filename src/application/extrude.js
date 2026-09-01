@@ -9,6 +9,15 @@ import {
 
 const uuid = (prefix) => `${prefix}_${crypto.randomUUID()}`;
 
+const invalidateExtrudeForSourceReference = (object, resolution) => {
+  if (![ReferenceState.MISSING, ReferenceState.INVALID].includes(resolution?.state)) return;
+  object.data.profile = null;
+  object.extensions.sketchDependency = {
+    status: 'invalid',
+    diagnostics: (resolution.diagnostics ?? []).map(item => ({ code:item.code, message:item.message }))
+  };
+};
+
 export function syncExtrudeSourceReference(store, object) {
   if (object?.type !== 'feature.extrude') return null;
   object.data ??= {};
@@ -42,6 +51,7 @@ export function syncExtrudeSourceReference(store, object) {
     state: resolution.state,
     diagnostics: resolution.diagnostics
   };
+  invalidateExtrudeForSourceReference(object, resolution);
   return resolution;
 }
 
