@@ -1,6 +1,77 @@
 import { getSingleExtrudableProfile } from '../model/sketch-profile.js';
+import {
+  ReferenceTargetKind,
+  ReferenceState,
+  createStableReference,
+  createReferenceResolution,
+  resolveStableReference
+} from './stable-reference.js';
 
 const uuid = (prefix) => `${prefix}_${crypto.randomUUID()}`;
+
+const invalidateExtrudeForSourceReference = (object, resolution) => {
+  if (![ReferenceState.MISSING, ReferenceState.INVALID].includes(resolution?.state)) return;
+  object.data.profile = null;
+  object.extensions.sketchDependency = {
+    status: 'invalid',
+    diagnostics: (resolution.diagnostics ?? []).map(item => ({ code:item.code, message:item.message }))
+  };
+};
+
+export function syncExtrudeSourceReference(store, object) {
+  if (object?.type !== 'feature.extrude') return null;
+  object.data ??= {};
+  object.extensions ??= {};
+
+  let reference = object.data.sourceSketchRef ?? null;
+  if (!reference && object.data.sourceSketchId) {
+    reference = createStableReference(
+      ReferenceTargetKind.SKETCH,
+      object.data.sourceSketchId,
+      object.data.sourceSketchId
+    );
+    object.data.sourceSketchRef = reference;
+  }
+
+  if (!reference) {
+    const resolution = createReferenceResolution(
+      createStableReference(ReferenceTargetKind.SKETCH, object.objectId, object.objectId),
+      ReferenceState.UNRESOLVED,
+      [{ code:'SOURCE_REFERENCE_MISSING', message:'Extrusion besitzt keine Quellskizzen-Referenz.' }]
+    );
+    object.extensions.sourceSketchReference = {
+      state: resolution.state,
+      diagnostics: resolution.diagnostics
+    };
+    return resolution;
+  }
+
+  const resolution = resolveStableReference(store, reference);
+  object.extensions.sourceSketchReference = {
+    state: resolution.state,
+    diagnostics: resolution.diagnostics
+  };
+  invalidateExtrudeForSourceReference(object, resolution);
+  return resolution;
+}
+
+export function syncAllExtrudeSourceReferences(store) {
+  const results = [];
+  for (const object of Object.values(store.project?.scene?.objects ?? {})) {
+    if (object?.type !== 'feature.extrude') continue;
+    results.push({ objectId: object.objectId, resolution: syncExtrudeSourceReference(store, object) });
+  }
+  return results;
+}
+
+export function installExtrudeSourceReferenceSync(store) {
+  const sync = () => syncAllExtrudeSourceReferences(store);
+  const unsubscribe = store.subscribe?.(event => {
+    if (['projectLoaded', 'projectChanged'].includes(event.type)) sync();
+  }) ?? (() => {});
+  sync();
+  return { sync, unsubscribe };
+}
 
 export function createExtrudeFromSketch(store, sketchId, depth = 1) {
   const sketch = store.getObject(sketchId);
@@ -27,6 +98,11 @@ export function createExtrudeFromSketch(store, sketchId, depth = 1) {
   const order = parentId === null
     ? store.project.scene.rootObjectIds.length
     : Object.values(store.project.scene.objects).filter(object => object.parentId === parentId).length;
+  const sourceSketchRef = createStableReference(
+    ReferenceTargetKind.SKETCH,
+    sketch.objectId,
+    sketch.objectId
+  );
   const object = {
     objectId,
     type:'feature.extrude',
@@ -36,6 +112,7 @@ export function createExtrudeFromSketch(store, sketchId, depth = 1) {
     transform:structuredClone(sketch.transform),
     data:{
       sourceSketchId:sketch.objectId,
+      sourceSketchRef,
       depth:d,
       direction:'positive',
       profile:{
@@ -52,6 +129,7 @@ export function createExtrudeFromSketch(store, sketchId, depth = 1) {
     extensions:{}
   };
 
+  syncExtrudeSourceReference(store, object);
   store.project.scene.objects[objectId]=object;
   if (parentId === null) store.project.scene.rootObjectIds.push(objectId);
   store.touch();

@@ -1,5 +1,5 @@
 import { AppStore } from './application/store.js';
-import { createExtrudeFromSketch } from './application/extrude.js';
+import { createExtrudeFromSketch, installExtrudeSourceReferenceSync } from './application/extrude.js';
 import { ThreeRuntime } from './runtime-three/runtime.js';
 import { installExtrudeRuntime } from './runtime-three/extrude.js';
 import { installGltfInterchange } from './runtime-three/gltf-interchange.js';
@@ -23,6 +23,7 @@ import { installCameraObjectPreview } from './ui/camera-object-preview.js';
 import { installInspectorDiagnostics } from './ui/inspector-diagnostics.js';
 
 const store = new AppStore();
+const extrudeSourceReferenceSync = installExtrudeSourceReferenceSync(store);
 const viewport = document.querySelector('#viewport');
 
 const runtime = new ThreeRuntime(viewport, store);
@@ -127,9 +128,9 @@ const projectSettings = installProjectSettings(store, appUI);
 const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
 const inspectorDiagnostics = installInspectorDiagnostics(store, runtime, appUI);
 
-document.title = 'CyberMotion 3D – WD-20B.10';
+document.title = 'CyberMotion 3D – WD-20C.4';
 const buildLabel = document.querySelector('.brand small');
-if (buildLabel) buildLabel.textContent = 'WD-20B.10';
+if (buildLabel) buildLabel.textContent = 'WD-20C.4';
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
@@ -137,4 +138,4 @@ if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',ev
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});
 syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics };
+window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, extrudeSourceReferenceSync, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics };
