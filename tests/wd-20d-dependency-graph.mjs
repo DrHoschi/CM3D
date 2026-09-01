@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createStableReference, ReferenceTargetKind } from '../src/application/stable-reference.js';
-import { buildDependencyGraph, DependencyNodeState } from '../src/application/dependency-graph.js';
+import { buildDependencyGraph, DependencyNodeState, visitDependents } from '../src/application/dependency-graph.js';
 
 const objects = {
   sketch_a: { objectId:'sketch_a', type:'sketch', data:{ lines:{}, points:{} } },
@@ -8,11 +8,11 @@ const objects = {
   box_a: { objectId:'box_a', type:'primitive.box' },
   extrude_a: {
     objectId:'extrude_a', type:'feature.extrude',
-    data:{ sourceSketchRef:createStableReference(ReferenceTargetKind.SKETCH,'sketch_a','sketch_a') }
+    data:{ sourceSketchId:'legacy_wrong_id', sourceSketchRef:createStableReference(ReferenceTargetKind.SKETCH,'sketch_a','sketch_a') }
   },
   extrude_b: {
     objectId:'extrude_b', type:'feature.extrude',
-    data:{ sourceSketchRef:createStableReference(ReferenceTargetKind.SKETCH,'sketch_a','sketch_a') }
+    data:{ sourceSketchId:'sketch_a', sourceSketchRef:createStableReference(ReferenceTargetKind.SKETCH,'sketch_a','sketch_a') }
   },
   extrude_missing: {
     objectId:'extrude_missing', type:'feature.extrude',
@@ -22,7 +22,7 @@ const objects = {
     objectId:'extrude_invalid', type:'feature.extrude',
     data:{ sourceSketchRef:createStableReference(ReferenceTargetKind.SKETCH,'box_a','box_a') }
   },
-  extrude_no_ref: { objectId:'extrude_no_ref', type:'feature.extrude', data:{} }
+  extrude_no_ref: { objectId:'extrude_no_ref', type:'feature.extrude', data:{ sourceSketchId:'sketch_a' } }
 };
 
 const store = {
@@ -49,4 +49,22 @@ const projected = graph.dependentsOf('sketch_a')[0];
 projected.reference.targetId = 'tampered';
 assert.equal(graph.dependentsOf('sketch_a')[0].reference.targetId, 'sketch_a');
 
-console.log('WD-20D.1 Dependency Graph regression: PASS');
+// WD-20D.2: recompute traversal follows StableReference graph edges, never legacy sourceSketchId.
+const visited = [];
+const changed = visitDependents(store, 'sketch_a', (dependent, edge) => {
+  visited.push({ objectId:dependent.objectId, sourceObjectId:edge.sourceObjectId });
+  dependent.extensions ??= {};
+  dependent.extensions.graphRecomputeVisited = true;
+});
+assert.deepEqual(changed, ['extrude_a','extrude_b']);
+assert.deepEqual(visited, [
+  { objectId:'extrude_a', sourceObjectId:'sketch_a' },
+  { objectId:'extrude_b', sourceObjectId:'sketch_a' }
+]);
+assert.equal(objects.extrude_a.extensions.graphRecomputeVisited, true);
+assert.equal(objects.extrude_b.extensions.graphRecomputeVisited, true);
+assert.equal(objects.extrude_no_ref.extensions, undefined);
+assert.equal(objects.extrude_missing.extensions, undefined);
+assert.equal(objects.extrude_invalid.extensions, undefined);
+
+console.log('WD-20D.2 Dependency Graph + Recompute Bridge regression: PASS');
