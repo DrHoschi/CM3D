@@ -54,6 +54,15 @@ export function syncAllExtrudeSourceReferences(store) {
   return results;
 }
 
+export function installExtrudeSourceReferenceSync(store) {
+  const sync = () => syncAllExtrudeSourceReferences(store);
+  const unsubscribe = store.subscribe?.(event => {
+    if (['projectLoaded', 'projectChanged'].includes(event.type)) sync();
+  }) ?? (() => {});
+  sync();
+  return { sync, unsubscribe };
+}
+
 export function createExtrudeFromSketch(store, sketchId, depth = 1) {
   const sketch = store.getObject(sketchId);
   if (sketch?.type !== 'sketch') return { ok:false, reason:'NO_SKETCH', message:'Bitte eine Skizze auswählen.' };
