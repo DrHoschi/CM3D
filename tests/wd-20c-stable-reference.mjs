@@ -82,7 +82,7 @@ assert.equal(legacyExtrude.extensions.sourceSketchReference.state, ReferenceStat
 const missingExtrude = {
   objectId:'obj_extrude_missing',
   type:'feature.extrude',
-  data:{ sourceSketchId:'obj_deleted_sketch' },
+  data:{ sourceSketchId:'obj_deleted_sketch', profile:{ points:[{x:0,y:0},{x:1,y:0},{x:0,y:1}] } },
   extensions:{}
 };
 objects[missingExtrude.objectId] = missingExtrude;
@@ -123,7 +123,7 @@ assert.equal(loadedLegacyExtrude.extensions.sourceSketchReference.state, Referen
 const loadedMissingExtrude = {
   objectId:'obj_loaded_missing_extrude',
   type:'feature.extrude',
-  data:{ sourceSketchId:'obj_loaded_deleted_sketch' },
+  data:{ sourceSketchId:'obj_loaded_deleted_sketch', profile:{ points:[{x:0,y:0},{x:1,y:0},{x:0,y:1}] } },
   extensions:{}
 };
 store.project.scene.objects[loadedMissingExtrude.objectId] = loadedMissingExtrude;
@@ -131,6 +131,31 @@ store.emit('projectChanged');
 assert.equal(loadedMissingExtrude.data.sourceSketchRef.targetId, 'obj_loaded_deleted_sketch');
 assert.equal(loadedMissingExtrude.data.sourceSketchId, 'obj_loaded_deleted_sketch');
 assert.equal(loadedMissingExtrude.extensions.sourceSketchReference.state, ReferenceState.MISSING);
+
+// WD-20C.4: broken references invalidate cached geometry instead of showing stale results.
+assert.equal(missingExtrude.data.profile, null);
+assert.equal(missingExtrude.extensions.sketchDependency.status, 'invalid');
+assert.equal(loadedMissingExtrude.data.profile, null);
+assert.equal(loadedMissingExtrude.extensions.sketchDependency.status, 'invalid');
+
+const invalidKindExtrude = {
+  objectId:'obj_invalid_kind_extrude',
+  type:'feature.extrude',
+  data:{
+    sourceSketchId:'obj_box',
+    sourceSketchRef:createStableReference(ReferenceTargetKind.SKETCH, 'obj_box', 'obj_box'),
+    profile:{ points:[{x:0,y:0},{x:1,y:0},{x:0,y:1}] }
+  },
+  extensions:{}
+};
+store.project.scene.objects[invalidKindExtrude.objectId] = invalidKindExtrude;
+const invalidKindResolution = syncExtrudeSourceReference(store, invalidKindExtrude);
+assert.equal(invalidKindResolution.state, ReferenceState.INVALID);
+assert.equal(invalidKindExtrude.data.sourceSketchId, 'obj_box');
+assert.equal(invalidKindExtrude.data.sourceSketchRef.targetId, 'obj_box');
+assert.equal(invalidKindExtrude.data.profile, null);
+assert.equal(invalidKindExtrude.extensions.sourceSketchReference.state, ReferenceState.INVALID);
+assert.equal(invalidKindExtrude.extensions.sketchDependency.status, 'invalid');
 
 syncController.unsubscribe();
 console.log('WD-20C StableReference regression: PASS');
