@@ -102,7 +102,7 @@ store.selectRef=(ref,notify=true,additive=false)=>{
   if(ref.targetKind==='OBJECT'&&object.type==='sketch')return false;
   legacyObjectSelect(ref.targetId,notify,additive);
   syncSelectionRefs();
-  return true;
+  return result;
 };
 store.select=(id,notify=true,additive=false)=>{
   if(!id)return legacyObjectSelect(id,notify,additive);
@@ -128,9 +128,9 @@ const projectSettings = installProjectSettings(store, appUI);
 const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
 const inspectorDiagnostics = installInspectorDiagnostics(store, runtime, appUI);
 
-document.title = 'CyberMotion 3D – WD-20D.2';
+document.title = 'CyberMotion 3D – WD-20D.3';
 const buildLabel = document.querySelector('.brand small');
-if (buildLabel) buildLabel.textContent = 'WD-20D.2';
+if (buildLabel) buildLabel.textContent = 'WD-20D.3';
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
