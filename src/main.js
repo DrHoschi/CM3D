@@ -102,7 +102,7 @@ store.selectRef=(ref,notify=true,additive=false)=>{
   if(ref.targetKind==='OBJECT'&&object.type==='sketch')return false;
   legacyObjectSelect(ref.targetId,notify,additive);
   syncSelectionRefs();
-  return result;
+  return true;
 };
 store.select=(id,notify=true,additive=false)=>{
   if(!id)return legacyObjectSelect(id,notify,additive);
