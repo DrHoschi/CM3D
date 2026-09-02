@@ -1,0 +1,38 @@
+name: WD-20D Dependency Graph Regression
+
+on:
+  push:
+    branches:
+      - feature/wd-20d-dependency-graph-recompute
+    paths:
+      - 'src/application/dependency-graph.js'
+      - 'src/application/stable-reference.js'
+      - 'src/application/extrude.js'
+      - 'src/ui/sketch-editing.js'
+      - 'tests/wd-20c-stable-reference.mjs'
+      - 'tests/wd-20d-dependency-graph.mjs'
+      - 'docs/05_implementation/WD-20D_STATUS.md'
+      - '.github/workflows/wd-20d-dependency-graph.yml'
+      - 'src/main.js'
+  pull_request:
+    paths:
+      - 'src/application/dependency-graph.js'
+      - 'src/application/stable-reference.js'
+      - 'src/application/extrude.js'
+      - 'src/ui/sketch-editing.js'
+      - 'tests/wd-20c-stable-reference.mjs'
+      - 'tests/wd-20d-dependency-graph.mjs'
+      - 'docs/05_implementation/WD-20D_STATUS.md'
+      - '.github/workflows/wd-20d-dependency-graph.yml'
+      - 'src/main.js'
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/wd-20c-stable-reference.mjs
+      - run: node tests/wd-20d-dependency-graph.mjs

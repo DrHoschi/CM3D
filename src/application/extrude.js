@@ -16,6 +16,17 @@ const invalidateExtrudeForSourceReference = (object, resolution) => {
     status: 'invalid',
     diagnostics: (resolution.diagnostics ?? []).map(item => ({ code:item.code, message:item.message }))
   };
+  object.extensions.recomputeState = {
+    state: ReferenceState.BLOCKED,
+    upstreamState: resolution.state,
+    diagnostics: [
+      {
+        code: `UPSTREAM_${resolution.state}`,
+        message: `Extrusionsberechnung ist blockiert, weil die Quellreferenz ${resolution.state} ist.`
+      },
+      ...(resolution.diagnostics ?? []).map(item => ({ code:item.code, message:item.message }))
+    ]
+  };
 };
 
 export function syncExtrudeSourceReference(store, object) {
@@ -51,6 +62,13 @@ export function syncExtrudeSourceReference(store, object) {
     state: resolution.state,
     diagnostics: resolution.diagnostics
   };
+  if (resolution.state === ReferenceState.RESOLVED) {
+    object.extensions.recomputeState = {
+      state: 'READY',
+      upstreamState: null,
+      diagnostics: []
+    };
+  }
   invalidateExtrudeForSourceReference(object, resolution);
   return resolution;
 }
