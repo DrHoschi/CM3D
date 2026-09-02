@@ -7,6 +7,7 @@ on:
     paths:
       - 'src/application/dependency-graph.js'
       - 'src/application/stable-reference.js'
+      - 'src/application/extrude.js'
       - 'src/ui/sketch-editing.js'
       - 'tests/wd-20d-dependency-graph.mjs'
       - '.github/workflows/wd-20d-dependency-graph.yml'
@@ -15,6 +16,7 @@ on:
     paths:
       - 'src/application/dependency-graph.js'
       - 'src/application/stable-reference.js'
+      - 'src/application/extrude.js'
       - 'src/ui/sketch-editing.js'
       - 'tests/wd-20d-dependency-graph.mjs'
       - '.github/workflows/wd-20d-dependency-graph.yml'
