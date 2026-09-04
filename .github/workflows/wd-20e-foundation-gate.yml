@@ -1,0 +1,42 @@
+name: WD-20E Foundation Gate Regression
+
+on:
+  push:
+    branches:
+      - feature/wd-20e-foundation-integration-rb01-gate
+    paths:
+      - 'src/application/dependency-graph.js'
+      - 'src/application/stable-reference.js'
+      - 'src/application/extrude.js'
+      - 'src/main.js'
+      - 'tests/wd-20a-project-schema.mjs'
+      - 'tests/wd-20b-selection-ref.mjs'
+      - 'tests/wd-20c-stable-reference.mjs'
+      - 'tests/wd-20d-dependency-graph.mjs'
+      - '.github/workflows/wd-20e-foundation-gate.yml'
+      - 'docs/05_implementation/WD-20E_STATUS.md'
+  pull_request:
+    paths:
+      - 'src/application/dependency-graph.js'
+      - 'src/application/stable-reference.js'
+      - 'src/application/extrude.js'
+      - 'src/main.js'
+      - 'tests/wd-20a-project-schema.mjs'
+      - 'tests/wd-20b-selection-ref.mjs'
+      - 'tests/wd-20c-stable-reference.mjs'
+      - 'tests/wd-20d-dependency-graph.mjs'
+      - '.github/workflows/wd-20e-foundation-gate.yml'
+      - 'docs/05_implementation/WD-20E_STATUS.md'
+
+jobs:
+  foundation-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/wd-20a-project-schema.mjs
+      - run: node tests/wd-20b-selection-ref.mjs
+      - run: node tests/wd-20c-stable-reference.mjs
+      - run: node tests/wd-20d-dependency-graph.mjs
