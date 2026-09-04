@@ -1,7 +1,7 @@
 # WD-20E – Foundation Integration / RB-01 Gate
 
 **Stand:** 2026-09-04  
-**Status:** IN PROGRESS – E.1 FOUNDATION INTEGRATION AUDIT  
+**Status:** IN PROGRESS – E.2 DEPENDENCY CYCLE GUARD  
 **Basis:** `main` @ `81e6d484169180a67b25e9d2befb0aa5ebe032b7` (WD-20D PASS / FROZEN / MERGED)  
 **Branch:** `feature/wd-20e-foundation-integration-rb01-gate`
 
@@ -32,7 +32,7 @@ Der RB-01-Inhalt verlangt außerdem unter anderem:
 - Save/Load für neue Grundstrukturen;
 - Diagnoseprojektion für Referenz-/Migrationsfehler.
 
-## E.1 – Foundation Integration Audit
+## E.1 – Foundation Integration Audit – COMPLETE
 
 ### Bereits durch WD-20A–D belastbar abgedeckt
 
@@ -53,17 +53,11 @@ Der RB-01-Inhalt verlangt außerdem unter anderem:
 
 #### G1 – Dependency Cycle Protection
 
-`src/application/dependency-graph.js` baut und traversiert den aktuellen Graphen deterministisch, besitzt aber noch keine allgemeine Zyklenerkennung bzw. kein Gate, das eine zyklische Abhängigkeit kontrolliert ablehnt.
-
-**RB-01-Relevanz:** Roadmap fordert ausdrücklich `Dependency-Graph-Grundgerüst und Zyklenschutz` sowie im Gate `Dependency-Zyklen abgewiesen werden`.
-
-**Status:** OPEN / BLOCKER FOR RB-01 PASS.
+Status nach E.2: **IMPLEMENTED / TECHNICAL GATE PENDING**.
 
 #### G2 – Domain Transaction Boundary
 
 `AppStore` verwendet weiterhin funktionierende Snapshot-History (`snapshot()` / `pushHistory()`), und WD-20D bestätigt für Sketch→Extrude, dass Recompute keinen eigenen Undo-Schritt erzeugt. Es existiert jedoch noch keine explizite gemeinsame Domänen-Transaction-Grenze, über die Mutation + Recompute als allgemeines Foundation-Muster atomar abgeschlossen werden.
-
-**RB-01-Relevanz:** Roadmap fordert ausdrücklich `Domänen-Transaction-Grenze für Undo/Redo`.
 
 **Status:** OPEN / BLOCKER FOR RB-01 PASS.
 
@@ -71,27 +65,50 @@ Der RB-01-Inhalt verlangt außerdem unter anderem:
 
 `src/ui/inspector-diagnostics.js` zeigt allgemeine Status-, Selection-, Scene-, Event- und History-Daten, projiziert aber die in WD-20C/D eingeführten Reference-/Recompute-Zustände noch nicht gezielt als gemeinsame Diagnose (`RESOLVED/MISSING/INVALID/BLOCKED`, Diagnostics, Upstream-State).
 
-**RB-01-Relevanz:** Roadmap fordert `Diagnoseprojektion für Referenz-/Migrationsfehler`; Gate verlangt, dass ungültige Referenzen sichtbar statt still repariert werden.
-
 **Status:** OPEN / BLOCKER FOR RB-01 PASS.
 
-### Punkte, die im weiteren WD-20E-Gate ausdrücklich nochmals integriert geprüft werden müssen
+## E.2 – Dependency Cycle Guard
 
-- A: V1→V2 Migration + Roundtrip;
-- B: SelectionRef-Lese-/Schreibpfade ohne V1-Regression;
-- C: StableReference-ID-Erhalt und No-Silent-Rebinding;
-- D: Graph-Recompute + MISSING/INVALID→BLOCKED;
-- E: Undo/Redo als atomarer Zustand über Mutation + Recompute;
-- F: Zyklus wird deterministisch erkannt und abgewiesen;
-- G: Reference-/Invalid-Zustand ist in der Diagnose sichtbar;
-- H: Save/Load erhält alle persistierenden Foundation-Daten;
-- I: iPad/Safari Gesamtregression vor RB-01 Freeze.
+E.2 ergänzt ausschließlich den bestehenden Dependency-Graph-Core um einen allgemeinen deterministischen Zyklenschutz.
 
-## Vorgesehene kleine Folgeblöcke
+Umgesetzt:
 
-### WD-20E.2 – Dependency Cycle Guard
+- `detectDependencyCycles(edges)` erkennt Zyklen ausschließlich über fachlich `RESOLVED` Kanten;
+- deterministische Strongly-Connected-Component-Auswertung mit stabil sortiertem Ergebnis;
+- Selbstzyklus wird ebenfalls erkannt;
+- `wouldCreateDependencyCycle(graph, sourceObjectId, dependentObjectId)` prüft eine geplante neue Kante vor dem Einfügen;
+- `validateDependencyEdge(...)` weist eine zyklische Kante kontrolliert mit `DEPENDENCY_CYCLE` ab;
+- vorhandene zyklische Graphkomponenten werden als `BLOCKED` mit Diagnose `DEPENDENCY_CYCLE` markiert;
+- normaler Recompute traversiert keine bereits blockierten Dependents;
+- ungültige/nicht aufgelöste Kanten werden nicht fälschlich als gültiger Zyklusbestandteil behandelt;
+- keine neue Featureart, keine neue Kantenart und keine allgemeine Feature-Engine eingeführt.
 
-Nur deterministische Zyklenerkennung/-abweisung auf dem bestehenden Dependency Graph. Keine neue Featureart und keine breitere Dependency-Engine.
+Regression erweitert in `tests/wd-20d-dependency-graph.mjs`:
+
+- 3-Knoten-Zyklus;
+- Selbstzyklus;
+- INVALID-Kante erzeugt keinen fachlichen Zyklus;
+- geplante Rückkante wird deterministisch abgewiesen;
+- azyklische geplante Kante bleibt erlaubt;
+- bestehende WD-20D-Graph-/Blocked-Regression bleibt enthalten.
+
+Neuer Integrationsworkflow:
+
+`.github/workflows/wd-20e-foundation-gate.yml`
+
+Er führt gemeinsam die vorhandenen WD-20A-, WD-20B-, WD-20C- und WD-20D/E-Regressionen aus.
+
+Sichtbarer Browser-Teststand: **WD-20E.2**.
+
+## Noch offene Gate-Punkte
+
+- E.2 technischer Gesamtworkflow muss PASS sein;
+- E.2 Geräte-Regression muss PASS sein;
+- G2 / E.3 Domain Transaction Boundary;
+- G3 / E.4 Reference Diagnostic Projection;
+- E.5 RB-01 Integration / Freeze Gate.
+
+## Vorgesehene Folgeblöcke
 
 ### WD-20E.3 – Domain Transaction Boundary
 
@@ -105,16 +122,17 @@ Bestehende Diagnoseansicht um gemeinsame Reference-/Recompute-Zustände und Diag
 
 A–E gemeinsam regressieren, Save/Load und Undo/Redo prüfen, iPad/Safari-Gerätetest, offene Blocker = 0, anschließend RB-01 PASS/FROZEN und Merge nach `main`.
 
-## E.1 Entscheidung
+## Aktueller Stand
 
 **WD-20A:** PASS / FROZEN / MERGED  
 **WD-20B:** PASS / FROZEN / MERGED  
 **WD-20C:** PASS / FROZEN / MERGED  
 **WD-20D:** PASS / FROZEN / MERGED  
+**WD-20E.1:** COMPLETE  
+**WD-20E.2:** IMPLEMENTED / TECHNICAL GATE PENDING  
 **RB-01 Gate aktuell:** NOT PASS  
-**Offene Gate-Blocker:** 3 (`G1`, `G2`, `G3`)  
-**WD-20E.1 Foundation Integration Audit:** COMPLETE
+**Offene fachliche Gate-Blocker nach E.2:** 2 (`G2`, `G3`) plus E.2-Abnahme
 
-Nächster zulässiger Schritt:
+Nächster Schritt nach E.2 TECH + DEVICE PASS:
 
-**WD-20E.2 – Dependency Cycle Guard**
+**WD-20E.3 – Domain Transaction Boundary**
