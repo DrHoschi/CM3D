@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { createStableReference, ReferenceTargetKind, ReferenceState } from '../src/application/stable-reference.js';
 import { syncExtrudeSourceReference } from '../src/application/extrude.js';
-import { buildDependencyGraph, DependencyNodeState, visitDependents, enforceBlockedDependencyState } from '../src/application/dependency-graph.js';
+import {
+  buildDependencyGraph,
+  DependencyNodeState,
+  visitDependents,
+  enforceBlockedDependencyState,
+  detectDependencyCycles,
+  wouldCreateDependencyCycle,
+  validateDependencyEdge
+} from '../src/application/dependency-graph.js';
 
 const objects = {
   sketch_a: { objectId:'sketch_a', type:'sketch', data:{ lines:{}, points:{} } },
@@ -38,6 +46,8 @@ assert.equal(graph.nodes.size, Object.keys(objects).length);
 assert.deepEqual(graph.dependentsOf('sketch_a').map(edge => edge.dependentObjectId), ['extrude_a','extrude_b']);
 assert.deepEqual(graph.dependenciesOf('extrude_a').map(edge => edge.sourceObjectId), ['sketch_a']);
 assert.equal(graph.nodeState('extrude_a').state, DependencyNodeState.READY);
+assert.equal(graph.hasCycles, false);
+assert.deepEqual(graph.cycles, []);
 
 // WD-20D.3: source-reference failure stays MISSING/INVALID on the edge, while the dependent computation becomes BLOCKED.
 assert.equal(graph.nodeState('extrude_missing').state, DependencyNodeState.BLOCKED);
@@ -104,4 +114,40 @@ assert.equal(objects.extrude_invalid.extensions.sourceSketchReference.state, Ref
 assert.equal(objects.extrude_invalid.extensions.recomputeState.state, ReferenceState.BLOCKED);
 assert.equal(objects.extrude_invalid.extensions.recomputeState.upstreamState, ReferenceState.INVALID);
 
-console.log('WD-20D.3 Dependency Graph + deterministic BLOCKED propagation regression: PASS');
+// WD-20E.2: generic dependency cycle guard is deterministic and ignores non-resolved edges.
+const resolved = (sourceObjectId, dependentObjectId) => ({ sourceObjectId, dependentObjectId, state:ReferenceState.RESOLVED });
+const invalid = (sourceObjectId, dependentObjectId) => ({ sourceObjectId, dependentObjectId, state:ReferenceState.INVALID });
+assert.deepEqual(detectDependencyCycles([
+  resolved('feature_c','feature_a'),
+  resolved('feature_a','feature_b'),
+  resolved('feature_b','feature_c')
+]), [['feature_a','feature_b','feature_c']]);
+assert.deepEqual(detectDependencyCycles([
+  resolved('feature_a','feature_a')
+]), [['feature_a']]);
+assert.deepEqual(detectDependencyCycles([
+  resolved('feature_a','feature_b'),
+  invalid('feature_b','feature_a')
+]), []);
+
+const syntheticGraph = {
+  dependentsOf(id) {
+    const map = {
+      feature_a:[resolved('feature_a','feature_b')],
+      feature_b:[resolved('feature_b','feature_c')],
+      feature_c:[]
+    };
+    return map[id] ?? [];
+  }
+};
+assert.equal(wouldCreateDependencyCycle(syntheticGraph, 'feature_c', 'feature_a'), true);
+assert.equal(wouldCreateDependencyCycle(syntheticGraph, 'feature_a', 'feature_c'), false);
+assert.equal(wouldCreateDependencyCycle(syntheticGraph, 'feature_a', 'feature_a'), true);
+assert.deepEqual(validateDependencyEdge(syntheticGraph, 'feature_c', 'feature_a'), {
+  allowed:false,
+  code:'DEPENDENCY_CYCLE',
+  message:'Dependency-Kante feature_c → feature_a würde einen Zyklus erzeugen.'
+});
+assert.equal(validateDependencyEdge(syntheticGraph, 'feature_a', 'feature_c').allowed, true);
+
+console.log('WD-20E.2 Dependency Graph + deterministic Cycle Guard regression: PASS');
