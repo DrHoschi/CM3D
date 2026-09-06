@@ -50,3 +50,9 @@ jobs:
       - run: node tests/wd-20d-dependency-graph.mjs
       - run: node tests/wd-20e-domain-transaction.mjs
       - run: node tests/wd-20e-reference-diagnostics.mjs
+      - name: Reject stale WD-20E.3 runtime labels
+        run: |
+          if grep -RIn --include='*.js' 'WD-20E.3' src; then
+            echo 'Stale WD-20E.3 runtime label found under src/.'
+            exit 1
+          fi
