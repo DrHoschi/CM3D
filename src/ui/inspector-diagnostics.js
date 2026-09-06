@@ -216,7 +216,7 @@ export function installInspectorDiagnostics(store, runtime, ui) {
   window.addEventListener('unhandledrejection', event => pushMessage('ERROR', event.reason?.message || String(event.reason || 'Unhandled Promise Rejection')));
 
   panel.style.setProperty('display', 'none', 'important');
-  pushMessage('INFO', 'WD-20E.4 Referenzdiagnose bereit.');
+  pushMessage('INFO', 'Referenzdiagnose bereit.');
 
   return { panel, button, open, close, renderAll, renderReferences, unsubscribe };
 }
