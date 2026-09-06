@@ -84,15 +84,20 @@ export function syncAllExtrudeSourceReferences(store) {
 }
 
 export function installExtrudeSourceReferenceSync(store) {
-  installDomainTransactionBoundary(store);
-  queueMicrotask(() => {
-    wrapDomainMutation(store, 'setSketchPoint');
-    wrapDomainMutation(store, 'setSketchLineEndpoints');
-    wrapDomainMutation(store, 'deleteSketchElement');
-    document.title = 'CyberMotion 3D – WD-20E.3';
-    const buildLabel = document.querySelector('.brand small');
-    if (buildLabel) buildLabel.textContent = 'WD-20E.3';
-  });
+  const historyCapable = typeof store?.snapshot === 'function' && typeof store?.pushHistory === 'function';
+  if (historyCapable) {
+    installDomainTransactionBoundary(store);
+    queueMicrotask(() => {
+      wrapDomainMutation(store, 'setSketchPoint');
+      wrapDomainMutation(store, 'setSketchLineEndpoints');
+      wrapDomainMutation(store, 'deleteSketchElement');
+      if (typeof document !== 'undefined') {
+        document.title = 'CyberMotion 3D – WD-20E.3';
+        const buildLabel = document.querySelector('.brand small');
+        if (buildLabel) buildLabel.textContent = 'WD-20E.3';
+      }
+    });
+  }
 
   const sync = () => syncAllExtrudeSourceReferences(store);
   const unsubscribe = store.subscribe?.(event => {
