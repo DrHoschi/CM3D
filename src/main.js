@@ -1,5 +1,6 @@
 import { AppStore } from './application/store.js';
 import { createExtrudeFromSketch, installExtrudeSourceReferenceSync } from './application/extrude.js';
+import { installSketchMutationContract } from './application/sketch-mutation.js';
 import { getSketchElement, getSketchPoint } from './model/sketch-topology.js';
 import { ThreeRuntime } from './runtime-three/runtime.js';
 import { installExtrudeRuntime } from './runtime-three/extrude.js';
@@ -23,7 +24,7 @@ import { installProjectSettings } from './ui/project-settings.js';
 import { installCameraObjectPreview } from './ui/camera-object-preview.js';
 import { installInspectorDiagnostics } from './ui/inspector-diagnostics.js';
 
-const BUILD_ID = 'WD-21A.2';
+const BUILD_ID = 'WD-21A.3';
 const applyBuildIdentity = () => {
   document.title = `CyberMotion 3D – ${BUILD_ID}`;
   const buildLabel = document.querySelector('.brand small');
@@ -69,6 +70,7 @@ installCommandSurface(store);
 installPartialProjectPanel(store);
 installGltfPanel(store, gltfInterchange);
 installSketchEditing(store, runtime, appUI);
+const sketchMutationContract = installSketchMutationContract(store);
 const sketchMultiSelection = installSketchMultiSelection(store, runtime, appUI);
 
 const syncSelectionRefs=()=>{
@@ -136,7 +138,6 @@ const projectSettings = installProjectSettings(store, appUI);
 const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
 const inspectorDiagnostics = installInspectorDiagnostics(store, runtime, appUI);
 
-// Authoritative visible build identity. Older installer-local labels are overridden here and are not release-authoritative.
 applyBuildIdentity();
 
 const focusButton=document.querySelector('#focus-selection');
@@ -145,4 +146,4 @@ if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',ev
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});
 syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, extrudeSourceReferenceSync, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics, buildId: BUILD_ID };
+window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, extrudeSourceReferenceSync, sketchMutationContract, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics, buildId: BUILD_ID };
