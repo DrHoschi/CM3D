@@ -1,7 +1,7 @@
 # WD-20E – Foundation Integration / RB-01 Gate
 
 **Stand:** 2026-09-06  
-**Status:** IN PROGRESS – E.4 REFERENCE DIAGNOSTIC PROJECTION  
+**Status:** PASS / 0 BLOCKER / READY FOR MERGE  
 **Basis:** `main` @ `81e6d484169180a67b25e9d2befb0aa5ebe032b7` (WD-20D PASS / FROZEN / MERGED)  
 **Branch:** `feature/wd-20e-foundation-integration-rb01-gate`
 
@@ -60,7 +60,7 @@ Umgesetzt:
 Technischer Foundation-Gate-Workflow: **PASS**.  
 iPad/Safari-Gerätetest 2026-09-06: **PASS** – Projekt laden, Sketch bearbeiten, Undo/Redo, speichern, neu laden sowie GLB-Import bestätigt.
 
-G1 ist damit geschlossen.
+G1 ist geschlossen.
 
 ## E.3 – Domain Transaction Boundary – TECH PASS / DEVICE PASS
 
@@ -87,9 +87,9 @@ Integration:
 Technischer Foundation-Gate-Workflow: **PASS**.  
 iPad/Safari-Gerätetest 2026-09-06: **PASS**.
 
-G2 ist damit geschlossen.
+G2 ist geschlossen.
 
-## E.4 – Reference Diagnostic Projection – IMPLEMENTED / TECHNICAL GATE PENDING
+## E.4 – Reference Diagnostic Projection – TECH PASS / DEVICE PASS
 
 E.4 erweitert ausschließlich die bestehende Diagnoseansicht. Die Domain bleibt autoritativ; die UI liest und projiziert vorhandene Referenz-/Recompute-Zustände, ohne sie zu verändern.
 
@@ -117,23 +117,27 @@ Regression:
 - Reference- und Recompute-Diagnostics;
 - Projektion ist eine Kopie und kann die autoritativen Domain-Daten nicht mutieren.
 
-Der gemeinsame Workflow `.github/workflows/wd-20e-foundation-gate.yml` führt jetzt A–D sowie E.3 und E.4 gemeinsam aus.
+Zusätzlich wurde eine veraltete E.3-Build-Überschreibung in `src/application/extrude.js` entfernt und der Foundation-Gate-Workflow um einen Schutz gegen zurückbleibende sichtbare `WD-20E.3`-Runtime-Kennungen unter `src/` ergänzt.
 
-G3 Status: **IMPLEMENTED / TECHNICAL GATE PENDING**.
+Technischer Foundation-Gate-Workflow: **PASS**.  
+iPad/Safari-Gerätetest 2026-09-06: **PASS** – sichtbarer Header und Browser-Tab `WD-20E.4`, Diagnose `WD-20E.4 Referenzdiagnose bereit`, `referenceState: RESOLVED`, `recomputeState: READY`.
 
-## Noch offene Gate-Punkte
+G3 ist geschlossen.
 
-- E.4 technischer Gesamtworkflow muss PASS sein;
-- E.4 iPad/Safari Geräte-Regression muss PASS sein;
-- danach E.5 RB-01 Integration / Freeze Gate.
+## E.5 – RB-01 Integration / Freeze Gate
 
-## Nächster Block nach E.4 TECH + DEVICE PASS
+Gemeinsamer Abschlussabgleich WD-20A–E gegen RB-01:
 
-### WD-20E.5 – RB-01 Integration / Freeze Gate
+1. **V1-Projekte kontrolliert laden:** PASS – durch WD-20A Migration/Schema und reale Save/Load-Regressionen abgedeckt.
+2. **V1-Basisfunktionen weiter funktionieren:** PASS – Projekt laden, Sketch bearbeiten, Undo/Redo, speichern, neu laden und GLB-Import auf iPad/Safari bestätigt.
+3. **Neue SelectionRefs gespeichert/aufgelöst:** PASS – WD-20B/WD-20C Regressionen bleiben im gemeinsamen Foundation-Gate grün.
+4. **Undo/Redo keine parallelen Zustände:** PASS – WD-20E.3 Domain Transaction Boundary + Device-Regression.
+5. **Ungültige Referenzen sichtbar statt still repariert:** PASS – StableReference No-Silent-Rebinding + MISSING/INVALID→BLOCKED + E.4 Diagnoseprojektion.
+6. **Dependency-Zyklen abgewiesen:** PASS – WD-20E.2 Cycle Guard + Regression.
+7. **Sichtbare Build-Kennung konsistent:** PASS – `WD-20E.4` in Header und Browser-Tab real bestätigt; stale E.3 Runtime-Override entfernt und Workflow-Guard ergänzt.
+8. **Scope-Grenze eingehalten:** PASS – keine neue CAD-Featurefamilie, kein Snap-/Collider-Ausbau, keine allgemeine Feature-Engine.
 
-A–E gemeinsam regressieren, Save/Load und Undo/Redo prüfen, iPad/Safari-Gerätetest, offene Blocker = 0, anschließend RB-01 PASS/FROZEN und Merge nach `main`.
-
-## Aktueller Stand
+## Abschlussstatus vor Merge
 
 **WD-20A:** PASS / FROZEN / MERGED  
 **WD-20B:** PASS / FROZEN / MERGED  
@@ -142,10 +146,14 @@ A–E gemeinsam regressieren, Save/Load und Undo/Redo prüfen, iPad/Safari-Gerä
 **WD-20E.1:** COMPLETE  
 **WD-20E.2:** TECH PASS / DEVICE PASS  
 **WD-20E.3:** TECH PASS / DEVICE PASS  
-**WD-20E.4:** IMPLEMENTED / TECHNICAL GATE PENDING  
-**RB-01 Gate aktuell:** NOT PASS  
-**Offene fachliche Gate-Blocker:** G3-Abnahme
+**WD-20E.4:** TECH PASS / DEVICE PASS  
+**WD-20E.5:** PASS / 0 BLOCKER / READY FOR MERGE  
+**RB-01 Gate:** PASS / 0 BLOCKER / READY FOR MERGE  
+**Offene fachliche Gate-Blocker:** 0
 
-Nächster Schritt nach E.4 TECH + DEVICE PASS:
+Nach der finalen technischen Regression auf exakt diesem Status-Head darf der PR nach `main` erstellt und gemergt werden. Erst wenn der freigegebene Stand auf `main` liegt, wird WD-20E / RB-01 gemäß `DEVELOPMENT_FREEZE_RULE.md` auf **PASS / FROZEN** gesetzt.
 
-**WD-20E.5 – RB-01 Integration / Freeze Gate**
+## Nächster zulässiger Block nach Merge / Freeze
+
+**RB-02 – Sketch Topology & Profiles**  
+Die konkrete WD-Zerlegung dafür wird erst nach dem WD-20E/RB-01 Freeze gegen den aktuellen Repository-Stand festgelegt.
