@@ -76,7 +76,6 @@ store.getPrimarySelectionRef=()=>store.selection.primaryRef?{...store.selection.
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded'].includes(event.type))syncSelectionRefs();});
 syncSelectionRefs();
 
-// WD-20B.10: scene objects, sketch objects, sketch lines and sketch points now write through SelectionRef.
 const legacyObjectSelect=store.select.bind(store);
 const legacySketchElementSelect=store.selectSketchElement.bind(store);
 store.selectRef=(ref,notify=true,additive=false)=>{
@@ -128,9 +127,9 @@ const projectSettings = installProjectSettings(store, appUI);
 const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
 const inspectorDiagnostics = installInspectorDiagnostics(store, runtime, appUI);
 
-document.title = 'CyberMotion 3D – WD-20E.2';
+document.title = 'CyberMotion 3D – WD-20E.4';
 const buildLabel = document.querySelector('.brand small');
-if (buildLabel) buildLabel.textContent = 'WD-20E.2';
+if (buildLabel) buildLabel.textContent = 'WD-20E.4';
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
