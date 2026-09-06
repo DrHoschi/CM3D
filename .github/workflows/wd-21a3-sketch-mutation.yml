@@ -1,0 +1,36 @@
+name: WD-21A.3 Sketch Mutation Contract Regression
+
+on:
+  push:
+    branches:
+      - feature/wd-21a-sketch-topology-contract-element-foundation
+    paths:
+      - 'src/application/sketch-mutation.js'
+      - 'src/application/domain-transaction.js'
+      - 'src/model/sketch-topology.js'
+      - 'src/model/project.js'
+      - 'src/main.js'
+      - 'tests/wd-21a3-sketch-mutation-contract.mjs'
+      - '.github/workflows/wd-21a3-sketch-mutation.yml'
+  pull_request:
+    paths:
+      - 'src/application/sketch-mutation.js'
+      - 'src/application/domain-transaction.js'
+      - 'src/model/sketch-topology.js'
+      - 'src/model/project.js'
+      - 'src/main.js'
+      - 'tests/wd-21a3-sketch-mutation-contract.mjs'
+      - '.github/workflows/wd-21a3-sketch-mutation.yml'
+
+jobs:
+  sketch-mutation-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run WD-21A.2 topology regression
+        run: node tests/wd-21a2-sketch-topology-contract.mjs
+      - name: Run WD-21A.3 mutation regression
+        run: node tests/wd-21a3-sketch-mutation-contract.mjs
