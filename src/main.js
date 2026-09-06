@@ -1,5 +1,6 @@
 import { AppStore } from './application/store.js';
 import { createExtrudeFromSketch, installExtrudeSourceReferenceSync } from './application/extrude.js';
+import { getSketchElement, getSketchPoint } from './model/sketch-topology.js';
 import { ThreeRuntime } from './runtime-three/runtime.js';
 import { installExtrudeRuntime } from './runtime-three/extrude.js';
 import { installGltfInterchange } from './runtime-three/gltf-interchange.js';
@@ -21,6 +22,13 @@ import { installProjectLifecycle } from './ui/project-lifecycle.js';
 import { installProjectSettings } from './ui/project-settings.js';
 import { installCameraObjectPreview } from './ui/camera-object-preview.js';
 import { installInspectorDiagnostics } from './ui/inspector-diagnostics.js';
+
+const BUILD_ID = 'WD-21A.2';
+const applyBuildIdentity = () => {
+  document.title = `CyberMotion 3D – ${BUILD_ID}`;
+  const buildLabel = document.querySelector('.brand small');
+  if (buildLabel) buildLabel.textContent = BUILD_ID;
+};
 
 const store = new AppStore();
 const extrudeSourceReferenceSync = installExtrudeSourceReferenceSync(store);
@@ -66,7 +74,7 @@ const sketchMultiSelection = installSketchMultiSelection(store, runtime, appUI);
 const syncSelectionRefs=()=>{
   const sketchElements=Array.isArray(store.selection.sketchElements)&&store.selection.sketchElements.length?store.selection.sketchElements:(store.selection.sketchElement?[store.selection.sketchElement]:[]);
   const refs=sketchElements.length
-    ?sketchElements.map(item=>({targetKind:item.kind==='point'?'SKETCH_POINT':'SKETCH_ELEMENT',ownerId:item.sketchId,targetId:item.elementId}))
+    ?sketchElements.map(item=>({targetKind:item.kind==='point'?'SKETCH_POINT':'SKETCH_ELEMENT',ownerId:item.sketchId,targetId:item.elementId,...(item.kind==='point'?{}:{subTargetId:item.kind})}))
     :store.selection.selectedObjectIds.map(objectId=>({targetKind:store.getObject(objectId)?.type==='sketch'?'SKETCH':'OBJECT',ownerId:objectId,targetId:objectId}));
   store.selection.refs=refs;
   store.selection.primaryRef=refs.length?refs[refs.length-1]:null;
@@ -82,14 +90,15 @@ store.selectRef=(ref,notify=true,additive=false)=>{
   if(!ref)return false;
   if(ref.targetKind==='SKETCH_ELEMENT'){
     const sketch=store.getObject(ref.ownerId);
-    if(sketch?.type!=='sketch'||!sketch.data?.lines?.[ref.targetId])return false;
-    const result=legacySketchElementSelect(ref.ownerId,'line',ref.targetId,notify);
+    const resolved=getSketchElement(sketch,ref.targetId,ref.subTargetId??null);
+    if(!resolved)return false;
+    const result=legacySketchElementSelect(ref.ownerId,resolved.kind,ref.targetId,notify);
     syncSelectionRefs();
     return result;
   }
   if(ref.targetKind==='SKETCH_POINT'){
     const sketch=store.getObject(ref.ownerId);
-    if(sketch?.type!=='sketch'||!sketch.data?.points?.[ref.targetId])return false;
+    if(!getSketchPoint(sketch,ref.targetId))return false;
     const result=legacySketchElementSelect(ref.ownerId,'point',ref.targetId,notify);
     syncSelectionRefs();
     return result;
@@ -111,8 +120,8 @@ store.select=(id,notify=true,additive=false)=>{
   return store.selectRef({targetKind,ownerId:id,targetId:id},notify,additive);
 };
 store.selectSketchElement=(sketchId,kind,elementId,notify=true)=>{
-  if(kind==='line')return store.selectRef({targetKind:'SKETCH_ELEMENT',ownerId:sketchId,targetId:elementId},notify,false);
   if(kind==='point')return store.selectRef({targetKind:'SKETCH_POINT',ownerId:sketchId,targetId:elementId},notify,false);
+  if(getSketchElement(store.getObject(sketchId),elementId,kind))return store.selectRef({targetKind:'SKETCH_ELEMENT',ownerId:sketchId,targetId:elementId,subTargetId:kind},notify,false);
   return legacySketchElementSelect(sketchId,kind,elementId,notify);
 };
 
@@ -127,9 +136,8 @@ const projectSettings = installProjectSettings(store, appUI);
 const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
 const inspectorDiagnostics = installInspectorDiagnostics(store, runtime, appUI);
 
-document.title = 'CyberMotion 3D – WD-20E.4';
-const buildLabel = document.querySelector('.brand small');
-if (buildLabel) buildLabel.textContent = 'WD-20E.4';
+// Authoritative visible build identity. Older installer-local labels are overridden here and are not release-authoritative.
+applyBuildIdentity();
 
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
@@ -137,4 +145,4 @@ if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',ev
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});
 syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, extrudeSourceReferenceSync, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics };
+window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, extrudeSourceReferenceSync, sketchMultiSelection, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics, buildId: BUILD_ID };
