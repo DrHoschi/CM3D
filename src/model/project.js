@@ -1,3 +1,5 @@
+import { validateSketchTopology } from './sketch-topology.js';
+
 export const FORMAT = 'CM3D_PROJECT';
 export const LEGACY_SCHEMA_VERSION = '0.1.0';
 export const SCHEMA_VERSION = '0.2.0';
@@ -110,20 +112,7 @@ export function validateProject(project) {
         else if(!asset)errors.push(`Asset ${assetId} fehlt für GLB/GLTF-Objekt ${o.objectId}.`);
         else if(asset.kind!=='model.gltf.bundle')errors.push(`Asset ${assetId} besitzt den falschen Typ für ${o.objectId}.`);
       }
-      if(o.type==='sketch'){
-        if(o.data?.plane!=='localXY')errors.push(`Ungültige Skizzenebene für ${o.objectId}.`);
-        if(!o.data?.points||Array.isArray(o.data.points)||typeof o.data.points!=='object')errors.push(`Skizzenpunkte fehlen für ${o.objectId}.`);
-        if(!o.data?.lines||Array.isArray(o.data.lines)||typeof o.data.lines!=='object')errors.push(`Skizzenlinien fehlen für ${o.objectId}.`);
-        for(const [pointKey,p] of Object.entries(o.data?.points??{})){
-          if(pointKey!==p.pointId)errors.push(`Punktschlüssel stimmt nicht mit pointId überein: ${pointKey}`);
-          if(!Number.isFinite(p.x)||!Number.isFinite(p.y))errors.push(`Ungültiger Skizzenpunkt ${pointKey} in ${o.objectId}.`);
-        }
-        for(const [lineKey,l] of Object.entries(o.data?.lines??{})){
-          if(lineKey!==l.lineId)errors.push(`Linienschlüssel stimmt nicht mit lineId überein: ${lineKey}`);
-          if(!o.data?.points?.[l.startPointId]||!o.data?.points?.[l.endPointId])errors.push(`Skizzenlinie ${lineKey} referenziert fehlende Punkte in ${o.objectId}.`);
-          if(l.startPointId===l.endPointId)errors.push(`Skizzenlinie ${lineKey} benötigt zwei verschiedene Punkte.`);
-        }
-      }
+      if(o.type==='sketch')errors.push(...validateSketchTopology(o).errors);
       const seen=new Set([o.objectId]); let parent=o.parentId;
       while(parent){if(seen.has(parent)){errors.push(`Parent-Zyklus bei ${o.objectId}.`);break;}seen.add(parent);parent=objects[parent]?.parentId??null;}
     }
