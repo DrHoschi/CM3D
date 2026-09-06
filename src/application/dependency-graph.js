@@ -17,6 +17,104 @@ const addEdge = (outgoing, incoming, edge) => {
   incoming.get(edge.dependentObjectId).push(edge);
 };
 
+const resolvedEdgesOnly = edges => (edges ?? []).filter(edge => edge?.state === ReferenceState.RESOLVED);
+
+export function detectDependencyCycles(edges = []) {
+  const adjacency = new Map();
+  const nodeIds = new Set();
+
+  for (const edge of resolvedEdgesOnly(edges)) {
+    nodeIds.add(edge.sourceObjectId);
+    nodeIds.add(edge.dependentObjectId);
+    if (!adjacency.has(edge.sourceObjectId)) adjacency.set(edge.sourceObjectId, []);
+    adjacency.get(edge.sourceObjectId).push(edge.dependentObjectId);
+  }
+
+  for (const targets of adjacency.values()) targets.sort((a, b) => a.localeCompare(b));
+
+  let index = 0;
+  const indices = new Map();
+  const lowLinks = new Map();
+  const stack = [];
+  const onStack = new Set();
+  const cycles = [];
+
+  const strongConnect = nodeId => {
+    indices.set(nodeId, index);
+    lowLinks.set(nodeId, index);
+    index += 1;
+    stack.push(nodeId);
+    onStack.add(nodeId);
+
+    for (const dependentId of adjacency.get(nodeId) ?? []) {
+      if (!indices.has(dependentId)) {
+        strongConnect(dependentId);
+        lowLinks.set(nodeId, Math.min(lowLinks.get(nodeId), lowLinks.get(dependentId)));
+      } else if (onStack.has(dependentId)) {
+        lowLinks.set(nodeId, Math.min(lowLinks.get(nodeId), indices.get(dependentId)));
+      }
+    }
+
+    if (lowLinks.get(nodeId) !== indices.get(nodeId)) return;
+
+    const component = [];
+    while (stack.length) {
+      const member = stack.pop();
+      onStack.delete(member);
+      component.push(member);
+      if (member === nodeId) break;
+    }
+
+    component.sort((a, b) => a.localeCompare(b));
+    const selfCycle = component.length === 1 && (adjacency.get(component[0]) ?? []).includes(component[0]);
+    if (component.length > 1 || selfCycle) cycles.push(component);
+  };
+
+  for (const nodeId of [...nodeIds].sort((a, b) => a.localeCompare(b))) {
+    if (!indices.has(nodeId)) strongConnect(nodeId);
+  }
+
+  return cycles.sort((a, b) => a.join('\u0000').localeCompare(b.join('\u0000')));
+}
+
+export function wouldCreateDependencyCycle(graph, sourceObjectId, dependentObjectId) {
+  if (!sourceObjectId || !dependentObjectId) return false;
+  if (sourceObjectId === dependentObjectId) return true;
+
+  const visited = new Set();
+  const pending = [dependentObjectId];
+  while (pending.length) {
+    const current = pending.shift();
+    if (current === sourceObjectId) return true;
+    if (visited.has(current)) continue;
+    visited.add(current);
+    const next = (graph?.dependentsOf?.(current) ?? [])
+      .filter(edge => edge.state === ReferenceState.RESOLVED)
+      .map(edge => edge.dependentObjectId)
+      .sort((a, b) => a.localeCompare(b));
+    pending.push(...next);
+  }
+  return false;
+}
+
+export function validateDependencyEdge(graph, sourceObjectId, dependentObjectId) {
+  if (!sourceObjectId || !dependentObjectId) {
+    return {
+      allowed: false,
+      code: 'DEPENDENCY_ENDPOINT_MISSING',
+      message: 'Dependency-Kante benötigt Quelle und abhängiges Ziel.'
+    };
+  }
+  if (wouldCreateDependencyCycle(graph, sourceObjectId, dependentObjectId)) {
+    return {
+      allowed: false,
+      code: 'DEPENDENCY_CYCLE',
+      message: `Dependency-Kante ${sourceObjectId} → ${dependentObjectId} würde einen Zyklus erzeugen.`
+    };
+  }
+  return { allowed: true, code: null, message: null };
+}
+
 export function buildDependencyGraph(store) {
   const nodes = new Map();
   const outgoing = new Map();
@@ -71,6 +169,21 @@ export function buildDependencyGraph(store) {
   for (const edges of outgoing.values()) edges.sort((a, b) => a.dependentObjectId.localeCompare(b.dependentObjectId));
   for (const edges of incoming.values()) edges.sort((a, b) => a.sourceObjectId.localeCompare(b.sourceObjectId));
 
+  const allEdges = [...outgoing.values()].flat();
+  const cycles = detectDependencyCycles(allEdges);
+  for (const cycle of cycles) {
+    for (const objectId of cycle) {
+      const node = nodes.get(objectId);
+      if (!node) continue;
+      node.state = DependencyNodeState.BLOCKED;
+      node.upstreamState = 'CYCLE';
+      node.diagnostics.push({
+        code: 'DEPENDENCY_CYCLE',
+        message: `Dependency-Zyklus erkannt: ${cycle.join(' → ')}.`
+      });
+    }
+  }
+
   const projectEdge = edge => ({
     ...edge,
     reference: cloneRef(edge.reference),
@@ -81,6 +194,8 @@ export function buildDependencyGraph(store) {
     nodes,
     outgoing,
     incoming,
+    cycles: cycles.map(cycle => [...cycle]),
+    hasCycles: cycles.length > 0,
     dependentsOf(objectId) {
       return (outgoing.get(objectId) ?? []).map(projectEdge);
     },
@@ -99,6 +214,7 @@ export function visitDependents(store, sourceObjectId, visitor) {
   const changed = [];
   for (const edge of graph.dependentsOf(sourceObjectId)) {
     if (edge.state !== ReferenceState.RESOLVED) continue;
+    if (graph.nodeState(edge.dependentObjectId)?.state === DependencyNodeState.BLOCKED) continue;
     const dependent = store?.getObject?.(edge.dependentObjectId) ?? null;
     if (!dependent) continue;
     visitor(dependent, edge, graph);

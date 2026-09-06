@@ -1,4 +1,5 @@
 import { getSingleExtrudableProfile } from '../model/sketch-profile.js';
+import { installDomainTransactionBoundary, wrapDomainMutation } from './domain-transaction.js';
 import {
   ReferenceTargetKind,
   ReferenceState,
@@ -83,6 +84,16 @@ export function syncAllExtrudeSourceReferences(store) {
 }
 
 export function installExtrudeSourceReferenceSync(store) {
+  const historyCapable = typeof store?.snapshot === 'function' && typeof store?.pushHistory === 'function';
+  if (historyCapable) {
+    installDomainTransactionBoundary(store);
+    queueMicrotask(() => {
+      wrapDomainMutation(store, 'setSketchPoint');
+      wrapDomainMutation(store, 'setSketchLineEndpoints');
+      wrapDomainMutation(store, 'deleteSketchElement');
+    });
+  }
+
   const sync = () => syncAllExtrudeSourceReferences(store);
   const unsubscribe = store.subscribe?.(event => {
     if (['projectLoaded', 'projectChanged'].includes(event.type)) sync();

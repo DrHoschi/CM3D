@@ -6,6 +6,28 @@ function pretty(value) {
   catch (error) { return `Nicht serialisierbar: ${error?.message || String(error)}`; }
 }
 
+const cloneDiagnostics = diagnostics => Array.isArray(diagnostics)
+  ? diagnostics.map(item => ({ code:item?.code ?? null, message:item?.message ?? '' }))
+  : [];
+
+export function projectReferenceDiagnostics(store) {
+  const objects = Object.values(store?.project?.scene?.objects ?? {})
+    .filter(object => object?.data?.sourceSketchRef || object?.extensions?.sourceSketchReference || object?.extensions?.recomputeState)
+    .sort((a, b) => String(a.objectId).localeCompare(String(b.objectId)));
+
+  return objects.map(object => ({
+    objectId: object.objectId,
+    type: object.type,
+    name: object.name ?? null,
+    sourceReference: object.data?.sourceSketchRef ? { ...object.data.sourceSketchRef } : null,
+    referenceState: object.extensions?.sourceSketchReference?.state ?? 'UNRESOLVED',
+    referenceDiagnostics: cloneDiagnostics(object.extensions?.sourceSketchReference?.diagnostics),
+    recomputeState: object.extensions?.recomputeState?.state ?? null,
+    upstreamState: object.extensions?.recomputeState?.upstreamState ?? null,
+    recomputeDiagnostics: cloneDiagnostics(object.extensions?.recomputeState?.diagnostics)
+  }));
+}
+
 function createPanel() {
   const host = document.querySelector('.inspector-panel');
   if (!host) return null;
@@ -20,6 +42,10 @@ function createPanel() {
     <details open>
       <summary>Status / Meldungen</summary>
       <pre id="diagnostics-status"></pre>
+    </details>
+    <details open>
+      <summary>Referenzen / Recompute</summary>
+      <pre id="diagnostics-references"></pre>
     </details>
     <details>
       <summary>Selection / Auswahlstatus</summary>
@@ -55,9 +81,6 @@ export function installInspectorDiagnostics(store, runtime, ui) {
   const host = document.querySelector('.inspector-panel');
   if (!panel || !button || !host) return null;
 
-  // Author CSS on inspector children (for example form{display:flex}) can override
-  // the browser's native [hidden] rule. Hide the inherited inspector surface with
-  // an explicit important display rule while diagnostics owns the right panel.
   const normalInspectorChildren = [...host.children].filter(child => child !== panel);
   const setNormalInspectorVisible = visible => {
     for (const child of normalInspectorChildren) {
@@ -67,6 +90,7 @@ export function installInspectorDiagnostics(store, runtime, ui) {
   };
 
   const statusOut = panel.querySelector('#diagnostics-status');
+  const referencesOut = panel.querySelector('#diagnostics-references');
   const selectionOut = panel.querySelector('#diagnostics-selection');
   const sceneOut = panel.querySelector('#diagnostics-scene');
   const consoleOut = panel.querySelector('#diagnostics-console');
@@ -90,6 +114,11 @@ export function installInspectorDiagnostics(store, runtime, ui) {
     const current = ui.status?.textContent || '';
     const history = messages.map(entry => `[${entry.time}] ${entry.kind}: ${entry.text}`).join('\n');
     statusOut.textContent = `Aktuell: ${current || '—'}${history ? `\n\n${history}` : ''}`;
+  };
+
+  const renderReferences = () => {
+    const projection = projectReferenceDiagnostics(store);
+    referencesOut.textContent = projection.length ? pretty(projection) : 'Keine Referenz-/Recompute-Diagnosen vorhanden.';
   };
 
   const renderSelection = () => {
@@ -136,6 +165,7 @@ export function installInspectorDiagnostics(store, runtime, ui) {
 
   const renderAll = () => {
     renderStatus();
+    renderReferences();
     renderSelection();
     renderScene();
     renderConsole();
@@ -173,7 +203,8 @@ export function installInspectorDiagnostics(store, runtime, ui) {
   const unsubscribe = store.subscribe(event => {
     pushEvent(event);
     if (!panel.hidden) {
-      if (['selectionChanged', 'projectChanged', 'projectLoaded', 'objectCreated', 'objectChanged', 'geometryChanged', 'visibilityChanged', 'lockChanged', 'historyChanged'].includes(event.type)) {
+      if (['selectionChanged', 'projectChanged', 'projectLoaded', 'objectCreated', 'objectChanged', 'geometryChanged', 'visibilityChanged', 'lockChanged', 'historyChanged', 'sketchDependenciesChanged'].includes(event.type)) {
+        renderReferences();
         renderSelection();
         renderScene();
       }
@@ -185,10 +216,7 @@ export function installInspectorDiagnostics(store, runtime, ui) {
   window.addEventListener('unhandledrejection', event => pushMessage('ERROR', event.reason?.message || String(event.reason || 'Unhandled Promise Rejection')));
 
   panel.style.setProperty('display', 'none', 'important');
-  pushMessage('INFO', 'WD-18 Diagnose bereit.');
-  document.title = 'CyberMotion 3D – WD-18';
-  const buildLabel = document.querySelector('.brand small');
-  if (buildLabel) buildLabel.textContent = 'WD-18';
+  pushMessage('INFO', 'WD-20E.4 Referenzdiagnose bereit.');
 
-  return { panel, button, open, close, renderAll, unsubscribe };
+  return { panel, button, open, close, renderAll, renderReferences, unsubscribe };
 }
