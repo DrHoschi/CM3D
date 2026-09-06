@@ -1,3 +1,5 @@
+import { getSketchElement, getSketchPoint } from '../model/sketch-topology.js';
+
 export const SelectionTargetKind = Object.freeze({
   OBJECT: 'OBJECT',
   SKETCH: 'SKETCH',
@@ -32,7 +34,8 @@ export function selectionRefsFromLegacy(store) {
     return sketchElements.map(item => createSelectionRef(
       item.kind === 'point' ? SelectionTargetKind.SKETCH_POINT : SelectionTargetKind.SKETCH_ELEMENT,
       item.sketchId,
-      item.elementId
+      item.elementId,
+      item.kind === 'point' ? null : item.kind
     ));
   }
 
@@ -42,6 +45,19 @@ export function selectionRefsFromLegacy(store) {
       : SelectionTargetKind.OBJECT;
     return createSelectionRef(targetKind, objectId, objectId);
   });
+}
+
+export function resolveSelectionSketchTarget(store, ref) {
+  const sketch = store.getObject?.(ref.ownerId) ?? null;
+  if (sketch?.type !== 'sketch') return null;
+  if (ref.targetKind === SelectionTargetKind.SKETCH_POINT) {
+    return getSketchPoint(sketch, ref.targetId) ? { kind: 'point', target: getSketchPoint(sketch, ref.targetId) } : null;
+  }
+  if (ref.targetKind === SelectionTargetKind.SKETCH_ELEMENT) {
+    const resolved = getSketchElement(sketch, ref.targetId, ref.subTargetId ?? null);
+    return resolved ? { kind: resolved.kind, target: resolved.element } : null;
+  }
+  return null;
 }
 
 export function installSelectionRefFoundation(store) {
@@ -64,9 +80,10 @@ export function installSelectionRefFoundation(store) {
       store.select(ref.targetId, notify, additive);
       result = true;
     } else {
-      const kind = ref.targetKind === SelectionTargetKind.SKETCH_POINT ? 'point' : 'line';
+      const resolved = resolveSelectionSketchTarget(store, ref);
+      if (!resolved) return false;
       if (additive && store.setSketchMultiSelectEnabled) store.setSketchMultiSelectEnabled(true, false);
-      result = store.selectSketchElement?.(ref.ownerId, kind, ref.targetId, notify) === true;
+      result = store.selectSketchElement?.(ref.ownerId, resolved.kind, ref.targetId, notify) === true;
     }
 
     sync();
