@@ -175,9 +175,11 @@ export function installSketchMutationContract(store) {
         return true;
       }
       return false;
-    }, { selectionChanged: true });
-    if (result !== false) store.selection.sketchElement = null;
-    return result !== false;
+    });
+    if (result === false) return false;
+    store.selection.sketchElement = null;
+    store.emit?.('selectionChanged');
+    return true;
   };
 
   store.sketchMutationContract = Object.freeze({
