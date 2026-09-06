@@ -1,0 +1,26 @@
+name: WD-21A.2 Sketch Topology Contract Regression
+
+on:
+  push:
+    branches:
+      - feature/wd-21a-sketch-topology-contract-element-foundation
+  pull_request:
+    paths:
+      - 'src/model/sketch-topology.js'
+      - 'src/model/project.js'
+      - 'src/application/selection-ref.js'
+      - 'src/application/stable-reference.js'
+      - 'src/main.js'
+      - 'tests/wd-21a2-sketch-topology-contract.mjs'
+      - '.github/workflows/wd-21a2-sketch-topology.yml'
+
+jobs:
+  topology-contract-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run WD-21A.2 topology contract regression
+        run: node tests/wd-21a2-sketch-topology-contract.mjs
