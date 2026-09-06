@@ -1,9 +1,10 @@
 # WD-20E – Foundation Integration / RB-01 Gate
 
 **Stand:** 2026-09-06  
-**Status:** PASS / 0 BLOCKER / READY FOR MERGE  
+**Status:** PASS / FROZEN / MERGED  
 **Basis:** `main` @ `81e6d484169180a67b25e9d2befb0aa5ebe032b7` (WD-20D PASS / FROZEN / MERGED)  
-**Branch:** `feature/wd-20e-foundation-integration-rb01-gate`
+**Merge:** PR #42 → `main` @ `985b0d86c06a5161abae2e4ce914f66562c8b33d`  
+**Branch:** `feature/wd-20e-foundation-integration-rb01-gate` (historischer Entwicklungsbranch)
 
 ## Ziel
 
@@ -137,7 +138,9 @@ Gemeinsamer Abschlussabgleich WD-20A–E gegen RB-01:
 7. **Sichtbare Build-Kennung konsistent:** PASS – `WD-20E.4` in Header und Browser-Tab real bestätigt; stale E.3 Runtime-Override entfernt und Workflow-Guard ergänzt.
 8. **Scope-Grenze eingehalten:** PASS – keine neue CAD-Featurefamilie, kein Snap-/Collider-Ausbau, keine allgemeine Feature-Engine.
 
-## Abschlussstatus vor Merge
+Der finale Foundation-Gate-Workflow auf dem freigegebenen Head `0e79ab4f296808847780dab332dcbfe4b19cdfd8` war **PASS**. PR #42 wurde anschließend mit exakt diesem Head nach `main` gemergt. Merge-Commit: `985b0d86c06a5161abae2e4ce914f66562c8b33d`.
+
+## Finaler Abschlussstatus
 
 **WD-20A:** PASS / FROZEN / MERGED  
 **WD-20B:** PASS / FROZEN / MERGED  
@@ -147,13 +150,14 @@ Gemeinsamer Abschlussabgleich WD-20A–E gegen RB-01:
 **WD-20E.2:** TECH PASS / DEVICE PASS  
 **WD-20E.3:** TECH PASS / DEVICE PASS  
 **WD-20E.4:** TECH PASS / DEVICE PASS  
-**WD-20E.5:** PASS / 0 BLOCKER / READY FOR MERGE  
-**RB-01 Gate:** PASS / 0 BLOCKER / READY FOR MERGE  
+**WD-20E.5:** PASS / FROZEN / MERGED  
+**WD-20E:** PASS / FROZEN / MERGED  
+**RB-01 Gate:** PASS / FROZEN  
 **Offene fachliche Gate-Blocker:** 0
 
-Nach der finalen technischen Regression auf exakt diesem Status-Head darf der PR nach `main` erstellt und gemergt werden. Erst wenn der freigegebene Stand auf `main` liegt, wird WD-20E / RB-01 gemäß `DEVELOPMENT_FREEZE_RULE.md` auf **PASS / FROZEN** gesetzt.
+WD-20E / RB-01 ist abgeschlossen. Der eingefrorene Stand wird nicht fachlich erweitert; Änderungen erfolgen nur über einen neuen Folgeblock oder bei einer konkret dokumentierten Regression.
 
-## Nächster zulässiger Block nach Merge / Freeze
+## Nächster zulässiger Block
 
 **RB-02 – Sketch Topology & Profiles**  
-Die konkrete WD-Zerlegung dafür wird erst nach dem WD-20E/RB-01 Freeze gegen den aktuellen Repository-Stand festgelegt.
+Die konkrete WD-Zerlegung dafür wird erst nach diesem Freeze gegen den aktuellen Repository-Stand festgelegt.
