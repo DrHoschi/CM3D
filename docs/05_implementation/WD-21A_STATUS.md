@@ -37,7 +37,7 @@ Umgesetzt:
 
 ## WD-21A.3 – Central Sketch Topology Mutation Contract
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PENDING DEVICE CHECK
+**Status:** PASS / DEVICE VERIFIED / 0 BLOCKER / NOT FROZEN AS WD-21A BLOCK
 
 Ziel:
 
@@ -55,8 +55,9 @@ Umgesetzt:
 8. Löschen eines Punktes entfernt deterministisch die daran referenzierenden Linien und verhindert Dangling References.
 9. `refreshDependentExtrudesFromSketch(...)` wird innerhalb derselben Mutation-Transaction ausgeführt; Geometry-/Dependency-Events folgen nach erfolgreichem Commit.
 10. Undo/Redo bleibt Snapshot-basiert und stellt die ursprünglichen `pointId`-/`lineId`-Identitäten exakt wieder her; kein geometrisches Rebinding.
-11. Sichtbare Build-Kennung ist für diesen testbaren Stand zentral `WD-21A.3`.
-12. Neuer Regressionstest `tests/wd-21a3-sketch-mutation-contract.mjs` plus Workflow `.github/workflows/wd-21a3-sketch-mutation.yml`.
+11. Sichtbare Build-Kennung ist zentral `WD-21A.3`.
+12. Regressionstest `tests/wd-21a3-sketch-mutation-contract.mjs` plus Workflow `.github/workflows/wd-21a3-sketch-mutation.yml`.
+13. Delete-Ereignisfolge korrigiert: erfolgreicher Delete-Commit → Sketch-Auswahl leeren → `selectionChanged`; kein UI-Zwischenzustand mit bereits gelöschter Auswahl.
 
 Automatisierte A.3-Prüfungen:
 
@@ -68,6 +69,25 @@ Automatisierte A.3-Prüfungen:
 - No-op erzeugt keinen künstlichen History-Eintrag;
 - A.2-Topologieregression läuft im A.3-Workflow mit;
 - Build-ID im Runtime-Einstieg ist `WD-21A.3`.
+
+Automatische Evidenz:
+
+- Workflow: `WD-21A.3 Sketch Mutation Contract Regression`
+- Run: `34061038460`
+- Head: `6432e653fcede3f3f1f3ab0c796994c144909efd`
+- Result: **SUCCESS / PASS**
+
+Reale Geräte-Evidenz vom 2026-09-06, iPad/Safari:
+
+- Browser-Tab zeigt `CyberMotion 3D – WD-21A.3`;
+- sichtbares Header-/Build-Label zeigt `WD-21A.3`;
+- vorhandene Sketch-/Extrude-Darstellung bleibt funktionsfähig;
+- Aktualisierung/Mutation funktioniert;
+- Speichern funktioniert;
+- Laden funktioniert;
+- Rückgängig funktioniert;
+- Wiederherstellen/Redo funktioniert;
+- Ergebnis: **PASS / 0 BLOCKER**.
 
 ## Explizit nicht Bestandteil von WD-21A.3
 
@@ -83,8 +103,14 @@ Automatisierte A.3-Prüfungen:
 - keine Constraints;
 - keine Schema-Erhöhung.
 
+## WD-21A – verbleibende Foundation-Grenze
+
+A.1 bis A.3 haben Inventar, gemeinsamen Element-/Topologievertrag und zentralen Mutationspfad abgedeckt. Bevor WD-21A abgeschlossen werden kann, muss noch geprüft werden, ob die Foundation an den Persistenz-/History-/Reference-Grenzen als Gesamtvertrag vollständig regressiert ist und ob alle Sketch-Schreibpfade tatsächlich den zentralen Mutation-Owner benutzen.
+
+Ein eventuelles WD-21A.4 darf ausschließlich diese Foundation-Integration bzw. Contract-Coverage schließen. Es darf keine Connect-/Disconnect-Bedienung, keine neuen Sketch-Elementtypen und keine Profile/Pfade vorziehen; diese gehören zu WD-21B ff.
+
 ## Freigaberegel
 
-WD-21A.3 wird erst nach erfolgreichem automatisierten Workflow und realem iPad-/Safari-Check auf PASS gesetzt. Browser-Titel und sichtbares Build-Label müssen konsistent `WD-21A.3` zeigen; vorhandene Sketch-Grundfunktionen müssen unverändert nutzbar bleiben. Widersprüchliche sichtbare Kennungen oder eine Regression in Linie/Rechteck/Polygon, Auswahl, Editieren, Löschen oder Undo/Redo sind BLOCKER.
+WD-21A.3 ist nach erfolgreichem automatisierten Workflow und realem iPad-/Safari-Check **PASS / 0 BLOCKER**. WD-21A als Gesamtblock bleibt bis zu seinem eigenen Abschluss-/Regression-Gate ausdrücklich **nicht FROZEN**.
 
-WD-21A als Gesamtblock bleibt bis zu seinem eigenen Abschluss-/Regression-Gate ausdrücklich **nicht FROZEN**. Ein Folgeblock wird nicht automatisch freigegeben.
+Ein Folgeblock wird nicht automatisch freigegeben. Vor WD-21A.4 ist zuerst der verbleibende Foundation-Umfang gegen A.1–A.3 und den RB-02-Vertrag zu bestimmen.
