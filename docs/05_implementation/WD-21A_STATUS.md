@@ -15,47 +15,76 @@ Bestand vor Änderung:
 - Punkte besitzen stabile `pointId`, Linien stabile `lineId`.
 - Linien referenzieren Endpunkte über `startPointId` / `endPointId`.
 - gleiche Koordinaten allein erzeugen keine topologische Verbindung.
-- SelectionRef und StableReference kennen `SKETCH_ELEMENT` und `SKETCH_POINT`, behandeln `SKETCH_ELEMENT` intern jedoch faktisch als Linie.
-- Sketch-Mutationen sind bereits in Snapshot-History und die WD-20E Domain-Transaction-Grenze eingebunden.
+- SelectionRef und StableReference kennen `SKETCH_ELEMENT` und `SKETCH_POINT`, behandelten `SKETCH_ELEMENT` vor A.2 intern jedoch faktisch als Linie.
+- Sketch-Mutationen waren bereits in Snapshot-History und die WD-20E Domain-Transaction-Grenze eingebunden, aber auf mehrere Owner verteilt.
 
 ## WD-21A.2 – Unified Sketch Element & Topology Contract Foundation
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE RELEASE NOT YET GRANTED
+**Status:** PASS / DEVICE VERIFIED / NOT FROZEN AS WD-21A BLOCK
 
 Umgesetzt:
 
-1. Neuer zentraler Contract-Layer `src/model/sketch-topology.js`.
+1. Zentraler Contract-Layer `src/model/sketch-topology.js`.
 2. `SketchElementKind` registriert den bestehenden Elementtyp `line`, ohne die persistente `points`/`lines`-Struktur zu brechen.
 3. Generische Auflösung über `getSketchElement(...)`; Punktauflösung über `getSketchPoint(...)`.
 4. Autoritative Topologie-Invariante: Zwei Endpunkte sind nur dann topologisch verbunden, wenn sie dieselbe `pointId` referenzieren. Geometrisch identische Koordinaten erzeugen keine Verbindung.
 5. `validateProject(...)` delegiert Sketch-Invarianten an `validateSketchTopology(...)`.
 6. SelectionRef und StableReference lösen `SKETCH_ELEMENT` über den gemeinsamen Elementvertrag auf. Alte Elementreferenzen ohne `subTargetId` bleiben für bestehende Linien kompatibel; neue typisierte Referenzen können `subTargetId: 'line'` tragen.
 7. `src/main.js` verwendet denselben Resolver für die aktuelle UI-Selection-Bridge.
-8. Sichtbare Kennung ist zentral in `src/main.js` als `BUILD_ID = 'WD-21A.2'` autoritativ gesetzt. `document.title` und `.brand small` werden aus diesem Wert gemeinsam gesetzt. Eine ältere Installer-lokale WD-12A-Zuweisung in `sketch-editing.js` wird nach Installation durch diese zentrale Kennung neutralisiert und ist nicht release-autoritativ.
-9. Automatischer Regressionstest `tests/wd-21a2-sketch-topology-contract.mjs` einschließlich Kompatibilitäts- und Topologieprüfungen.
-10. GitHub Actions Workflow `.github/workflows/wd-21a2-sketch-topology.yml`.
+8. Die sichtbare Build-Kennung wurde zentralisiert; alte installer-lokale WD-12A- und Diagnose-WD-20E.4-Kennungen wurden aus den laufzeitrelevanten Stellen entfernt.
+9. Automatischer Regressionstest `tests/wd-21a2-sketch-topology-contract.mjs` und Workflow `.github/workflows/wd-21a2-sketch-topology.yml`.
+10. Reale iPad-/Safari-Evidenz am 2026-09-06: Browser-Tab und Header konsistent `WD-21A.2`; Diagnose neutral `Referenzdiagnose bereit.`; keine sichtbaren alten WD-Kennungen.
 
-Automatische Evidenz:
+## WD-21A.3 – Central Sketch Topology Mutation Contract
 
-- Workflow: `WD-21A.2 Sketch Topology Contract Regression`
-- Run: `34058462552`
-- Head: `1361acbe34f8a752447d39a9c38518eacc67df39`
-- Ergebnis: **SUCCESS / PASS**
+**Status:** IMPLEMENTED / AUTOMATED REGRESSION PENDING DEVICE CHECK
 
-## Explizit nicht Bestandteil von WD-21A.2
+Ziel:
+
+Alle bestehenden Sketch-Mutationen werden auf einen einzigen validierten, history-/recompute-sicheren Pfad konsolidiert, ohne neue sichtbare Sketch-Funktionalität einzuführen.
+
+Umgesetzt:
+
+1. Neuer zentraler Mutation-Owner `src/application/sketch-mutation.js`.
+2. `runSketchMutation(...)` ist die gemeinsame atomare Grenze für Sketch-Mutationen.
+3. Jede erfolgreiche Mutation läuft über die vorhandene Domain-Transaction-Grenze und erzeugt höchstens einen History-Eintrag.
+4. Nach jeder Mutation wird `validateSketchTopology(...)` ausgeführt. Ungültige/dangling Topologie führt zum vollständigen Transaction-Rollback und erzeugt keinen History-Eintrag.
+5. Autoritative Connectivity bleibt ausschließlich gemeinsame `pointId`; Koordinatengleichheit erzeugt keine Verbindung.
+6. Vorhandene Store-Methoden für Punkt, Linie, Segment, Rechteck/Polygon, Punkt-/Linieneditierung und Sketch-Element-Löschen werden auf den zentralen Contract umgebogen, ohne ihre Benutzeroberflächen aufzubrechen.
+7. Löschen einer Linie entfernt nur unbenutzte Endpunkte; gemeinsam weiterverwendete Punkte bleiben erhalten.
+8. Löschen eines Punktes entfernt deterministisch die daran referenzierenden Linien und verhindert Dangling References.
+9. `refreshDependentExtrudesFromSketch(...)` wird innerhalb derselben Mutation-Transaction ausgeführt; Geometry-/Dependency-Events folgen nach erfolgreichem Commit.
+10. Undo/Redo bleibt Snapshot-basiert und stellt die ursprünglichen `pointId`-/`lineId`-Identitäten exakt wieder her; kein geometrisches Rebinding.
+11. Sichtbare Build-Kennung ist für diesen testbaren Stand zentral `WD-21A.3`.
+12. Neuer Regressionstest `tests/wd-21a3-sketch-mutation-contract.mjs` plus Workflow `.github/workflows/wd-21a3-sketch-mutation.yml`.
+
+Automatisierte A.3-Prüfungen:
+
+- gemeinsamer Punkt bleibt gemeinsame topologische Autorität beim Verschieben;
+- geometrisch gleicher neu erzeugter Punkt bleibt topologisch getrennt;
+- Löschen einer Linie erhält gemeinsam genutzte Punkte;
+- Undo/Redo-Snapshots stellen exakt dieselben logischen IDs wieder her;
+- ungültige/dangling Mutation wird atomar zurückgerollt;
+- No-op erzeugt keinen künstlichen History-Eintrag;
+- A.2-Topologieregression läuft im A.3-Workflow mit;
+- Build-ID im Runtime-Einstieg ist `WD-21A.3`.
+
+## Explizit nicht Bestandteil von WD-21A.3
 
 - keine Connect-/Disconnect-Bedienung;
+- kein automatisches Verschmelzen geometrisch naher Punkte;
+- kein neuer Snap-Mechanismus;
 - kein Kreis;
 - kein Bogen;
 - keine Spline;
 - keine Profile oder offenen Pfade;
 - kein Profil-/Pfad-SelectionRef;
 - keine neue Extrude-/3D-Funktion;
-- kein Constraint-Solver;
-- keine Schema-Erhöhung nur für diesen Contract-Layer.
+- keine Constraints;
+- keine Schema-Erhöhung.
 
 ## Freigaberegel
 
-WD-21A.2 ist noch nicht FROZEN. Vor der Freigabe muss der Branch-Diff gegen den eingefrorenen `main` auf Scope-Verletzungen geprüft werden und die sichtbare Kennung im realen Browser konsistent `WD-21A.2` zeigen. Widersprüchliche sichtbare Build-Kennungen blockieren die Freigabe.
+WD-21A.3 wird erst nach erfolgreichem automatisierten Workflow und realem iPad-/Safari-Check auf PASS gesetzt. Browser-Titel und sichtbares Build-Label müssen konsistent `WD-21A.3` zeigen; vorhandene Sketch-Grundfunktionen müssen unverändert nutzbar bleiben. Widersprüchliche sichtbare Kennungen oder eine Regression in Linie/Rechteck/Polygon, Auswahl, Editieren, Löschen oder Undo/Redo sind BLOCKER.
 
-Ein Folgeblock wird nicht automatisch freigegeben.
+WD-21A als Gesamtblock bleibt bis zu seinem eigenen Abschluss-/Regression-Gate ausdrücklich **nicht FROZEN**. Ein Folgeblock wird nicht automatisch freigegeben.
