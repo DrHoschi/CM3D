@@ -1,7 +1,7 @@
 # WD-20E – Foundation Integration / RB-01 Gate
 
-**Stand:** 2026-09-04  
-**Status:** IN PROGRESS – E.2 DEPENDENCY CYCLE GUARD  
+**Stand:** 2026-09-06  
+**Status:** IN PROGRESS – E.3 DOMAIN TRANSACTION BOUNDARY  
 **Basis:** `main` @ `81e6d484169180a67b25e9d2befb0aa5ebe032b7` (WD-20D PASS / FROZEN / MERGED)  
 **Branch:** `feature/wd-20e-foundation-integration-rb01-gate`
 
@@ -34,40 +34,15 @@ Der RB-01-Inhalt verlangt außerdem unter anderem:
 
 ## E.1 – Foundation Integration Audit – COMPLETE
 
-### Bereits durch WD-20A–D belastbar abgedeckt
+Durch WD-20A–D belastbar abgedeckt sind insbesondere V2-Schema/Migration, SelectionRef-Grundlage, StableReference + Resolution States, No-Silent-Rebinding, Sketch→Extrude Dependency Graph, graph-basierter Recompute und MISSING/INVALID→BLOCKED-Fortpflanzung.
 
-- V2-Projektschema `0.2.0` und kontrollierter V1 `0.1.0` → V2-Migrationspfad;
-- Erhalt bestehender IDs/Nutzdaten bei Migration;
-- gemeinsame SelectionRef-Semantik für OBJECT, SKETCH, SKETCH_ELEMENT und SKETCH_POINT;
-- StableReference-Grundtyp und Resolution-State-Modell;
-- No-Silent-Rebinding;
-- persistente `sourceSketchRef` für bestehende Sketch→Extrude-Abhängigkeit;
-- zentraler Dependency Graph für Sketch→Extrude;
-- graph-basierter deterministischer Recompute;
-- `MISSING`/`INVALID`-Ursache mit abhängiger `BLOCKED`-Fortpflanzung;
-- stale Extrusionsgeometrie wird bei blockierter Quelle verworfen;
-- Recompute erzeugt im geprüften Sketch→Extrude-Pfad keinen zusätzlichen Undo-Schritt;
-- technische Regressionen und iPad/Safari-Gerätetests A–D PASS.
+Im E.1-Audit wurden drei noch offene Gate-Lücken identifiziert:
 
-### Im E.1-Audit festgestellte offene RB-01-Gate-Lücken
+- G1 – Dependency Cycle Protection;
+- G2 – Domain Transaction Boundary;
+- G3 – Reference / Invalid Diagnostic Projection.
 
-#### G1 – Dependency Cycle Protection
-
-Status nach E.2: **IMPLEMENTED / TECHNICAL GATE PENDING**.
-
-#### G2 – Domain Transaction Boundary
-
-`AppStore` verwendet weiterhin funktionierende Snapshot-History (`snapshot()` / `pushHistory()`), und WD-20D bestätigt für Sketch→Extrude, dass Recompute keinen eigenen Undo-Schritt erzeugt. Es existiert jedoch noch keine explizite gemeinsame Domänen-Transaction-Grenze, über die Mutation + Recompute als allgemeines Foundation-Muster atomar abgeschlossen werden.
-
-**Status:** OPEN / BLOCKER FOR RB-01 PASS.
-
-#### G3 – Reference / Invalid Diagnostic Projection
-
-`src/ui/inspector-diagnostics.js` zeigt allgemeine Status-, Selection-, Scene-, Event- und History-Daten, projiziert aber die in WD-20C/D eingeführten Reference-/Recompute-Zustände noch nicht gezielt als gemeinsame Diagnose (`RESOLVED/MISSING/INVALID/BLOCKED`, Diagnostics, Upstream-State).
-
-**Status:** OPEN / BLOCKER FOR RB-01 PASS.
-
-## E.2 – Dependency Cycle Guard
+## E.2 – Dependency Cycle Guard – TECH PASS / DEVICE PASS
 
 E.2 ergänzt ausschließlich den bestehenden Dependency-Graph-Core um einen allgemeinen deterministischen Zyklenschutz.
 
@@ -76,43 +51,63 @@ Umgesetzt:
 - `detectDependencyCycles(edges)` erkennt Zyklen ausschließlich über fachlich `RESOLVED` Kanten;
 - deterministische Strongly-Connected-Component-Auswertung mit stabil sortiertem Ergebnis;
 - Selbstzyklus wird ebenfalls erkannt;
-- `wouldCreateDependencyCycle(graph, sourceObjectId, dependentObjectId)` prüft eine geplante neue Kante vor dem Einfügen;
-- `validateDependencyEdge(...)` weist eine zyklische Kante kontrolliert mit `DEPENDENCY_CYCLE` ab;
-- vorhandene zyklische Graphkomponenten werden als `BLOCKED` mit Diagnose `DEPENDENCY_CYCLE` markiert;
-- normaler Recompute traversiert keine bereits blockierten Dependents;
-- ungültige/nicht aufgelöste Kanten werden nicht fälschlich als gültiger Zyklusbestandteil behandelt;
-- keine neue Featureart, keine neue Kantenart und keine allgemeine Feature-Engine eingeführt.
+- `wouldCreateDependencyCycle(...)` prüft eine geplante Kante vor dem Einfügen;
+- `validateDependencyEdge(...)` weist eine zyklische Kante mit `DEPENDENCY_CYCLE` ab;
+- vorhandene zyklische Graphkomponenten werden `BLOCKED`;
+- normaler Recompute traversiert keine blockierten Dependents;
+- keine neue Featureart, Kantenart oder Feature-Engine eingeführt.
 
-Regression erweitert in `tests/wd-20d-dependency-graph.mjs`:
+Technischer Foundation-Gate-Workflow: **PASS**.  
+iPad/Safari-Gerätetest 2026-09-06: **PASS** – Projekt laden, Sketch bearbeiten, Undo/Redo, speichern, neu laden sowie GLB-Import bestätigt.
 
-- 3-Knoten-Zyklus;
-- Selbstzyklus;
-- INVALID-Kante erzeugt keinen fachlichen Zyklus;
-- geplante Rückkante wird deterministisch abgewiesen;
-- azyklische geplante Kante bleibt erlaubt;
-- bestehende WD-20D-Graph-/Blocked-Regression bleibt enthalten.
+G1 ist damit geschlossen.
 
-Neuer Integrationsworkflow:
+## E.3 – Domain Transaction Boundary – IMPLEMENTED / TECHNICAL GATE PENDING
 
-`.github/workflows/wd-20e-foundation-gate.yml`
+E.3 führt eine kleine gemeinsame atomare Domänen-Transaction-Grenze ein, ohne das bestehende Snapshot-History-System neu zu entwerfen.
 
-Er führt gemeinsam die vorhandenen WD-20A-, WD-20B-, WD-20C- und WD-20D/E-Regressionen aus.
+Umgesetzt in `src/application/domain-transaction.js`:
 
-Sichtbarer Browser-Teststand: **WD-20E.2**.
+- `installDomainTransactionBoundary(store)` ergänzt `store.runDomainTransaction(...)`;
+- eine Domänenaktion erhält genau einen gemeinsamen `before`-Snapshot;
+- innerhalb derselben Transaktion wird höchstens ein History-Eintrag zugelassen;
+- Mutation und abhängiger Recompute landen gemeinsam im `after`-Snapshot;
+- `false`/No-op ohne History-Aufruf erzeugt keinen künstlichen Undo-Eintrag;
+- bei Exception wird der Projektzustand auf den Transaction-Startzustand zurückgesetzt;
+- verschachtelte Nutzung erzeugt keine zweite unabhängige Transaction-Grenze;
+- `wrapDomainMutation(...)` erlaubt bestehende Store-Mutationen ohne internes History-Redesign einzubinden.
+
+Integration:
+
+- die Transaction Boundary wird zusammen mit der bestehenden Extrude-Reference-Foundation installiert;
+- nach vollständiger synchroner Runtime-Initialisierung werden die bestehenden Sketch-Domänenmutationen `setSketchPoint`, `setSketchLineEndpoints` und `deleteSketchElement` atomar umschlossen;
+- die bestehende `commitSketchMutation()`-Logik bleibt unverändert;
+- ihr bestehendes `mutate → dependent recompute → pushHistory` wird nun durch die gemeinsame Transaction-Grenze abgesichert;
+- sichtbarer Browser-Teststand: **WD-20E.3**.
+
+Regression:
+
+`tests/wd-20e-domain-transaction.mjs` prüft:
+
+- Mutation + Recompute → genau ein History-Eintrag;
+- gesamter Vorzustand im `before`-Snapshot;
+- gesamter Mutation+Recompute-Zustand im `after`-Snapshot;
+- zweiter interner `pushHistory()` erzeugt keinen zweiten Undo-Schritt;
+- No-op erzeugt keinen History-Eintrag;
+- Exception rollt den Projektzustand zurück.
+
+Der gemeinsame Workflow `.github/workflows/wd-20e-foundation-gate.yml` führt zusätzlich zu A–D jetzt auch die E.3-Transaction-Regression aus.
+
+G2 Status: **IMPLEMENTED / TECHNICAL GATE PENDING**.
 
 ## Noch offene Gate-Punkte
 
-- E.2 technischer Gesamtworkflow muss PASS sein;
-- E.2 Geräte-Regression muss PASS sein;
-- G2 / E.3 Domain Transaction Boundary;
+- E.3 technischer Gesamtworkflow muss PASS sein;
+- E.3 iPad/Safari Geräte-Regression muss PASS sein;
 - G3 / E.4 Reference Diagnostic Projection;
 - E.5 RB-01 Integration / Freeze Gate.
 
 ## Vorgesehene Folgeblöcke
-
-### WD-20E.3 – Domain Transaction Boundary
-
-Eine kleine gemeinsame atomare Transaction-Hülle über der bestehenden Snapshot-History, die Mutation + abhängigen Recompute als eine History-Aktion abschließt. Bestehende Undo/Redo-Semantik bleibt erhalten; kein History-Neudesign.
 
 ### WD-20E.4 – Reference Diagnostic Projection
 
@@ -129,10 +124,11 @@ A–E gemeinsam regressieren, Save/Load und Undo/Redo prüfen, iPad/Safari-Gerä
 **WD-20C:** PASS / FROZEN / MERGED  
 **WD-20D:** PASS / FROZEN / MERGED  
 **WD-20E.1:** COMPLETE  
-**WD-20E.2:** IMPLEMENTED / TECHNICAL GATE PENDING  
+**WD-20E.2:** TECH PASS / DEVICE PASS  
+**WD-20E.3:** IMPLEMENTED / TECHNICAL GATE PENDING  
 **RB-01 Gate aktuell:** NOT PASS  
-**Offene fachliche Gate-Blocker nach E.2:** 2 (`G2`, `G3`) plus E.2-Abnahme
+**Offene fachliche Gate-Blocker:** G2-Abnahme + G3
 
-Nächster Schritt nach E.2 TECH + DEVICE PASS:
+Nächster Schritt nach E.3 TECH + DEVICE PASS:
 
-**WD-20E.3 – Domain Transaction Boundary**
+**WD-20E.4 – Reference Diagnostic Projection**
