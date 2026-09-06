@@ -9,12 +9,14 @@ on:
       - 'src/application/stable-reference.js'
       - 'src/application/extrude.js'
       - 'src/application/domain-transaction.js'
+      - 'src/ui/inspector-diagnostics.js'
       - 'src/main.js'
       - 'tests/wd-20a-project-schema.mjs'
       - 'tests/wd-20b-selection-ref.mjs'
       - 'tests/wd-20c-stable-reference.mjs'
       - 'tests/wd-20d-dependency-graph.mjs'
       - 'tests/wd-20e-domain-transaction.mjs'
+      - 'tests/wd-20e-reference-diagnostics.mjs'
       - '.github/workflows/wd-20e-foundation-gate.yml'
       - 'docs/05_implementation/WD-20E_STATUS.md'
   pull_request:
@@ -23,12 +25,14 @@ on:
       - 'src/application/stable-reference.js'
       - 'src/application/extrude.js'
       - 'src/application/domain-transaction.js'
+      - 'src/ui/inspector-diagnostics.js'
       - 'src/main.js'
       - 'tests/wd-20a-project-schema.mjs'
       - 'tests/wd-20b-selection-ref.mjs'
       - 'tests/wd-20c-stable-reference.mjs'
       - 'tests/wd-20d-dependency-graph.mjs'
       - 'tests/wd-20e-domain-transaction.mjs'
+      - 'tests/wd-20e-reference-diagnostics.mjs'
       - '.github/workflows/wd-20e-foundation-gate.yml'
       - 'docs/05_implementation/WD-20E_STATUS.md'
 
@@ -45,3 +49,4 @@ jobs:
       - run: node tests/wd-20c-stable-reference.mjs
       - run: node tests/wd-20d-dependency-graph.mjs
       - run: node tests/wd-20e-domain-transaction.mjs
+      - run: node tests/wd-20e-reference-diagnostics.mjs
