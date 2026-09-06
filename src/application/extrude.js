@@ -91,11 +91,6 @@ export function installExtrudeSourceReferenceSync(store) {
       wrapDomainMutation(store, 'setSketchPoint');
       wrapDomainMutation(store, 'setSketchLineEndpoints');
       wrapDomainMutation(store, 'deleteSketchElement');
-      if (typeof document !== 'undefined') {
-        document.title = 'CyberMotion 3D – WD-20E.3';
-        const buildLabel = document.querySelector('.brand small');
-        if (buildLabel) buildLabel.textContent = 'WD-20E.3';
-      }
     });
   }
 
