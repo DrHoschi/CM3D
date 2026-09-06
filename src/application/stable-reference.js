@@ -1,3 +1,5 @@
+import { getSketchElement, getSketchPoint } from '../model/sketch-topology.js';
+
 export const ReferenceTargetKind = Object.freeze({
   OBJECT: 'OBJECT',
   SKETCH: 'SKETCH',
@@ -77,10 +79,10 @@ export function resolveStableReference(store, reference) {
     ]);
   }
 
-  const map = reference.targetKind === ReferenceTargetKind.SKETCH_POINT
-    ? owner.data?.points
-    : owner.data?.lines;
-  if (!map?.[reference.targetId]) {
+  const target = reference.targetKind === ReferenceTargetKind.SKETCH_POINT
+    ? getSketchPoint(owner, reference.targetId)
+    : getSketchElement(owner, reference.targetId, reference.subTargetId ?? null)?.element;
+  if (!target) {
     return createReferenceResolution(reference, ReferenceState.MISSING, [
       { code: 'SUBTARGET_MISSING', message: `Referenzziel fehlt: ${reference.targetId}` }
     ]);
