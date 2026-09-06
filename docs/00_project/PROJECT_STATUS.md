@@ -67,9 +67,7 @@ Basis:
 
 ### WD-21A.2 – Unified Sketch Element & Topology Contract Foundation
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE RELEASE NOT YET GRANTED**
-
-Umgesetzt:
+**PASS / DEVICE VERIFIED / 0 BLOCKER**
 
 - zentraler Sketch-Element-/Topologievertrag;
 - bestehende persistente `points`/`lines`-Struktur bleibt kompatibel;
@@ -79,23 +77,35 @@ Umgesetzt:
 - Projektvalidierung nutzt den zentralen Sketch-Topology-Validator;
 - SelectionRef und StableReference nutzen den generischen Sketch-Elementresolver;
 - alte Linienreferenzen ohne Element-Subtyp bleiben kompatibel;
-- sichtbare Build-Kennung wird zentral auf `WD-21A.2` gesetzt;
-- automatischer WD-21A.2-Regressionsworkflow ist PASS.
+- sichtbare Build-Kennung zentralisiert und auf realem iPad/Safari bestätigt.
+
+### WD-21A.3 – Central Sketch Topology Mutation Contract
+
+**PASS / DEVICE VERIFIED / 0 BLOCKER**
+
+- zentraler Mutation-Owner `src/application/sketch-mutation.js`;
+- Sketch-Mutationen laufen über eine validierte atomare Domain-Transaction-Grenze;
+- ungültige/dangling Topologie wird vollständig zurückgerollt;
+- Connectivity bleibt ausschließlich über gemeinsame `pointId` definiert;
+- Punkt-/Linienerzeugung, Editierung und Löschen nutzen den zentralen Vertrag;
+- abhängiger Extrude-Recompute bleibt innerhalb der kontrollierten Mutation;
+- Undo/Redo stellt logische Punkt-/Linien-IDs exakt wieder her;
+- Delete-Ereignisfolge ist Commit → Auswahl leeren → `selectionChanged`.
 
 Automatische Evidenz:
 
-- Workflow: `WD-21A.2 Sketch Topology Contract Regression`
-- Run: `34058462552`
+- Workflow: `WD-21A.3 Sketch Mutation Contract Regression`
+- Run: `34061038460`
+- Head: `6432e653fcede3f3f1f3ab0c796994c144909efd`
 - Result: **SUCCESS / PASS**
 
-Noch nicht freigegeben bzw. nicht Bestandteil von WD-21A.2:
+Reale iPad-/Safari-Evidenz vom 2026-09-06:
 
-- Connect/Disconnect-Bedienung;
-- Kreis/Bogen/Spline;
-- Profile/Pfade;
-- Profil-/Pfadreferenzen;
-- neue 3D-Featurefunktionen;
-- Constraints.
+- Browser-Titel und Header konsistent `WD-21A.3`;
+- Aktualisierung/Mutation, Speichern, Laden, Rückgängig und Wiederherstellen erfolgreich;
+- Ergebnis: **PASS / 0 BLOCKER**.
+
+WD-21A als Gesamtblock ist damit noch **nicht FROZEN**. A.1–A.3 decken Inventar, Element-/Topologievertrag und zentralen Mutationspfad ab. Vor einem A.4 ist der verbleibende Foundation-Umfang gegen den RB-02-Vertrag zu bestimmen.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -132,4 +142,4 @@ Die aktualisierte Funktionsmatrix V0.2 und die Hauptfenster-/Programmstruktur V0
 
 ## Nächster zulässiger Schritt
 
-WD-21A.2 gegen den eingefrorenen `main`-Stand regressieren und die sichtbare Kennung im realen Browser prüfen. Erst bei konsistentem Ergebnis kann WD-21A.2 freigegeben werden. WD-21A.3 bzw. WD-21B wird nicht automatisch gestartet.
+WD-21A.3 ist PASS / DEVICE VERIFIED / 0 BLOCKER. Als Nächstes ausschließlich den verbleibenden WD-21A-Foundation-Umfang gegen A.1–A.3 und RB-02 bestimmen. Ein eventuelles WD-21A.4 darf nur Foundation-Integration/Contract-Coverage schließen. WD-21B Connect/Disconnect, neue Sketch-Elementtypen und Profile/Pfade werden nicht vorgezogen.
