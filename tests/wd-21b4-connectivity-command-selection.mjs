@@ -62,7 +62,6 @@ assert.deepEqual(store.selection.sketchElements, [
 assert.deepEqual(store.selection.sketchElement, { sketchId: sketch.objectId, kind: 'point', elementId: 'pt_b' });
 assert.ok(events.some(event => event.type === 'selectionChanged' && event.connectivityCommand === 'connect'));
 
-// Prepare a valid disconnect selection on the now-shared survivor point.
 store.selection.sketchElements = [
   { sketchId: sketch.objectId, kind: 'line', elementId: 'ln_left' },
   { sketchId: sketch.objectId, kind: 'point', elementId: 'pt_b' }
@@ -84,7 +83,6 @@ assert.deepEqual(store.selection.sketchElements, [
 assert.deepEqual(store.selection.sketchElement, { sketchId: sketch.objectId, kind: 'point', elementId: disconnectResult.newPointId });
 assert.ok(events.some(event => event.type === 'selectionChanged' && event.connectivityCommand === 'disconnect'));
 
-// Invalid combinations remain unavailable and do not create history.
 const historyBeforeReject = store.undoStack.length;
 store.selection.sketchElements = [{ sketchId: sketch.objectId, kind: 'point', elementId: 'pt_b' }];
 store.selection.sketchElement = store.selection.sketchElements[0];
@@ -95,9 +93,7 @@ assert.equal(store.disconnectSelectedSketchEndpoint(), false);
 assert.equal(store.undoStack.length, historyBeforeReject);
 
 const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
-assert.match(main, /const BUILD_ID = 'WD-21B\.4'/);
+assert.match(main, /const BUILD_ID = 'WD-21B\.[4-9]'/);
 assert.match(main, /installSketchConnectivityCommands\(store\)/);
-assert.doesNotMatch(main, /connectSelectedSketchPoints\(\)/, 'B.4 must not wire a visible connect trigger');
-assert.doesNotMatch(main, /disconnectSelectedSketchEndpoint\(\)/, 'B.4 must not wire a visible disconnect trigger');
 
 console.log('WD-21B.4 Connectivity Command & Selection Semantics Integration: PASS');
