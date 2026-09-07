@@ -49,7 +49,7 @@ Reale iPad-/Safari-Evidenz vom 2026-09-07:
 
 ## WD-21B.3 – Deterministic Endpoint Disconnect Mutation Contract
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING
+**Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
 Umgesetzt:
 
@@ -80,6 +80,18 @@ Automatische Regression:
 - B.3 Disconnect Regression: PASS
 - Result: **SUCCESS / PASS**
 
+Reale iPad-/Safari-Evidenz vom 2026-09-07:
+
+- Browser-Tab zeigt `CyberMotion 3D – WD-21B.3`;
+- sichtbares Header-/Build-Label zeigt `WD-21B.3`;
+- Laden funktioniert;
+- Speichern funktioniert;
+- Neuladen funktioniert;
+- Rückgängig funktioniert;
+- Wiederholen/Redo funktioniert;
+- Sketch-Punkte lassen sich weiterhin verschieben;
+- Ergebnis: **PASS / 0 BLOCKER**.
+
 Explizit nicht Bestandteil von WD-21B.3:
 
 - kein Disconnect-Button;
@@ -93,6 +105,6 @@ Explizit nicht Bestandteil von WD-21B.3:
 
 ## Freigabestatus
 
-WD-21B.2 ist **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21B.3 ist technisch **AUTOMATED PASS**, benötigt aber noch den realen iPad-/Safari-Build-ID-/Regressionscheck. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
+WD-21B.2 und WD-21B.3 sind **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
 
-Der nächste zulässige Schritt ist ausschließlich der Gerätecheck für `WD-21B.3`: Browser-Tab und sichtbares Build-Label müssen konsistent `WD-21B.3` zeigen und die bestehenden Sketch-Grundfunktionen einschließlich Speichern, Laden, Undo und Redo dürfen nicht regressiert sein. Erst danach darf B.3 auf PASS gesetzt werden. Kein weiterer B-Schritt wird automatisch begonnen.
+Der nächste fachlich zulässige WD-21B-Teilblock muss separat definiert und autorisiert werden. Kein weiterer B-Schritt wird automatisch begonnen.
