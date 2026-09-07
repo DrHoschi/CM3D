@@ -14,15 +14,13 @@ Festgelegt:
 - Punkte sind über Tree, Viewer und Inspector einzeln auswählbar.
 - Mehrfachauswahl kann mehrere Punkte derselben Skizze halten; die letzte Auswahl ist Primary Selection.
 - SelectionRef bildet Punkte als `SKETCH_POINT` mit `ownerId=sketchId` und `targetId=pointId` ab.
-- Connect/Disconnect müssen über den eingefrorenen zentralen `runSketchMutation(...)`-Pfad laufen.
-- Connect: Primary/Survivor bleibt, Merge-Source wird umgehängt und entfernt; kein geometrisches Rebinding.
-- Disconnect: gemeinsamer Punkt bleibt bestehen; für eine explizit ausgewählte angeschlossene Linie wird ein neuer Punkt mit neuer `pointId` erzeugt.
+- Connect/Disconnect laufen über den eingefrorenen zentralen `runSketchMutation(...)`-Pfad.
 
 ## WD-21B.2 – Deterministic Endpoint Connect Mutation Contract
 
 **Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
-Interner Connect-Mutation-Contract ist implementiert, automatisiert regressiert und auf iPad/Safari bestätigt. Keine sichtbare Connect-Aktion.
+Interner Connect-Mutation-Contract ist implementiert, automatisiert regressiert und auf iPad/Safari bestätigt.
 
 Automatische Evidenz: Workflow `WD-21B.2 Endpoint Connect Contract Regression`, Run `34138362614`, Head `fbbab7b48fb8efc65dd0e20e150dececfd922627`, **SUCCESS / PASS**.
 
@@ -30,7 +28,7 @@ Automatische Evidenz: Workflow `WD-21B.2 Endpoint Connect Contract Regression`, 
 
 **Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
-Interner Disconnect-Mutation-Contract ist implementiert, automatisiert regressiert und auf iPad/Safari bestätigt. Keine sichtbare Disconnect-Aktion.
+Interner Disconnect-Mutation-Contract ist implementiert, automatisiert regressiert und auf iPad/Safari bestätigt.
 
 Automatische Evidenz: Workflow `WD-21B.3 Endpoint Disconnect Contract Regression`, Run `34149057090`, Head `3b09bc8f47f3a7849a14672e0f8e4664f9e3c613`, **SUCCESS / PASS**.
 
@@ -38,50 +36,56 @@ Automatische Evidenz: Workflow `WD-21B.3 Endpoint Disconnect Contract Regression
 
 **Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
+- nicht sichtbarer Command-Layer `src/application/sketch-connectivity-commands.js`;
+- zwei Punkte derselben Skizze: erster = Source, letzter/Primary = Survivor;
+- Connect normalisiert auf Survivor;
+- Punkt + inzidente Linie: Disconnect;
+- Disconnect normalisiert auf Linie + neuen Punkt, neuer Punkt Primary;
+- ungültige Kombinationen bleiben deaktiviert;
+- keine geometrische Suche, kein Snap/Merge, keine Toleranz.
+
+Automatische Evidenz: Workflow `WD-21B.4 Connectivity Command & Selection Semantics Regression`, Run `34149960132`, Head `bc854825912b084d325a1ef535a54868a8428b7d`, **SUCCESS / PASS**.
+
+Reale iPad-/Safari-Evidenz vom 2026-09-07:
+
+- Browser-Tab und Header konsistent `WD-21B.4`;
+- Speichern, Laden, Undo/Redo und Punktbearbeitung funktionieren;
+- Ergebnis: **PASS / 0 BLOCKER**.
+
+## WD-21B.5 – Visible Connectivity Actions & Availability Integration
+
+**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE FUNCTION CHECK PENDING
+
 Umgesetzt:
 
-1. Neuer nicht sichtbarer Command-Layer `src/application/sketch-connectivity-commands.js`.
-2. `deriveSketchConnectivityCommandState(store)` wertet ausschließlich den aktuellen expliziten Auswahlzustand aus; keine geometrische Suche, keine Nähe-/Toleranzlogik.
-3. Connect ist nur verfügbar, wenn exakt zwei Punkte derselben Skizze ausgewählt sind und die B.2-Mutation diese Kombination grundsätzlich zulässt.
-4. Die Reihenfolge der Mehrfachauswahl ist autoritativ: erster Punkt = Source, zuletzt ausgewählter/Primary Point = Survivor.
-5. `connectSelectedSketchPoints()` ruft ausschließlich den vorhandenen B.2-Contract auf; nach Erfolg bleibt nur der Survivor als gültige Sketch-Auswahl bestehen.
-6. Disconnect ist nur verfügbar, wenn exakt ein Punkt und eine Linie derselben Skizze ausgewählt sind, die Linie diesen Punkt tatsächlich referenziert und der Punkt mindestens zwei inzidente Linien besitzt.
-7. `disconnectSelectedSketchEndpoint()` ruft ausschließlich den vorhandenen B.3-Contract auf.
-8. Nach erfolgreichem Disconnect wird die Auswahl deterministisch auf die weiterhin gültige Linie plus den neu erzeugten abgetrennten Punkt normalisiert; der neue Punkt ist Primary Selection.
-9. Ungültige Auswahlkombinationen bleiben Command-disabled/Reject und erzeugen keine Mutation bzw. keinen History-Eintrag.
-10. Selection-Änderungen nach erfolgreichem Connect/Disconnect werden über `selectionChanged` publiziert, sodass SelectionRef/Viewer/Tree auf den gültigen Zustand synchronisieren können.
-11. Der Layer wird nach Mutation-Contract, Mehrfachauswahl und SelectionRef-Brücke installiert.
-12. Der Command-Layer besitzt `version: 'WD-21B.4'` und `visibleUi: false`.
-13. Sichtbare Build-ID ist zentral `WD-21B.4`.
-14. Es wurde kein Connect-/Disconnect-Button, Menüeintrag oder anderer sichtbarer Trigger hinzugefügt.
+1. Neuer sichtbarer UI-Layer `src/ui/sketch-connectivity-actions.js`.
+2. Die Aktionen werden ausschließlich im bestehenden Sketch-Kontextbalken eingeblendet.
+3. Sichtbare Aktion `Verbinden` ruft ausschließlich `connectSelectedSketchPoints()` aus B.4 auf.
+4. Sichtbare Aktion `Trennen` ruft ausschließlich `disconnectSelectedSketchEndpoint()` aus B.4 auf.
+5. Die UI ruft niemals direkt `connectSketchPoints(...)` oder `disconnectSketchLineFromPoint(...)` auf.
+6. `Verbinden` ist nur aktiv, wenn B.4 `connect.enabled === true` liefert.
+7. `Trennen` ist nur aktiv, wenn B.4 `disconnect.enabled === true` liefert.
+8. Bei allen anderen Auswahlzuständen bleiben die Aktionen sichtbar, aber deaktiviert.
+9. Der Aktivierungszustand wird bei `selectionChanged`, `geometryChanged`, `projectChanged` und `projectLoaded` neu synchronisiert.
+10. Nach Ausführung übernimmt die UI die bereits in B.4 definierte Auswahl-Normalisierung unverändert.
+11. Keine neue Topologie-, History-, Reference- oder Recompute-Logik wurde im UI-Layer eingeführt.
+12. Sichtbare Build-ID ist zentral `WD-21B.5`.
 
 Automatische Regression:
 
-- Workflow: `WD-21B.4 Connectivity Command & Selection Semantics Regression`
-- Run: `34149960132`
-- Head: `bc854825912b084d325a1ef535a54868a8428b7d`
+- Workflow: `WD-21B.5 Visible Connectivity Actions Regression`
+- Run: `34155743925`
+- Head: `b1a234aa46aa6f81e9014528672a45172c514304`
 - A.2 Topology Regression: PASS
 - A.3 Mutation Regression: PASS
 - B.2 Connect Regression: PASS
 - B.3 Disconnect Regression: PASS
 - B.4 Command/Selection Regression: PASS
+- B.5 Visible Action Regression: PASS
 - Result: **SUCCESS / PASS**
 
-Reale iPad-/Safari-Evidenz vom 2026-09-07:
+Explizit nicht Bestandteil von WD-21B.5:
 
-- Browser-Tab zeigt `CyberMotion 3D – WD-21B.4`;
-- sichtbares Header-/Build-Label zeigt konsistent `WD-21B.4`;
-- Speichern funktioniert;
-- Laden funktioniert;
-- Undo/Redo funktioniert;
-- Sketch-Punktbearbeitung funktioniert weiterhin;
-- bestehende Sketch-Grundfunktionen zeigen keine gemeldete Regression;
-- Ergebnis: **PASS / 0 BLOCKER**.
-
-Explizit nicht Bestandteil von WD-21B.4:
-
-- kein sichtbarer Connect-Button;
-- kein sichtbarer Disconnect-Button;
 - kein automatisches Snap/Merge;
 - keine Toleranzsuche;
 - kein geometrisches Best-Guess;
@@ -91,6 +95,6 @@ Explizit nicht Bestandteil von WD-21B.4:
 
 ## Freigabestatus
 
-WD-21B.2, WD-21B.3 und WD-21B.4 sind **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
+WD-21B.2, B.3 und B.4 sind **PASS / DEVICE VERIFIED / 0 BLOCKER**. B.5 ist **AUTOMATED PASS**, benötigt aber noch die reale iPad-/Safari-Funktionsprüfung der erstmals sichtbaren Aktionen. WD-21B als Gesamtblock bleibt **nicht FROZEN**.
 
-Der nächste fachlich zulässige WD-21B-Teilblock muss separat definiert und autorisiert werden. Kein weiterer B-Schritt wird automatisch begonnen.
+Der nächste zulässige Schritt ist ausschließlich der Gerätecheck für `WD-21B.5`: Browser-Tab und Header müssen `WD-21B.5` zeigen. Bei zwei gültig ausgewählten Punkten muss `Verbinden` aktiv werden und die Punkte topologisch verbinden; bei einem gemeinsam verwendeten Punkt plus inzidenter Linie muss `Trennen` aktiv werden und die Linie topologisch abtrennen. Undo/Redo sowie Speichern/Laden müssen danach weiterhin funktionieren. Kein weiterer B-Schritt wird automatisch begonnen.
