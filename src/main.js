@@ -14,6 +14,7 @@ import { installGltfPanel } from './ui/gltf-panel.js';
 import { installPartialProjectPanel } from './ui/partial-project-panel.js';
 import { installSketchEditing } from './ui/sketch-editing.js';
 import { installSketchMultiSelection } from './ui/sketch-multiselect.js';
+import { installSketchConnectivityActions } from './ui/sketch-connectivity-actions.js';
 import { installSketchGizmo } from './ui/sketch-gizmo.js';
 import { installFeatureOperationsTree } from './ui/feature-operations-tree.js';
 import { installFeatureParametersInspector } from './ui/feature-parameters-inspector.js';
@@ -25,7 +26,7 @@ import { installProjectSettings } from './ui/project-settings.js';
 import { installCameraObjectPreview } from './ui/camera-object-preview.js';
 import { installInspectorDiagnostics } from './ui/inspector-diagnostics.js';
 
-const BUILD_ID = 'WD-21B.4';
+const BUILD_ID = 'WD-21B.5';
 const applyBuildIdentity = () => {
   document.title = `CyberMotion 3D – ${BUILD_ID}`;
   const buildLabel = document.querySelector('.brand small');
@@ -129,6 +130,7 @@ store.selectSketchElement=(sketchId,kind,elementId,notify=true)=>{
 };
 
 const sketchConnectivityCommands = installSketchConnectivityCommands(store);
+const sketchConnectivityActions = installSketchConnectivityActions(store);
 const sketchGizmo = installSketchGizmo(store, runtime);
 const featureOperationsTree = installFeatureOperationsTree(store, appUI);
 const featureParametersInspector = installFeatureParametersInspector(store, appUI);
@@ -148,4 +150,4 @@ if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',ev
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});
 syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, extrudeSourceReferenceSync, sketchMutationContract, sketchMultiSelection, sketchConnectivityCommands, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics, buildId: BUILD_ID };
+window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, extrudeSourceReferenceSync, sketchMutationContract, sketchMultiSelection, sketchConnectivityCommands, sketchConnectivityActions, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics, buildId: BUILD_ID };
