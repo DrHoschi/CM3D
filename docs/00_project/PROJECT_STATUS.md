@@ -79,7 +79,7 @@ Festgelegt wurden die vorhandenen Punkt-/Mehrfachauswahlpfade sowie der determin
 
 ### WD-21B.2 – Deterministic Endpoint Connect Mutation Contract
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING**
+**PASS / DEVICE VERIFIED / 0 BLOCKER**
 
 Umgesetzt:
 
@@ -97,9 +97,21 @@ Umgesetzt:
 Automatisierte Regression:
 
 - Workflow: `WD-21B.2 Endpoint Connect Contract Regression`
+- Run: `34138362614`
+- Head: `fbbab7b48fb8efc65dd0e20e150dececfd922627`
 - A.2 Topology Regression: PASS
 - A.3 Mutation Regression: PASS
 - B.2 Endpoint Connect Regression: PASS
+- Result: **SUCCESS / PASS**
+
+Reale iPad-/Safari-Evidenz vom 2026-09-07:
+
+- Browser-Tab und Header konsistent `WD-21B.2`;
+- bestehende Sketch-Funktionen erhalten;
+- Speichern, Laden, Rückgängig und Wiederherstellen erfolgreich;
+- Ergebnis: **PASS / 0 BLOCKER**.
+
+WD-21B als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -115,4 +127,4 @@ Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtb
 
 ## Nächster zulässiger Schritt
 
-Nur der reale iPad-/Safari-Abgleich für WD-21B.2: Browser-Titel und sichtbares Build-Label müssen konsistent `WD-21B.2` zeigen; vorhandene Sketch-Grundfunktionen dürfen nicht regressiert sein. Erst danach kann WD-21B.2 auf PASS gesetzt werden. Kein Connect-Button und kein Disconnect werden vorher begonnen.
+WD-21B.2 ist abgeschlossen. Der nächste fachlich zulässige Teilblock muss separat autorisiert werden. WD-21B.3 wird nicht automatisch begonnen.
