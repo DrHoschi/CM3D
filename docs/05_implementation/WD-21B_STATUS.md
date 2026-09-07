@@ -16,7 +16,7 @@ Festgelegt:
 - SelectionRef bildet Punkte als `SKETCH_POINT` mit `ownerId=sketchId` und `targetId=pointId` ab.
 - Connect/Disconnect müssen über den eingefrorenen zentralen `runSketchMutation(...)`-Pfad laufen.
 - Connect: Primary/Survivor bleibt, Merge-Source wird umgehängt und entfernt; kein geometrisches Rebinding.
-- Disconnect wird erst in einem späteren Teilblock implementiert.
+- Disconnect: gemeinsamer Punkt bleibt bestehen; für eine explizit ausgewählte angeschlossene Linie wird ein neuer Punkt mit neuer `pointId` erzeugt.
 
 ## WD-21B.2 – Deterministic Endpoint Connect Mutation Contract
 
@@ -24,47 +24,67 @@ Festgelegt:
 
 Umgesetzt:
 
-1. Neuer interner zentraler Mutationseinstieg `connectSketchPoints(sketchId, survivorPointId, sourcePointId)` in `src/application/sketch-mutation.js`.
+1. Interner zentraler Mutationseinstieg `connectSketchPoints(sketchId, survivorPointId, sourcePointId)`.
 2. Survivor und Source müssen unterschiedliche existierende `pointId`s derselben Skizze sein.
-3. Der Survivor behält Identität und Koordinaten unverändert.
-4. Alle Linienreferenzen auf die Source-ID werden deterministisch auf die Survivor-ID umgehängt.
-5. Danach wird ausschließlich die Source-Punktinstanz entfernt.
-6. Der Rückgabevertrag enthält `survivorPointId`, `sourcePointId` und `rewiredLineIds`.
-7. Eine direkte Linie Survivor↔Source führt beim Merge zu einer ungültigen Start=End-Topologie und wird deshalb vor Mutation vollständig abgewiesen.
-8. Fehlende Punkte oder identische IDs sind No-op/Reject und erzeugen keinen History-Eintrag.
-9. Die Mutation läuft vollständig über `runSketchMutation(...)` und damit über Validation, Domain Transaction, History, Recompute und Events.
-10. StableReference auf Survivor bleibt `RESOLVED`; StableReference auf entfernte Source wird `MISSING`; kein Rebinding auf Survivor.
-11. SelectionRef auf die entfernte Source löst nach Connect nicht mehr auf.
-12. Undo stellt Source-ID, Koordinate und ursprüngliche Linieninzidenz exakt wieder her; Redo reproduziert den Connect-Zustand.
-13. Der eingefrorene A.3-Mutation-Contract bleibt als Foundation-Version erhalten; B.2 ist als `connectivityExtension: 'WD-21B.2'` ausgewiesen.
-14. Es wurde keine sichtbare Connect-Aktion verdrahtet.
-15. Sichtbare Build-ID ist zentral `WD-21B.2`.
+3. Survivor behält Identität und Koordinaten unverändert.
+4. Alle Source-Linien werden auf Survivor umgehängt; Source wird anschließend entfernt.
+5. Direkte Survivor↔Source-Linie wird abgewiesen, damit keine Start=End-Topologie entsteht.
+6. StableReference auf Survivor bleibt `RESOLVED`, Source wird `MISSING`; kein Rebinding.
+7. Undo/Redo stellt exakte IDs und Inzidenzen wieder her.
+8. Keine sichtbare Connect-Aktion.
 
 Automatische Regression:
 
 - Workflow: `WD-21B.2 Endpoint Connect Contract Regression`
 - Run: `34138362614`
 - Head: `fbbab7b48fb8efc65dd0e20e150dececfd922627`
-- A.2 Topology Regression: PASS
-- A.3 Mutation Regression: PASS
-- B.2 Endpoint Connect Regression: PASS
 - Result: **SUCCESS / PASS**
 
 Reale iPad-/Safari-Evidenz vom 2026-09-07:
 
-- Browser-Tab zeigt `CyberMotion 3D – WD-21B.2`;
-- sichtbares Header-/Build-Label zeigt `WD-21B.2`;
-- bestehende Sketch-Funktionen sind erhalten;
-- Speichern funktioniert;
-- Laden funktioniert;
-- Rückgängig funktioniert;
-- Wiederherstellen/Redo funktioniert;
+- Browser-Tab und Header konsistent `WD-21B.2`;
+- bestehende Sketch-Funktionen erhalten;
+- Speichern, Laden, Rückgängig und Wiederherstellen erfolgreich;
 - Ergebnis: **PASS / 0 BLOCKER**.
 
-Explizit nicht Bestandteil von WD-21B.2:
+## WD-21B.3 – Deterministic Endpoint Disconnect Mutation Contract
 
+**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING
+
+Umgesetzt:
+
+1. Neuer interner zentraler Mutationseinstieg `disconnectSketchLineFromPoint(sketchId, pointId, lineId)`.
+2. Punkt und Linie müssen existieren und die Linie muss den angegebenen Punkt tatsächlich als Start- oder Endpunkt referenzieren.
+3. Disconnect ist nur zulässig, wenn der Punkt von mindestens zwei Linien verwendet wird.
+4. Der ursprüngliche gemeinsame Punkt behält `pointId`, Koordinate und alle übrigen Inzidenzen.
+5. Für die explizit ausgewählte Linie wird ein neuer Punkt über `createSketchPoint(...)` erzeugt; dieser erhält eine neue `pointId`.
+6. Der neue Punkt übernimmt exakt die Koordinate des ursprünglichen gemeinsamen Punkts. Die sichtbare Geometrie springt daher beim Disconnect nicht.
+7. Nur die ausgewählte Linie wird auf die neue Punkt-ID umgehängt; ihre `lineId` bleibt unverändert.
+8. Fehlende, nicht inzidente oder nur einfach verwendete Punkte werden als No-op/Reject abgewiesen und erzeugen keinen History-Eintrag.
+9. Die Mutation läuft vollständig über `runSketchMutation(...)` und damit über Validation, Domain Transaction, History, Recompute und Events.
+10. StableReference auf den ursprünglichen Punkt bleibt `RESOLVED`; StableReference auf die Linie bleibt `RESOLVED`.
+11. Undo entfernt den neu erzeugten Punkt wieder und stellt die ursprüngliche gemeinsame `pointId`-Inzidenz exakt her; Redo reproduziert dieselbe erzeugte Punkt-ID aus dem Snapshot.
+12. Der zentrale Mutation-Owner audit umfasst jetzt auch `disconnectSketchLineFromPoint`.
+13. `connectivityExtension` ist auf `WD-21B.3` fortgeschrieben; der eingefrorene Foundation-Vertrag `version: 'WD-21A.3'` bleibt unverändert.
+14. Sichtbare Build-ID ist zentral `WD-21B.3`.
+15. Es wurde keine sichtbare Disconnect-Aktion verdrahtet.
+
+Automatische Regression:
+
+- Workflow: `WD-21B.3 Endpoint Disconnect Contract Regression`
+- Run: `34149057090`
+- Head: `3b09bc8f47f3a7849a14672e0f8e4664f9e3c613`
+- A.2 Topology Regression: PASS
+- A.3 Mutation Regression: PASS
+- B.2 Connect Regression: PASS
+- B.3 Disconnect Regression: PASS
+- Result: **SUCCESS / PASS**
+
+Explizit nicht Bestandteil von WD-21B.3:
+
+- kein Disconnect-Button;
 - kein Connect-Button;
-- kein Disconnect;
+- keine UI-Verknüpfung der Mehrfachauswahl mit Connect/Disconnect;
 - kein automatisches Snap/Merge;
 - keine Toleranzsuche;
 - keine Kreis-/Bogen-/Spline-Elementtypen;
@@ -73,6 +93,6 @@ Explizit nicht Bestandteil von WD-21B.2:
 
 ## Freigabestatus
 
-WD-21B.2 ist **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
+WD-21B.2 ist **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21B.3 ist technisch **AUTOMATED PASS**, benötigt aber noch den realen iPad-/Safari-Build-ID-/Regressionscheck. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
 
-Der nächste fachlich zulässige Teilblock darf erst separat autorisiert werden. WD-21B.3 wird nicht automatisch begonnen.
+Der nächste zulässige Schritt ist ausschließlich der Gerätecheck für `WD-21B.3`: Browser-Tab und sichtbares Build-Label müssen konsistent `WD-21B.3` zeigen und die bestehenden Sketch-Grundfunktionen einschließlich Speichern, Laden, Undo und Redo dürfen nicht regressiert sein. Erst danach darf B.3 auf PASS gesetzt werden. Kein weiterer B-Schritt wird automatisch begonnen.
