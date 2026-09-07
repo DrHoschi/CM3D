@@ -54,39 +54,40 @@ Basis: WD-21A FROZEN @ `4014cf865049c66c20d756db608201fa599d0948`
 
 **PASS / DEVICE VERIFIED / 0 BLOCKER**
 
-Interner zentraler Connect-Contract ist implementiert, automatisiert regressiert und auf iPad/Safari bestätigt. Keine sichtbare Connect-Bedienung.
-
 ### WD-21B.3 – Deterministic Endpoint Disconnect Mutation Contract
 
 **PASS / DEVICE VERIFIED / 0 BLOCKER**
 
-Interner zentraler Disconnect-Contract ist implementiert, automatisiert regressiert und auf iPad/Safari bestätigt. Keine sichtbare Disconnect-Bedienung.
-
 ### WD-21B.4 – Connectivity Command & Selection Semantics Integration
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING**
+**PASS / DEVICE VERIFIED / 0 BLOCKER**
 
-- neuer nicht sichtbarer Command-Layer `src/application/sketch-connectivity-commands.js`;
-- exakt zwei Punkte derselben Skizze aktivieren Connect, sofern die B.2-Voraussetzungen erfüllt sind;
-- Auswahlreihenfolge ist autoritativ: erster Punkt = Source, letzter/Primary Point = Survivor;
-- erfolgreicher Connect normalisiert die Auswahl auf den Survivor;
-- exakt ein gemeinsam verwendeter Punkt plus eine inzidente Linie derselben Skizze aktiviert Disconnect;
-- erfolgreicher Disconnect normalisiert die Auswahl auf die weiterhin gültige Linie plus den neu erzeugten abgetrennten Punkt; der neue Punkt ist Primary;
-- ungültige Auswahlkombinationen bleiben deaktiviert und erzeugen keine Mutation/History;
-- keine geometrische Suche, kein Snap/Merge, keine Toleranz;
-- keine sichtbare Connect-/Disconnect-Bedienung;
-- sichtbare Build-ID ist `WD-21B.4`.
+Reale iPad-/Safari-Evidenz bestätigte `WD-21B.4` sowie Speichern, Laden, Undo/Redo und Punktbearbeitung ohne Regression.
+
+### WD-21B.5 – Visible Connectivity Actions & Availability Integration
+
+**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE FUNCTION CHECK PENDING**
+
+- sichtbare Aktionen `Verbinden` und `Trennen` im Sketch-Kontextbalken;
+- UI konsumiert ausschließlich die B.4-Commands;
+- `Verbinden` nur bei exakt gültiger Zwei-Punkt-Auswahl;
+- `Trennen` nur bei gültigem gemeinsamem Punkt + inzidenter Linie;
+- sonst bleiben die Aktionen deaktiviert;
+- keine direkte Mutation aus der UI;
+- kein Snap/Merge, keine Toleranz und keine geometrische Suche;
+- sichtbare Build-ID ist `WD-21B.5`.
 
 Automatisierte Regression:
 
-- Workflow: `WD-21B.4 Connectivity Command & Selection Semantics Regression`
-- Run: `34149960132`
-- Head: `bc854825912b084d325a1ef535a54868a8428b7d`
+- Workflow: `WD-21B.5 Visible Connectivity Actions Regression`
+- Run: `34155743925`
+- Head: `b1a234aa46aa6f81e9014528672a45172c514304`
 - A.2 Topology Regression: PASS
 - A.3 Mutation Regression: PASS
 - B.2 Connect Regression: PASS
 - B.3 Disconnect Regression: PASS
 - B.4 Command/Selection Regression: PASS
+- B.5 Visible Action Regression: PASS
 - Result: **SUCCESS / PASS**
 
 WD-21B als Gesamtblock bleibt **nicht FROZEN**.
@@ -105,4 +106,4 @@ Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtb
 
 ## Nächster zulässiger Schritt
 
-Nur der reale iPad-/Safari-Abgleich für WD-21B.4: Browser-Titel und sichtbares Build-Label müssen konsistent `WD-21B.4` zeigen; vorhandene Sketch-Grundfunktionen, Speichern, Laden, Undo/Redo und Punktbearbeitung dürfen nicht regressiert sein. Da B.4 noch keinen sichtbaren Connectivity-Trigger besitzt, ist auf dem Gerät noch keine Connect-/Disconnect-Aktion zu testen. Erst danach kann WD-21B.4 auf PASS gesetzt werden. Kein weiterer WD-21B-Schritt wird automatisch begonnen.
+Nur der reale iPad-/Safari-Abgleich für WD-21B.5: Browser-Titel und sichtbares Build-Label müssen konsistent `WD-21B.5` zeigen. Danach müssen die sichtbaren Aktionen erstmals funktional geprüft werden: zwei gültig ausgewählte Punkte → `Verbinden`; gemeinsamer Punkt + inzidente Linie → `Trennen`. Anschließend Undo/Redo sowie Speichern/Laden regressieren. Erst bei **PASS / 0 BLOCKER** darf B.5 abgeschlossen werden. Kein weiterer WD-21B-Schritt wird automatisch begonnen.
