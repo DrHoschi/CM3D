@@ -43,58 +43,39 @@ Freeze-Dokumentation: `4014cf865049c66c20d756db608201fa599d0948`
 
 ## WD-21B – Sketch Connectivity & Editing Integration
 
-Aktiver Branch: `feature/wd-21b-sketch-connectivity-editing-integration`  
+**PASS / FROZEN / 0 BLOCKER**
+
+Branch: `feature/wd-21b-sketch-connectivity-editing-integration`  
 Basis: WD-21A FROZEN @ `4014cf865049c66c20d756db608201fa599d0948`
 
-### WD-21B.1 – Existing Endpoint Selection & Connectivity Editing Inventory
+Abgeschlossene Teilblöcke:
 
-**PASS / INVENTORY & CONTRACT COMPLETE / 0 IMPLEMENTATION**
+- WD-21B.1 – Existing Endpoint Selection & Connectivity Editing Inventory — PASS / INVENTORY COMPLETE
+- WD-21B.2 – Deterministic Endpoint Connect Mutation Contract — PASS / DEVICE VERIFIED / 0 BLOCKER
+- WD-21B.3 – Deterministic Endpoint Disconnect Mutation Contract — PASS / DEVICE VERIFIED / 0 BLOCKER
+- WD-21B.4 – Connectivity Command & Selection Semantics Integration — PASS / DEVICE VERIFIED / 0 BLOCKER
+- WD-21B.5 – Visible Connectivity Actions & Availability Integration — PASS / DEVICE VERIFIED / 0 BLOCKER
 
-### WD-21B.2 – Deterministic Endpoint Connect Mutation Contract
+Reale iPad-/Safari-Evidenz bestätigte die sichtbare Build-Identität `WD-21B.5`, Connect/Disconnect sowie die geprüften Bestandsfunktionen ohne Blocker.
 
-**PASS / DEVICE VERIFIED / 0 BLOCKER**
+### WD-21B Completion / Regression / Freeze Gate
 
-### WD-21B.3 – Deterministic Endpoint Disconnect Mutation Contract
+- Workflow: `WD-21B Completion Regression Freeze Gate`
+- Run: `34158722819`
+- getesteter Head: `50e907bb4993fb0885ef73e8d3ebcd93f21fb732`
+- Branch-Boundary gegen WD-21A: PASS
+- WD-21A.2 Topology Foundation: PASS
+- WD-21A.3 Central Mutation Foundation: PASS
+- WD-21B.2 Connect: PASS
+- WD-21B.3 Disconnect: PASS
+- WD-21B.4 Command/Selection: PASS
+- WD-21B.5 Visible Actions: PASS
+- Build-Identity `WD-21B.5`: PASS
+- Ergebnis: **SUCCESS / PASS / 0 BLOCKER**
 
-**PASS / DEVICE VERIFIED / 0 BLOCKER**
+Der vollständige Branch-Diff gegen WD-21A blieb auf die autorisierte Sketch-Connectivity-/Editing-Grenze, zugehörige Tests/Workflows und Statusdokumentation beschränkt. Keine WD-21C-Funktion, keine neuen Sketch-Elementtypen und keine Profile/Pfade wurden vorgezogen.
 
-### WD-21B.4 – Connectivity Command & Selection Semantics Integration
-
-**PASS / DEVICE VERIFIED / 0 BLOCKER**
-
-### WD-21B.5 – Visible Connectivity Actions & Availability Integration
-
-**PASS / DEVICE VERIFIED / 0 BLOCKER**
-
-- sichtbare Aktionen `Verbinden` und `Trennen` im Sketch-Kontextbalken;
-- UI konsumiert ausschließlich die B.4-Commands;
-- Aktivierung ausschließlich für die fachlich gültigen Auswahlzustände;
-- keine direkte Mutation aus der UI;
-- kein Snap/Merge, keine Toleranz und keine geometrische Suche;
-- sichtbare Build-ID ist `WD-21B.5`.
-
-Automatisierte Regression:
-
-- Workflow: `WD-21B.5 Visible Connectivity Actions Regression`
-- Run: `34155743925`
-- Head: `b1a234aa46aa6f81e9014528672a45172c514304`
-- A.2 Topology Regression: PASS
-- A.3 Mutation Regression: PASS
-- B.2 Connect Regression: PASS
-- B.3 Disconnect Regression: PASS
-- B.4 Command/Selection Regression: PASS
-- B.5 Visible Action Regression: PASS
-- Result: **SUCCESS / PASS**
-
-Reale iPad-/Safari-Evidenz vom 2026-09-07:
-
-- Browser-Tab `CyberMotion 3D – WD-21B.5`;
-- Header-/Build-Label `WD-21B.5`;
-- sichtbare Connectivity-Bedienung funktioniert im realen Gerätebetrieb;
-- Nutzer meldet alle geprüften Funktionen als funktionierend;
-- Ergebnis: **PASS / DEVICE VERIFIED / 0 BLOCKER**.
-
-WD-21B als Gesamtblock bleibt **nicht FROZEN**, bis sein Completion-/Regression-/Freeze-Gate separat freigegeben und durchgeführt wurde.
+WD-21B ist damit eingefroren. Änderungen erfolgen nur noch über ausdrücklich autorisierte Folgeblöcke oder konkrete Regressionen.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -110,4 +91,4 @@ Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtb
 
 ## Nächster zulässiger Schritt
 
-Der nächste Schritt muss separat freigegeben werden. Sinnvoll ist jetzt ausschließlich **WD-21B – Completion / Regression / Freeze Gate**: B.1–B.5 gemeinsam gegen die eingefrorene WD-21A-Basis regressieren und WD-21B nur bei **PASS / 0 BLOCKER** einfrieren. Noch kein WD-21C.
+Der nächste fachlich zulässige Roadmapblock ist **WD-21C – Sketch Element Type Expansion**. WD-21C wird nicht automatisch begonnen und muss separat definiert und autorisiert werden.
