@@ -1,0 +1,75 @@
+name: WD-21B Completion Regression Freeze Gate
+
+on:
+  push:
+    branches:
+      - feature/wd-21b-sketch-connectivity-editing-integration
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '.github/workflows/wd-21b*.yml'
+  workflow_dispatch:
+
+jobs:
+  completion-regression-freeze-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify WD-21B branch boundary against frozen WD-21A
+        shell: bash
+        run: |
+          BASE=4014cf865049c66c20d756db608201fa599d0948
+          git cat-file -e "$BASE^{commit}"
+          unexpected=0
+          while IFS= read -r path; do
+            case "$path" in
+              src/application/sketch-mutation.js|\
+              src/application/sketch-connectivity-commands.js|\
+              src/ui/sketch-connectivity-actions.js|\
+              src/main.js|\
+              tests/wd-21a3-sketch-mutation-contract.mjs|\
+              tests/wd-21b2-endpoint-connect-contract.mjs|\
+              tests/wd-21b3-endpoint-disconnect-contract.mjs|\
+              tests/wd-21b4-connectivity-command-selection.mjs|\
+              tests/wd-21b5-visible-connectivity-actions.mjs|\
+              .github/workflows/wd-21b2-endpoint-connect.yml|\
+              .github/workflows/wd-21b3-endpoint-disconnect.yml|\
+              .github/workflows/wd-21b4-connectivity-command-selection.yml|\
+              .github/workflows/wd-21b5-visible-connectivity-actions.yml|\
+              .github/workflows/wd-21b-completion-freeze-gate.yml|\
+              docs/05_implementation/WD-21B_STATUS.md|\
+              docs/00_project/PROJECT_STATUS.md)
+                ;;
+              *)
+                echo "Unexpected WD-21B diff path: $path"
+                unexpected=1
+                ;;
+            esac
+          done < <(git diff --name-only "$BASE"...HEAD)
+          test "$unexpected" -eq 0
+
+      - name: Run WD-21A.2 topology foundation regression
+        run: node tests/wd-21a2-sketch-topology-contract.mjs
+      - name: Run WD-21A.3 central mutation foundation regression
+        run: node tests/wd-21a3-sketch-mutation-contract.mjs
+      - name: Run WD-21B.2 connect regression
+        run: node tests/wd-21b2-endpoint-connect-contract.mjs
+      - name: Run WD-21B.3 disconnect regression
+        run: node tests/wd-21b3-endpoint-disconnect-contract.mjs
+      - name: Run WD-21B.4 command and selection regression
+        run: node tests/wd-21b4-connectivity-command-selection.mjs
+      - name: Run WD-21B.5 visible action regression
+        run: node tests/wd-21b5-visible-connectivity-actions.mjs
+
+      - name: Verify frozen completion build identity
+        shell: bash
+        run: |
+          grep -q "const BUILD_ID = 'WD-21B.5'" src/main.js
+          grep -q "document.title = .*BUILD_ID" src/main.js
+          grep -q "buildLabel.textContent = BUILD_ID" src/main.js
