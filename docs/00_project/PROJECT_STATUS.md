@@ -46,36 +46,34 @@ Freeze-Dokumentation: `4014cf865049c66c20d756db608201fa599d0948`
 **PASS / FROZEN / 0 BLOCKER**
 
 Branch: `feature/wd-21b-sketch-connectivity-editing-integration`  
-Basis: WD-21A FROZEN @ `4014cf865049c66c20d756db608201fa599d0948`
+Freeze-Dokumentation: `2e8d5b0434e62bf7c7e34b11e54da077853328cc`
 
-Abgeschlossene Teilblöcke:
+WD-21B.1–B.5 sind abgeschlossen. Das Completion-/Regression-/Freeze-Gate war **SUCCESS / PASS / 0 BLOCKER**; reale iPad-/Safari-Evidenz bestätigte `WD-21B.5`, Connect/Disconnect und die geprüften Bestandsfunktionen.
 
-- WD-21B.1 – Existing Endpoint Selection & Connectivity Editing Inventory — PASS / INVENTORY COMPLETE
-- WD-21B.2 – Deterministic Endpoint Connect Mutation Contract — PASS / DEVICE VERIFIED / 0 BLOCKER
-- WD-21B.3 – Deterministic Endpoint Disconnect Mutation Contract — PASS / DEVICE VERIFIED / 0 BLOCKER
-- WD-21B.4 – Connectivity Command & Selection Semantics Integration — PASS / DEVICE VERIFIED / 0 BLOCKER
-- WD-21B.5 – Visible Connectivity Actions & Availability Integration — PASS / DEVICE VERIFIED / 0 BLOCKER
+## WD-21C – Sketch Element Type Expansion
 
-Reale iPad-/Safari-Evidenz bestätigte die sichtbare Build-Identität `WD-21B.5`, Connect/Disconnect sowie die geprüften Bestandsfunktionen ohne Blocker.
+Aktiver Branch: `feature/wd-21c-sketch-element-type-expansion`  
+Basis: WD-21B FROZEN @ `2e8d5b0434e62bf7c7e34b11e54da077853328cc`
 
-### WD-21B Completion / Regression / Freeze Gate
+### WD-21C.1 – Existing Sketch Element Type & Creation/Editing Inventory
 
-- Workflow: `WD-21B Completion Regression Freeze Gate`
-- Run: `34158722819`
-- getesteter Head: `50e907bb4993fb0885ef73e8d3ebcd93f21fb732`
-- Branch-Boundary gegen WD-21A: PASS
-- WD-21A.2 Topology Foundation: PASS
-- WD-21A.3 Central Mutation Foundation: PASS
-- WD-21B.2 Connect: PASS
-- WD-21B.3 Disconnect: PASS
-- WD-21B.4 Command/Selection: PASS
-- WD-21B.5 Visible Actions: PASS
-- Build-Identity `WD-21B.5`: PASS
-- Ergebnis: **SUCCESS / PASS / 0 BLOCKER**
+**PASS / INVENTORY & CONTRACT COMPLETE / 0 ELEMENT IMPLEMENTATION**
 
-Der vollständige Branch-Diff gegen WD-21A blieb auf die autorisierte Sketch-Connectivity-/Editing-Grenze, zugehörige Tests/Workflows und Statusdokumentation beschränkt. Keine WD-21C-Funktion, keine neuen Sketch-Elementtypen und keine Profile/Pfade wurden vorgezogen.
+Inventar-Ergebnis:
 
-WD-21B ist damit eingefroren. Änderungen erfolgen nur noch über ausdrücklich autorisierte Folgeblöcke oder konkrete Regressionen.
+- bestehender `LINE`-Vertrag ist bei Topology/SelectionRef/StableReference bereits teilweise generalisiert;
+- Datenmodell, zentrale Mutationen, Viewer, Tree, Inspector, Sketch-Input und Profilableitung sind weiterhin linienzentriert;
+- WD-21C erweitert den Elementvertrag später um `CIRCLE`, `ARC` und `SPLINE`;
+- Circle: stabile `circleId`, Mittelpunkt + Radius, keine topologischen Endpunkte;
+- Arc: stabile `arcId`, `startPointId`/`endPointId` als echte topologische Endpunkte, zusätzlicher geometrischer Controlpunkt ohne Connectivity-Rolle;
+- Spline: stabile `splineId`, `startPointId`/`endPointId` als echte topologische Endpunkte sowie stabile Interior-Control-IDs ohne Connectivity-Rolle;
+- SelectionRef/StableReference bleiben auf `SKETCH_ELEMENT` + `subTargetId=<kind>`;
+- Profil-/Pfadableitung bleibt bis WD-21D ausdrücklich unverändert;
+- kein automatisches Snap/Merge und keine Toleranzsuche werden in C.1 eingeführt.
+
+Sichtbare Build-ID wurde zur eindeutigen C.1-Kennung auf `WD-21C.1` fortgeschrieben. Circle/Arc/Spline selbst sind weiterhin **nicht implementiert**.
+
+WD-21C als Gesamtblock ist **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -91,4 +89,4 @@ Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtb
 
 ## Nächster zulässiger Schritt
 
-Der nächste fachlich zulässige Roadmapblock ist **WD-21C – Sketch Element Type Expansion**. WD-21C wird nicht automatisch begonnen und muss separat definiert und autorisiert werden.
+Der nächste Teilblock muss separat autorisiert werden. Sinnvoll ist **WD-21C.2 – Generic Sketch Element Registry & Persistence Foundation**: ausschließlich Daten-/Registry-/Validation-Grundlage für Circle, Arc und Spline; noch keine sichtbare Erstellung, kein Viewer-Rendering, keine Inspector-Bedienung und keine Profile/Pfade.
