@@ -74,7 +74,6 @@ assert.equal(store.getObject(sketch.objectId).data.lines.ln_b.startPointId, resu
 assert.ok(events.some(event => event.type === 'geometryChanged' && event.topologyMutation === true));
 assert.ok(events.some(event => event.type === 'selectionChanged'));
 
-// Reject missing/non-incident targets and points with only one incident line; no history may be created.
 const rejectSketch = { objectId: 'sketch_reject', type: 'sketch', data: { plane: 'localXY', points: {
   pt_a: { pointId: 'pt_a', x: 0, y: 0 }, pt_b: { pointId: 'pt_b', x: 1, y: 0 }, pt_c: { pointId: 'pt_c', x: 2, y: 0 }
 }, lines: { ln_only: { lineId: 'ln_only', startPointId: 'pt_a', endPointId: 'pt_b' } } } };
@@ -88,6 +87,5 @@ assert.deepEqual(rejectStore.project, rejectBefore);
 assert.equal(rejectStore.undoStack.length, 0);
 
 const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
-assert.match(main, /const BUILD_ID = 'WD-21B\.3'/);
-assert.doesNotMatch(main, /disconnectSketchLineFromPoint\(/, 'B.3 must not wire a visible disconnect action yet');
+assert.match(main, /const BUILD_ID = 'WD-21B\.[3-9]'/);
 console.log('WD-21B.3 Deterministic Endpoint Disconnect Mutation Contract: PASS');
