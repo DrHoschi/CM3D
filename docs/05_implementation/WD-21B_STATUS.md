@@ -54,7 +54,7 @@ Reale iPad-/Safari-Evidenz vom 2026-09-07:
 
 ## WD-21B.5 – Visible Connectivity Actions & Availability Integration
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE FUNCTION CHECK PENDING
+**Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
 Umgesetzt:
 
@@ -84,6 +84,15 @@ Automatische Regression:
 - B.5 Visible Action Regression: PASS
 - Result: **SUCCESS / PASS**
 
+Reale iPad-/Safari-Evidenz vom 2026-09-07:
+
+- Browser-Tab zeigt `CyberMotion 3D – WD-21B.5`;
+- sichtbares Header-/Build-Label zeigt konsistent `WD-21B.5`;
+- sichtbare Connectivity-Bedienung wurde real getestet und funktioniert;
+- Connect/Disconnect funktionieren im vorgesehenen Auswahl-Workflow;
+- bestehende Funktionen blieben nach Nutzerprüfung erhalten;
+- Ergebnis: **PASS / DEVICE VERIFIED / 0 BLOCKER**.
+
 Explizit nicht Bestandteil von WD-21B.5:
 
 - kein automatisches Snap/Merge;
@@ -95,6 +104,6 @@ Explizit nicht Bestandteil von WD-21B.5:
 
 ## Freigabestatus
 
-WD-21B.2, B.3 und B.4 sind **PASS / DEVICE VERIFIED / 0 BLOCKER**. B.5 ist **AUTOMATED PASS**, benötigt aber noch die reale iPad-/Safari-Funktionsprüfung der erstmals sichtbaren Aktionen. WD-21B als Gesamtblock bleibt **nicht FROZEN**.
+WD-21B.1 bis WD-21B.5 sind jeweils abgeschlossen; B.2 bis B.5 sind **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**, bis ein separat freigegebener Completion-/Regression-/Freeze-Schritt durchgeführt wurde.
 
-Der nächste zulässige Schritt ist ausschließlich der Gerätecheck für `WD-21B.5`: Browser-Tab und Header müssen `WD-21B.5` zeigen. Bei zwei gültig ausgewählten Punkten muss `Verbinden` aktiv werden und die Punkte topologisch verbinden; bei einem gemeinsam verwendeten Punkt plus inzidenter Linie muss `Trennen` aktiv werden und die Linie topologisch abtrennen. Undo/Redo sowie Speichern/Laden müssen danach weiterhin funktionieren. Kein weiterer B-Schritt wird automatisch begonnen.
+Der nächste zulässige Schritt muss separat definiert und autorisiert werden. Sinnvoll ist jetzt ausschließlich ein `WD-21B – Completion / Regression / Freeze Gate`, das B.1–B.5 gemeinsam gegen die eingefrorene WD-21A-Basis regressiert. Noch kein WD-21C.
