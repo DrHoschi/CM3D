@@ -62,17 +62,13 @@ Basis: WD-21A FROZEN @ `4014cf865049c66c20d756db608201fa599d0948`
 
 **PASS / DEVICE VERIFIED / 0 BLOCKER**
 
-Reale iPad-/Safari-Evidenz bestätigte `WD-21B.4` sowie Speichern, Laden, Undo/Redo und Punktbearbeitung ohne Regression.
-
 ### WD-21B.5 – Visible Connectivity Actions & Availability Integration
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE FUNCTION CHECK PENDING**
+**PASS / DEVICE VERIFIED / 0 BLOCKER**
 
 - sichtbare Aktionen `Verbinden` und `Trennen` im Sketch-Kontextbalken;
 - UI konsumiert ausschließlich die B.4-Commands;
-- `Verbinden` nur bei exakt gültiger Zwei-Punkt-Auswahl;
-- `Trennen` nur bei gültigem gemeinsamem Punkt + inzidenter Linie;
-- sonst bleiben die Aktionen deaktiviert;
+- Aktivierung ausschließlich für die fachlich gültigen Auswahlzustände;
 - keine direkte Mutation aus der UI;
 - kein Snap/Merge, keine Toleranz und keine geometrische Suche;
 - sichtbare Build-ID ist `WD-21B.5`.
@@ -90,7 +86,15 @@ Automatisierte Regression:
 - B.5 Visible Action Regression: PASS
 - Result: **SUCCESS / PASS**
 
-WD-21B als Gesamtblock bleibt **nicht FROZEN**.
+Reale iPad-/Safari-Evidenz vom 2026-09-07:
+
+- Browser-Tab `CyberMotion 3D – WD-21B.5`;
+- Header-/Build-Label `WD-21B.5`;
+- sichtbare Connectivity-Bedienung funktioniert im realen Gerätebetrieb;
+- Nutzer meldet alle geprüften Funktionen als funktionierend;
+- Ergebnis: **PASS / DEVICE VERIFIED / 0 BLOCKER**.
+
+WD-21B als Gesamtblock bleibt **nicht FROZEN**, bis sein Completion-/Regression-/Freeze-Gate separat freigegeben und durchgeführt wurde.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -106,4 +110,4 @@ Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtb
 
 ## Nächster zulässiger Schritt
 
-Nur der reale iPad-/Safari-Abgleich für WD-21B.5: Browser-Titel und sichtbares Build-Label müssen konsistent `WD-21B.5` zeigen. Danach müssen die sichtbaren Aktionen erstmals funktional geprüft werden: zwei gültig ausgewählte Punkte → `Verbinden`; gemeinsamer Punkt + inzidente Linie → `Trennen`. Anschließend Undo/Redo sowie Speichern/Laden regressieren. Erst bei **PASS / 0 BLOCKER** darf B.5 abgeschlossen werden. Kein weiterer WD-21B-Schritt wird automatisch begonnen.
+Der nächste Schritt muss separat freigegeben werden. Sinnvoll ist jetzt ausschließlich **WD-21B – Completion / Regression / Freeze Gate**: B.1–B.5 gemeinsam gegen die eingefrorene WD-21A-Basis regressieren und WD-21B nur bei **PASS / 0 BLOCKER** einfrieren. Noch kein WD-21C.
