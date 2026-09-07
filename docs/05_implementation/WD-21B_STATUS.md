@@ -20,7 +20,7 @@ Festgelegt:
 
 ## WD-21B.2 – Deterministic Endpoint Connect Mutation Contract
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING
+**Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
 Umgesetzt:
 
@@ -43,9 +43,23 @@ Umgesetzt:
 Automatische Regression:
 
 - Workflow: `WD-21B.2 Endpoint Connect Contract Regression`
+- Run: `34138362614`
+- Head: `fbbab7b48fb8efc65dd0e20e150dececfd922627`
 - A.2 Topology Regression: PASS
 - A.3 Mutation Regression: PASS
 - B.2 Endpoint Connect Regression: PASS
+- Result: **SUCCESS / PASS**
+
+Reale iPad-/Safari-Evidenz vom 2026-09-07:
+
+- Browser-Tab zeigt `CyberMotion 3D – WD-21B.2`;
+- sichtbares Header-/Build-Label zeigt `WD-21B.2`;
+- bestehende Sketch-Funktionen sind erhalten;
+- Speichern funktioniert;
+- Laden funktioniert;
+- Rückgängig funktioniert;
+- Wiederherstellen/Redo funktioniert;
+- Ergebnis: **PASS / 0 BLOCKER**.
 
 Explizit nicht Bestandteil von WD-21B.2:
 
@@ -57,6 +71,8 @@ Explizit nicht Bestandteil von WD-21B.2:
 - keine Profile/Pfade;
 - keine neue 3D-Funktion.
 
-## Freigaberegel
+## Freigabestatus
 
-WD-21B.2 wird erst nach konsistenter sichtbarer Kennung `WD-21B.2` im realen Browser auf PASS gesetzt. Da B.2 bewusst keine sichtbare Connect-Bedienung besitzt, ist auf dem Gerät nur Build-ID-Konsistenz plus kurze Regression der bestehenden Sketch-Grundfunktionen erforderlich. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
+WD-21B.2 ist **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
+
+Der nächste fachlich zulässige Teilblock darf erst separat autorisiert werden. WD-21B.3 wird nicht automatisch begonnen.
