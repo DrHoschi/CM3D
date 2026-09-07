@@ -17,6 +17,7 @@ const SKETCH_MUTATION_METHODS = Object.freeze([
   'addSketchPolygon',
   'setSketchPoint',
   'setSketchLineEndpoints',
+  'connectSketchPoints',
   'deleteSketchElement'
 ]);
 
@@ -186,6 +187,42 @@ export function installSketchMutationContract(store) {
     return true;
   }, { selectionChanged: true }));
 
+  store.connectSketchPoints = markMutationOwner((sketchId, survivorPointId, sourcePointId) => {
+    if (!survivorPointId || !sourcePointId || survivorPointId === sourcePointId) return false;
+    return runSketchMutation(sketchId, 'Skizzenendpunkte verbinden', sketch => {
+      const points = sketch.data?.points ?? {};
+      const lines = sketch.data?.lines ?? {};
+      if (!points[survivorPointId] || !points[sourcePointId]) return false;
+
+      for (const line of Object.values(lines)) {
+        const joinsSelectedPair = (line.startPointId === survivorPointId && line.endPointId === sourcePointId)
+          || (line.startPointId === sourcePointId && line.endPointId === survivorPointId);
+        if (joinsSelectedPair) return false;
+      }
+
+      const rewiredLineIds = [];
+      for (const line of Object.values(lines)) {
+        let changed = false;
+        if (line.startPointId === sourcePointId) {
+          line.startPointId = survivorPointId;
+          changed = true;
+        }
+        if (line.endPointId === sourcePointId) {
+          line.endPointId = survivorPointId;
+          changed = true;
+        }
+        if (changed) rewiredLineIds.push(line.lineId);
+      }
+
+      delete points[sourcePointId];
+      return {
+        survivorPointId,
+        sourcePointId,
+        rewiredLineIds
+      };
+    }, { selectionChanged: true });
+  });
+
   store.deleteSketchElement = markMutationOwner(() => {
     const selected = store.selection?.sketchElement;
     if (!selected) return false;
@@ -228,7 +265,14 @@ export function installSketchMutationContract(store) {
     transactionBoundary: true,
     mutationOwner: MUTATION_OWNER,
     mutationMethods: SKETCH_MUTATION_METHODS,
-    ownershipVerified: true
+    ownershipVerified: true,
+    connectivityExtension: 'WD-21B.2',
+    connectPolicy: Object.freeze({
+      survivor: 'explicit-primary-point-id',
+      source: 'explicit-merge-source-point-id',
+      geometryPolicy: 'source-lines-move-to-survivor-coordinate',
+      geometricRebinding: false
+    })
   });
   Object.defineProperty(store, '__cm3dSketchMutationContractInstalled', { value: true });
   return store.sketchMutationContract;
