@@ -1,0 +1,36 @@
+name: WD-21B.4 Connectivity Command & Selection Semantics Regression
+
+on:
+  push:
+    branches:
+      - feature/wd-21b-sketch-connectivity-editing-integration
+    paths:
+      - 'src/application/sketch-connectivity-commands.js'
+      - 'src/application/sketch-mutation.js'
+      - 'src/main.js'
+      - 'tests/wd-21a2-sketch-topology-contract.mjs'
+      - 'tests/wd-21a3-sketch-mutation-contract.mjs'
+      - 'tests/wd-21b2-endpoint-connect-contract.mjs'
+      - 'tests/wd-21b3-endpoint-disconnect-contract.mjs'
+      - 'tests/wd-21b4-connectivity-command-selection.mjs'
+      - '.github/workflows/wd-21b4-connectivity-command-selection.yml'
+  workflow_dispatch:
+
+jobs:
+  connectivity-command-selection-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run WD-21A.2 topology regression
+        run: node tests/wd-21a2-sketch-topology-contract.mjs
+      - name: Run WD-21A.3 mutation regression
+        run: node tests/wd-21a3-sketch-mutation-contract.mjs
+      - name: Run WD-21B.2 connect regression
+        run: node tests/wd-21b2-endpoint-connect-contract.mjs
+      - name: Run WD-21B.3 disconnect regression
+        run: node tests/wd-21b3-endpoint-disconnect-contract.mjs
+      - name: Run WD-21B.4 command selection regression
+        run: node tests/wd-21b4-connectivity-command-selection.mjs
