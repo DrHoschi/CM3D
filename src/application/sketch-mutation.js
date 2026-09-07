@@ -7,6 +7,42 @@ const finite = value => {
   return Number.isFinite(n) ? n : NaN;
 };
 
+const SKETCH_MUTATION_METHODS = Object.freeze([
+  'runSketchMutation',
+  'addSketchPoint',
+  'addSketchLine',
+  'addSketchSegment',
+  'addSketchClosedShape',
+  'addSketchRectangle',
+  'addSketchPolygon',
+  'setSketchPoint',
+  'setSketchLineEndpoints',
+  'deleteSketchElement'
+]);
+
+const MUTATION_OWNER = 'central-sketch-mutation';
+
+function markMutationOwner(fn) {
+  if (typeof fn !== 'function') return fn;
+  Object.defineProperty(fn, '__cm3dMutationOwner', { value: MUTATION_OWNER, configurable: false });
+  return fn;
+}
+
+export function auditSketchMutationOwnership(store) {
+  const methods = SKETCH_MUTATION_METHODS.map(name => ({
+    name,
+    active: typeof store?.[name] === 'function',
+    owner: store?.[name]?.__cm3dMutationOwner ?? null
+  }));
+  const invalid = methods.filter(item => !item.active || item.owner !== MUTATION_OWNER);
+  return Object.freeze({
+    valid: invalid.length === 0,
+    owner: MUTATION_OWNER,
+    methods: Object.freeze(methods.map(item => Object.freeze(item))),
+    invalid: Object.freeze(invalid.map(item => Object.freeze(item)))
+  });
+}
+
 class SketchTopologyMutationError extends Error {
   constructor(errors) {
     super((errors ?? []).join('\n') || 'Ungültige Sketch-Topologie nach Mutation.');
@@ -52,9 +88,9 @@ export function installSketchMutationContract(store) {
     }
   };
 
-  store.runSketchMutation = runSketchMutation;
+  store.runSketchMutation = markMutationOwner(runSketchMutation);
 
-  store.addSketchPoint = (sketchId, next) => {
+  store.addSketchPoint = markMutationOwner((sketchId, next) => {
     const x = finite(next?.x), y = finite(next?.y);
     if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
     const result = runSketchMutation(sketchId, 'Skizzenpunkt erzeugen', sketch => {
@@ -63,9 +99,9 @@ export function installSketchMutationContract(store) {
       return point.pointId;
     });
     return result === false ? null : result;
-  };
+  });
 
-  store.addSketchLine = (sketchId, startPointId, endPointId) => {
+  store.addSketchLine = markMutationOwner((sketchId, startPointId, endPointId) => {
     if (!startPointId || !endPointId || startPointId === endPointId) return null;
     const result = runSketchMutation(sketchId, 'Skizzenlinie erzeugen', sketch => {
       if (!sketch.data?.points?.[startPointId] || !sketch.data?.points?.[endPointId]) return false;
@@ -74,9 +110,9 @@ export function installSketchMutationContract(store) {
       return line.lineId;
     });
     return result === false ? null : result;
-  };
+  });
 
-  store.addSketchSegment = (sketchId, start, end) => {
+  store.addSketchSegment = markMutationOwner((sketchId, start, end) => {
     const sx = finite(start?.x), sy = finite(start?.y), ex = finite(end?.x), ey = finite(end?.y);
     if (![sx, sy, ex, ey].every(Number.isFinite) || (sx === ex && sy === ey)) return null;
     const result = runSketchMutation(sketchId, 'Skizzenlinie mit Punkten erzeugen', sketch => {
@@ -89,9 +125,9 @@ export function installSketchMutationContract(store) {
       return { lineId: line.lineId, startPointId: a.pointId, endPointId: b.pointId };
     });
     return result === false ? null : result;
-  };
+  });
 
-  store.addSketchClosedShape = (sketchId, vertices, label = 'Geschlossene Skizzenform erzeugen') => {
+  store.addSketchClosedShape = markMutationOwner((sketchId, vertices, label = 'Geschlossene Skizzenform erzeugen') => {
     if (!Array.isArray(vertices) || vertices.length < 3) return null;
     const points = vertices.map(v => ({ x: finite(v?.x), y: finite(v?.y) }));
     if (points.some(point => !Number.isFinite(point.x) || !Number.isFinite(point.y))) return null;
@@ -112,19 +148,19 @@ export function installSketchMutationContract(store) {
       return { pointIds: created.map(point => point.pointId), lineIds };
     });
     return result === false ? null : result;
-  };
+  });
 
-  store.addSketchRectangle = (sketchId, a, b) => {
+  store.addSketchRectangle = markMutationOwner((sketchId, a, b) => {
     const ax = finite(a?.x), ay = finite(a?.y), bx = finite(b?.x), by = finite(b?.y);
     if (![ax, ay, bx, by].every(Number.isFinite) || ax === bx || ay === by) return null;
     return store.addSketchClosedShape(sketchId, [
       { x: ax, y: ay }, { x: bx, y: ay }, { x: bx, y: by }, { x: ax, y: by }
     ], 'Rechteck erzeugen');
-  };
+  });
 
-  store.addSketchPolygon = (sketchId, vertices) => store.addSketchClosedShape(sketchId, vertices, 'Polygon erzeugen');
+  store.addSketchPolygon = markMutationOwner((sketchId, vertices) => store.addSketchClosedShape(sketchId, vertices, 'Polygon erzeugen'));
 
-  store.setSketchPoint = (sketchId, pointId, next) => runSketchMutation(sketchId, 'Skizzenpunkt ändern', sketch => {
+  store.setSketchPoint = markMutationOwner((sketchId, pointId, next) => runSketchMutation(sketchId, 'Skizzenpunkt ändern', sketch => {
     const point = sketch.data?.points?.[pointId];
     if (!point) return false;
     const x = finite(next?.x), y = finite(next?.y);
@@ -132,9 +168,9 @@ export function installSketchMutationContract(store) {
     point.x = x;
     point.y = y;
     return true;
-  }, { selectionChanged: true });
+  }, { selectionChanged: true }));
 
-  store.setSketchLineEndpoints = (sketchId, lineId, next) => runSketchMutation(sketchId, 'Skizzenlinie ändern', sketch => {
+  store.setSketchLineEndpoints = markMutationOwner((sketchId, lineId, next) => runSketchMutation(sketchId, 'Skizzenlinie ändern', sketch => {
     const line = sketch.data?.lines?.[lineId];
     if (!line) return false;
     const a = sketch.data.points?.[line.startPointId];
@@ -148,9 +184,9 @@ export function installSketchMutationContract(store) {
     b.x = bx;
     b.y = by;
     return true;
-  }, { selectionChanged: true });
+  }, { selectionChanged: true }));
 
-  store.deleteSketchElement = () => {
+  store.deleteSketchElement = markMutationOwner(() => {
     const selected = store.selection?.sketchElement;
     if (!selected) return false;
     const { sketchId, kind, elementId } = selected;
@@ -180,13 +216,19 @@ export function installSketchMutationContract(store) {
     store.selection.sketchElement = null;
     store.emit?.('selectionChanged');
     return true;
-  };
+  });
+
+  const ownership = auditSketchMutationOwnership(store);
+  if (!ownership.valid) throw new Error(`Sketch mutation ownership incomplete: ${ownership.invalid.map(item => item.name).join(', ')}`);
 
   store.sketchMutationContract = Object.freeze({
     version: 'WD-21A.3',
     topologyAuthority: 'pointId',
     validatesAfterMutation: true,
-    transactionBoundary: true
+    transactionBoundary: true,
+    mutationOwner: MUTATION_OWNER,
+    mutationMethods: SKETCH_MUTATION_METHODS,
+    ownershipVerified: true
   });
   Object.defineProperty(store, '__cm3dSketchMutationContractInstalled', { value: true });
   return store.sketchMutationContract;
