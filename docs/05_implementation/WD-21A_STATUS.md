@@ -66,7 +66,7 @@ Reale iPad-/Safari-Evidenz vom 2026-09-06:
 
 ## WD-21A.4 – Foundation Integration & Contract Coverage Gate
 
-**Status:** AUTOMATED PASS / DEVICE CHECK PENDING / WD-21A NOT YET FROZEN
+**Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
 Ziel:
 
@@ -97,6 +97,17 @@ Automatische Evidenz:
 - A.3 Regression: PASS
 - A.4 Integration/Ownership/Persistenz/Reference Gate: PASS
 
+Reale Geräte-Evidenz vom 2026-09-07, iPad/Safari:
+
+- Browser-Tab zeigt `CyberMotion 3D – WD-21A.4`;
+- sichtbares Header-/Build-Label zeigt `WD-21A.4`;
+- vorhandene Sketch-Bearbeitung funktioniert;
+- Speichern funktioniert;
+- Laden funktioniert;
+- Rückgängig funktioniert;
+- Wiederherstellen/Redo funktioniert;
+- Ergebnis: **PASS / 0 BLOCKER**.
+
 ## Explizit nicht Bestandteil von WD-21A.4
 
 - keine Connect-/Disconnect-Bedienung;
@@ -111,10 +122,12 @@ Automatische Evidenz:
 - keine Constraints;
 - keine Schema-Erhöhung.
 
-## Freigaberegel / verbleibender Abschluss
+## WD-21A – Completion / Freeze
 
-Technisch ist WD-21A.4 automatisiert **PASS**. WD-21A als Gesamtblock wird erst nach realem iPad-/Safari-Abgleich des A.4-Builds eingefroren.
+**WD-21A – PASS / FROZEN / 0 BLOCKER**
 
-Für den Geräte-Abschluss müssen Browser-Titel und sichtbares Build-Label konsistent `WD-21A.4` zeigen und die bereits bestätigten Grundfunktionen weiterhin funktionieren: Sketch-Anzeige/-Bearbeitung, Speichern, Laden, Undo und Redo. Jede widersprüchliche sichtbare Kennung oder Geräte-Regression ist ein BLOCKER.
+A.1–A.4 schließen gemeinsam die Sketch Topology Contract & Element Foundation. Die automatisierten Integrations-/Coverage-Prüfungen und die reale iPad-/Safari-Evidenz sind vollständig grün. Die sichtbare Build-Kennung ist konsistent `WD-21A.4`.
 
-Erst bei **PASS / 0 BLOCKER** dieses letzten Gerätechecks darf WD-21A auf **FROZEN** gesetzt werden. Danach – und nicht vorher – ist WD-21B – Sketch Connectivity & Editing Integration zulässig.
+WD-21A ist damit eingefroren. Änderungen an dieser Foundation erfolgen nur kontrolliert über einen ausdrücklich autorisierten Folgeblock oder eine konkrete Regression.
+
+Der nächste fachlich zulässige Block ist **WD-21B – Sketch Connectivity & Editing Integration**, wird aber nicht automatisch begonnen.
