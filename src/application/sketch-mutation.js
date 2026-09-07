@@ -18,6 +18,7 @@ const SKETCH_MUTATION_METHODS = Object.freeze([
   'setSketchPoint',
   'setSketchLineEndpoints',
   'connectSketchPoints',
+  'disconnectSketchLineFromPoint',
   'deleteSketchElement'
 ]);
 
@@ -215,10 +216,41 @@ export function installSketchMutationContract(store) {
       }
 
       delete points[sourcePointId];
+      return { survivorPointId, sourcePointId, rewiredLineIds };
+    }, { selectionChanged: true });
+  });
+
+  store.disconnectSketchLineFromPoint = markMutationOwner((sketchId, pointId, lineId) => {
+    if (!pointId || !lineId) return false;
+    return runSketchMutation(sketchId, 'Skizzenendpunkt trennen', sketch => {
+      const points = sketch.data?.points ?? {};
+      const lines = sketch.data?.lines ?? {};
+      const point = points[pointId];
+      const line = lines[lineId];
+      if (!point || !line) return false;
+
+      const endpoint = line.startPointId === pointId
+        ? 'start'
+        : line.endPointId === pointId
+          ? 'end'
+          : null;
+      if (!endpoint) return false;
+
+      const incidenceCount = Object.values(lines).reduce((count, item) => (
+        count + (item.startPointId === pointId || item.endPointId === pointId ? 1 : 0)
+      ), 0);
+      if (incidenceCount < 2) return false;
+
+      const detachedPoint = createSketchPoint(point.x, point.y);
+      points[detachedPoint.pointId] = detachedPoint;
+      if (endpoint === 'start') line.startPointId = detachedPoint.pointId;
+      else line.endPointId = detachedPoint.pointId;
+
       return {
-        survivorPointId,
-        sourcePointId,
-        rewiredLineIds
+        originalPointId: pointId,
+        newPointId: detachedPoint.pointId,
+        lineId,
+        endpoint
       };
     }, { selectionChanged: true });
   });
@@ -266,11 +298,18 @@ export function installSketchMutationContract(store) {
     mutationOwner: MUTATION_OWNER,
     mutationMethods: SKETCH_MUTATION_METHODS,
     ownershipVerified: true,
-    connectivityExtension: 'WD-21B.2',
+    connectivityExtension: 'WD-21B.3',
     connectPolicy: Object.freeze({
       survivor: 'explicit-primary-point-id',
       source: 'explicit-merge-source-point-id',
       geometryPolicy: 'source-lines-move-to-survivor-coordinate',
+      geometricRebinding: false
+    }),
+    disconnectPolicy: Object.freeze({
+      source: 'explicit-shared-point-and-line-id',
+      minimumIncidence: 2,
+      identityPolicy: 'original-point-id-survives-new-point-id-created',
+      geometryPolicy: 'new-point-clones-original-coordinate',
       geometricRebinding: false
     })
   });
