@@ -6,10 +6,10 @@ export const SketchElementKind = Object.freeze({
 });
 
 export const SketchElementRegistry = Object.freeze({
-  [SketchElementKind.LINE]: Object.freeze({ collection: 'lines', idField: 'lineId', topologyEndpoints: true }),
-  [SketchElementKind.CIRCLE]: Object.freeze({ collection: 'circles', idField: 'circleId', topologyEndpoints: false }),
-  [SketchElementKind.ARC]: Object.freeze({ collection: 'arcs', idField: 'arcId', topologyEndpoints: true }),
-  [SketchElementKind.SPLINE]: Object.freeze({ collection: 'splines', idField: 'splineId', topologyEndpoints: true })
+  [SketchElementKind.LINE]: Object.freeze({ collection: 'lines', idField: 'lineId', topologyEndpoints: true, requiredLegacy: true }),
+  [SketchElementKind.CIRCLE]: Object.freeze({ collection: 'circles', idField: 'circleId', topologyEndpoints: false, requiredLegacy: false }),
+  [SketchElementKind.ARC]: Object.freeze({ collection: 'arcs', idField: 'arcId', topologyEndpoints: true, requiredLegacy: false }),
+  [SketchElementKind.SPLINE]: Object.freeze({ collection: 'splines', idField: 'splineId', topologyEndpoints: true, requiredLegacy: false })
 });
 
 const EPSILON = 1e-10;
@@ -64,6 +64,7 @@ export function sketchElementsShareTopologyPoint(sketch, firstElementId, secondE
 function validateElementMap(sketch, kind, errors) {
   const definition = getSketchElementDefinition(kind);
   const collection = sketch.data?.[definition.collection];
+  if (collection == null && !definition.requiredLegacy) return;
   if (!collection || Array.isArray(collection) || typeof collection !== 'object') {
     errors.push(`Skizzen-Collection ${definition.collection} fehlt für ${sketch.objectId}.`);
     return;
