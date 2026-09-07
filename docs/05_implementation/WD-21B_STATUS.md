@@ -22,89 +22,64 @@ Festgelegt:
 
 **Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
-Umgesetzt:
+Interner Connect-Mutation-Contract ist implementiert, automatisiert regressiert und auf iPad/Safari bestätigt. Keine sichtbare Connect-Aktion.
 
-1. Interner zentraler Mutationseinstieg `connectSketchPoints(sketchId, survivorPointId, sourcePointId)`.
-2. Survivor und Source müssen unterschiedliche existierende `pointId`s derselben Skizze sein.
-3. Survivor behält Identität und Koordinaten unverändert.
-4. Alle Source-Linien werden auf Survivor umgehängt; Source wird anschließend entfernt.
-5. Direkte Survivor↔Source-Linie wird abgewiesen, damit keine Start=End-Topologie entsteht.
-6. StableReference auf Survivor bleibt `RESOLVED`, Source wird `MISSING`; kein Rebinding.
-7. Undo/Redo stellt exakte IDs und Inzidenzen wieder her.
-8. Keine sichtbare Connect-Aktion.
-
-Automatische Regression:
-
-- Workflow: `WD-21B.2 Endpoint Connect Contract Regression`
-- Run: `34138362614`
-- Head: `fbbab7b48fb8efc65dd0e20e150dececfd922627`
-- Result: **SUCCESS / PASS**
-
-Reale iPad-/Safari-Evidenz vom 2026-09-07:
-
-- Browser-Tab und Header konsistent `WD-21B.2`;
-- bestehende Sketch-Funktionen erhalten;
-- Speichern, Laden, Rückgängig und Wiederherstellen erfolgreich;
-- Ergebnis: **PASS / 0 BLOCKER**.
+Automatische Evidenz: Workflow `WD-21B.2 Endpoint Connect Contract Regression`, Run `34138362614`, Head `fbbab7b48fb8efc65dd0e20e150dececfd922627`, **SUCCESS / PASS**.
 
 ## WD-21B.3 – Deterministic Endpoint Disconnect Mutation Contract
 
 **Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
+Interner Disconnect-Mutation-Contract ist implementiert, automatisiert regressiert und auf iPad/Safari bestätigt. Keine sichtbare Disconnect-Aktion.
+
+Automatische Evidenz: Workflow `WD-21B.3 Endpoint Disconnect Contract Regression`, Run `34149057090`, Head `3b09bc8f47f3a7849a14672e0f8e4664f9e3c613`, **SUCCESS / PASS**.
+
+## WD-21B.4 – Connectivity Command & Selection Semantics Integration
+
+**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING
+
 Umgesetzt:
 
-1. Neuer interner zentraler Mutationseinstieg `disconnectSketchLineFromPoint(sketchId, pointId, lineId)`.
-2. Punkt und Linie müssen existieren und die Linie muss den angegebenen Punkt tatsächlich als Start- oder Endpunkt referenzieren.
-3. Disconnect ist nur zulässig, wenn der Punkt von mindestens zwei Linien verwendet wird.
-4. Der ursprüngliche gemeinsame Punkt behält `pointId`, Koordinate und alle übrigen Inzidenzen.
-5. Für die explizit ausgewählte Linie wird ein neuer Punkt über `createSketchPoint(...)` erzeugt; dieser erhält eine neue `pointId`.
-6. Der neue Punkt übernimmt exakt die Koordinate des ursprünglichen gemeinsamen Punkts. Die sichtbare Geometrie springt daher beim Disconnect nicht.
-7. Nur die ausgewählte Linie wird auf die neue Punkt-ID umgehängt; ihre `lineId` bleibt unverändert.
-8. Fehlende, nicht inzidente oder nur einfach verwendete Punkte werden als No-op/Reject abgewiesen und erzeugen keinen History-Eintrag.
-9. Die Mutation läuft vollständig über `runSketchMutation(...)` und damit über Validation, Domain Transaction, History, Recompute und Events.
-10. StableReference auf den ursprünglichen Punkt bleibt `RESOLVED`; StableReference auf die Linie bleibt `RESOLVED`.
-11. Undo entfernt den neu erzeugten Punkt wieder und stellt die ursprüngliche gemeinsame `pointId`-Inzidenz exakt her; Redo reproduziert dieselbe erzeugte Punkt-ID aus dem Snapshot.
-12. Der zentrale Mutation-Owner audit umfasst jetzt auch `disconnectSketchLineFromPoint`.
-13. `connectivityExtension` ist auf `WD-21B.3` fortgeschrieben; der eingefrorene Foundation-Vertrag `version: 'WD-21A.3'` bleibt unverändert.
-14. Sichtbare Build-ID ist zentral `WD-21B.3`.
-15. Es wurde keine sichtbare Disconnect-Aktion verdrahtet.
+1. Neuer nicht sichtbarer Command-Layer `src/application/sketch-connectivity-commands.js`.
+2. `deriveSketchConnectivityCommandState(store)` wertet ausschließlich den aktuellen expliziten Auswahlzustand aus; keine geometrische Suche, keine Nähe-/Toleranzlogik.
+3. Connect ist nur verfügbar, wenn exakt zwei Punkte derselben Skizze ausgewählt sind und die B.2-Mutation diese Kombination grundsätzlich zulässt.
+4. Die Reihenfolge der Mehrfachauswahl ist autoritativ: erster Punkt = Source, zuletzt ausgewählter/Primary Point = Survivor.
+5. `connectSelectedSketchPoints()` ruft ausschließlich den vorhandenen B.2-Contract auf; nach Erfolg bleibt nur der Survivor als gültige Sketch-Auswahl bestehen.
+6. Disconnect ist nur verfügbar, wenn exakt ein Punkt und eine Linie derselben Skizze ausgewählt sind, die Linie diesen Punkt tatsächlich referenziert und der Punkt mindestens zwei inzidente Linien besitzt.
+7. `disconnectSelectedSketchEndpoint()` ruft ausschließlich den vorhandenen B.3-Contract auf.
+8. Nach erfolgreichem Disconnect wird die Auswahl deterministisch auf die weiterhin gültige Linie plus den neu erzeugten abgetrennten Punkt normalisiert; der neue Punkt ist Primary Selection.
+9. Ungültige Auswahlkombinationen bleiben Command-disabled/Reject und erzeugen keine Mutation bzw. keinen History-Eintrag.
+10. Selection-Änderungen nach erfolgreichem Connect/Disconnect werden über `selectionChanged` publiziert, sodass SelectionRef/Viewer/Tree auf den gültigen Zustand synchronisieren können.
+11. Der Layer wird nach Mutation-Contract, Mehrfachauswahl und SelectionRef-Brücke installiert.
+12. Der Command-Layer besitzt `version: 'WD-21B.4'` und `visibleUi: false`.
+13. Sichtbare Build-ID ist zentral `WD-21B.4`.
+14. Es wurde kein Connect-/Disconnect-Button, Menüeintrag oder anderer sichtbarer Trigger hinzugefügt.
 
 Automatische Regression:
 
-- Workflow: `WD-21B.3 Endpoint Disconnect Contract Regression`
-- Run: `34149057090`
-- Head: `3b09bc8f47f3a7849a14672e0f8e4664f9e3c613`
+- Workflow: `WD-21B.4 Connectivity Command & Selection Semantics Regression`
+- Run: `34149960132`
+- Head: `bc854825912b084d325a1ef535a54868a8428b7d`
 - A.2 Topology Regression: PASS
 - A.3 Mutation Regression: PASS
 - B.2 Connect Regression: PASS
 - B.3 Disconnect Regression: PASS
+- B.4 Command/Selection Regression: PASS
 - Result: **SUCCESS / PASS**
 
-Reale iPad-/Safari-Evidenz vom 2026-09-07:
+Explizit nicht Bestandteil von WD-21B.4:
 
-- Browser-Tab zeigt `CyberMotion 3D – WD-21B.3`;
-- sichtbares Header-/Build-Label zeigt `WD-21B.3`;
-- Laden funktioniert;
-- Speichern funktioniert;
-- Neuladen funktioniert;
-- Rückgängig funktioniert;
-- Wiederholen/Redo funktioniert;
-- Sketch-Punkte lassen sich weiterhin verschieben;
-- Ergebnis: **PASS / 0 BLOCKER**.
-
-Explizit nicht Bestandteil von WD-21B.3:
-
-- kein Disconnect-Button;
-- kein Connect-Button;
-- keine UI-Verknüpfung der Mehrfachauswahl mit Connect/Disconnect;
+- kein sichtbarer Connect-Button;
+- kein sichtbarer Disconnect-Button;
 - kein automatisches Snap/Merge;
 - keine Toleranzsuche;
+- kein geometrisches Best-Guess;
 - keine Kreis-/Bogen-/Spline-Elementtypen;
 - keine Profile/Pfade;
 - keine neue 3D-Funktion.
 
 ## Freigabestatus
 
-WD-21B.2 und WD-21B.3 sind **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
+WD-21B.2 und WD-21B.3 sind **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21B.4 ist technisch **AUTOMATED PASS**, benötigt aber noch den realen iPad-/Safari-Build-ID-/Regressionscheck. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
 
-Der nächste fachlich zulässige WD-21B-Teilblock muss separat definiert und autorisiert werden. Kein weiterer B-Schritt wird automatisch begonnen.
+Der nächste zulässige Schritt ist ausschließlich der Gerätecheck für `WD-21B.4`: Browser-Tab und sichtbares Build-Label müssen konsistent `WD-21B.4` zeigen und die bestehenden Sketch-Grundfunktionen einschließlich Speichern, Laden, Undo/Redo und Punktbearbeitung dürfen nicht regressiert sein. Da B.4 bewusst noch keinen sichtbaren Connectivity-Trigger besitzt, ist auf dem Gerät noch keine Connect-/Disconnect-Bedienung zu testen. Kein weiterer B-Schritt wird automatisch begonnen.
