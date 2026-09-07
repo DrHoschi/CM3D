@@ -95,9 +95,9 @@ const historyBeforeNoop = store.undoStack.length;
 assert.equal(store.setSketchPoint('sketch_a', 'pt_shared', { x:2, y:3 }), false);
 assert.equal(store.undoStack.length, historyBeforeNoop);
 
-// A.3 owns the mutation contract; later WD-21A integration gates may advance the visible build ID.
+// A.3 owns the mutation contract; later WD-21 blocks may advance the visible build ID.
 const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
-assert.match(main, /const BUILD_ID = 'WD-21A\.[3-9]'/);
+assert.match(main, /const BUILD_ID = 'WD-21(?:A\.[3-9]|[B-Z]\.\d+)'/);
 assert.doesNotMatch(main, /const BUILD_ID = 'WD-21A\.2'/);
 
 assert.ok(events.some(event => event.type === 'geometryChanged' && event.topologyMutation === true));
