@@ -71,24 +71,17 @@ Vorhandene Punkt-/Mehrfachauswahlpfade und der deterministische Connect-/Disconn
 
 **PASS / DEVICE VERIFIED / 0 BLOCKER**
 
-- interner zentraler `connectSketchPoints(...)`-Contract;
-- Survivor bleibt autoritativ, Source wird deterministisch umgehängt und entfernt;
-- kein geometrisches Rebinding;
-- Undo/Redo erhält exakte IDs;
-- keine sichtbare Connect-Bedienung.
-
-Automatische Evidenz: Workflow `WD-21B.2 Endpoint Connect Contract Regression`, Run `34138362614`, **SUCCESS**. Reale iPad-/Safari-Evidenz bestätigte Build `WD-21B.2` sowie bestehende Sketch-Funktionen, Speichern, Laden, Undo und Redo.
+Interner zentraler Connect-Contract ist implementiert und automatisiert sowie auf iPad/Safari regressiert. Keine sichtbare Connect-Bedienung.
 
 ### WD-21B.3 – Deterministic Endpoint Disconnect Mutation Contract
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING**
+**PASS / DEVICE VERIFIED / 0 BLOCKER**
 
 - interner zentraler `disconnectSketchLineFromPoint(sketchId, pointId, lineId)`-Contract;
 - nur ein tatsächlich gemeinsam verwendeter Punkt mit mindestens zwei inzidenten Linien ist trennbar;
 - ursprüngliche `pointId` bleibt bestehen;
 - für die explizit ausgewählte Linie wird eine neue `pointId` mit identischer Koordinate erzeugt;
 - nur die ausgewählte Linie wird umgehängt, ihre `lineId` bleibt unverändert;
-- No-op/Reject bei fehlender, nicht inzidenter oder nur einfach verwendeter Auswahl;
 - Validation, Transaction, History, Recompute und Events laufen über den zentralen Mutation-Owner;
 - Undo/Redo stellt die ursprüngliche bzw. getrennte Identität exakt wieder her;
 - keine sichtbare Disconnect-Bedienung;
@@ -104,6 +97,14 @@ Automatisierte Regression:
 - B.2 Connect Regression: PASS
 - B.3 Disconnect Regression: PASS
 - Result: **SUCCESS / PASS**
+
+Reale iPad-/Safari-Evidenz vom 2026-09-07:
+
+- Browser-Tab und Header konsistent `WD-21B.3`;
+- Laden, Speichern und Neuladen funktionieren;
+- Rückgängig und Wiederholen/Redo funktionieren;
+- Sketch-Punkte lassen sich weiterhin verschieben;
+- Ergebnis: **PASS / 0 BLOCKER**.
 
 WD-21B als Gesamtblock bleibt **nicht FROZEN**.
 
@@ -121,4 +122,4 @@ Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtb
 
 ## Nächster zulässiger Schritt
 
-Nur der reale iPad-/Safari-Abgleich für WD-21B.3: Browser-Titel und sichtbares Build-Label müssen konsistent `WD-21B.3` zeigen; vorhandene Sketch-Grundfunktionen, Speichern, Laden, Undo und Redo dürfen nicht regressiert sein. Erst danach kann WD-21B.3 auf PASS gesetzt werden. Kein weiterer WD-21B-Schritt wird automatisch begonnen.
+WD-21B.3 ist abgeschlossen. Der nächste fachlich zulässige WD-21B-Teilblock muss separat definiert und autorisiert werden. Kein weiterer WD-21B-Schritt wird automatisch begonnen.
