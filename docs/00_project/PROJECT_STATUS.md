@@ -12,8 +12,6 @@ Der vollständige V1-Pflichtkern wurde abgeschlossen und auf iPad/Safari praktis
 
 ## V2 – Foundation & Compatibility
 
-RB-01 – Foundation & Compatibility ist vollständig abgeschlossen.
-
 **RB-01 – PASS / FROZEN**
 
 Freigegebener `main`-Stand nach Abschlussdokumentation:
@@ -49,75 +47,59 @@ Geplante WD-Zerlegung:
 - WD-21F – Profile/Path Dependency & Recompute Integration
 - WD-21G – RB-02 Integration / Regression / Freeze Gate
 
-## WD-21A – aktueller Arbeitsstatus
+## WD-21A – Sketch Topology Contract & Element Foundation
+
+**PASS / FROZEN / 0 BLOCKER**
 
 Branch:
 
 `feature/wd-21a-sketch-topology-contract-element-foundation`
 
+Freeze-Dokumentation:
+
+`4014cf865049c66c20d756db608201fa599d0948`
+
+A.1–A.4 sind vollständig abgeschlossen. Reale iPad-/Safari-Evidenz bestätigte `WD-21A.4`, Sketch-Bearbeitung, Speichern, Laden, Rückgängig und Wiederherstellen.
+
+## WD-21B – Sketch Connectivity & Editing Integration
+
+Aktiver Branch:
+
+`feature/wd-21b-sketch-connectivity-editing-integration`
+
 Basis:
 
-`main` @ `1edae185c6207db9d754c94d00d23cf10218c56c`
+WD-21A FROZEN @ `4014cf865049c66c20d756db608201fa599d0948`
 
-### WD-21A.1 – Existing Sketch Data/Topology Contract Inventory
+### WD-21B.1 – Existing Endpoint Selection & Connectivity Editing Inventory
 
-**PASS / INVENTORY COMPLETE**
+**PASS / INVENTORY & CONTRACT COMPLETE / 0 IMPLEMENTATION**
 
-### WD-21A.2 – Unified Sketch Element & Topology Contract Foundation
+Festgelegt wurden die vorhandenen Punkt-/Mehrfachauswahlpfade sowie der deterministische Connect-/Disconnect-Fachvertrag. B.1 hat keine Produktionsfunktion eingeführt.
 
-**PASS / DEVICE VERIFIED / 0 BLOCKER**
+### WD-21B.2 – Deterministic Endpoint Connect Mutation Contract
 
-- zentraler Sketch-Element-/Topologievertrag;
-- `points`/`lines`, `pointId` und `lineId` bleiben kompatibel;
-- gemeinsame `pointId` ist die einzige autoritative topologische Verbindung;
-- Projektvalidierung, SelectionRef und StableReference nutzen den gemeinsamen Vertrag;
-- sichtbare Build-Kennung auf realem iPad/Safari bestätigt.
+**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING**
 
-### WD-21A.3 – Central Sketch Topology Mutation Contract
+Umgesetzt:
 
-**PASS / DEVICE VERIFIED / 0 BLOCKER**
+- interner zentraler `connectSketchPoints(sketchId, survivorPointId, sourcePointId)`-Contract;
+- Survivor behält ID und Koordinate;
+- alle Source-Linien werden auf Survivor umgehängt;
+- Source-Punkt wird danach entfernt;
+- direkte Survivor↔Source-Linie wird wegen entstehender ungültiger Null-Topologie abgewiesen;
+- StableReference auf Survivor bleibt `RESOLVED`, Source wird `MISSING`;
+- kein geometrisches Rebinding;
+- Undo/Redo stellt exakte IDs und Inzidenzen wieder her bzw. reproduziert den Connect;
+- zentrale sichtbare Build-ID ist `WD-21B.2`;
+- noch keine sichtbare Connect-Bedienung und noch kein Disconnect.
 
-- zentraler Mutation-Owner `src/application/sketch-mutation.js`;
-- validierte atomare Domain-Transaction-Grenze;
-- deterministischer Recompute und Event-Pfad;
-- Undo/Redo erhält logische IDs;
-- reale iPad-/Safari-Prüfung für Mutation, Speichern, Laden, Undo und Redo PASS.
+Automatisierte Regression:
 
-### WD-21A.4 – Foundation Integration & Contract Coverage Gate
-
-**AUTOMATED PASS / DEVICE CHECK PENDING / WD-21A NOT YET FROZEN**
-
-A.4 führt keine neue Benutzerfunktion ein, sondern regressiert A.1–A.3 als gemeinsamen Foundation-Vertrag.
-
-Abgesichert:
-
-- alle runtime-aktiven Sketch-Schreibmethoden sind dem zentralen Mutation-Owner zugeordnet;
-- A.2- und A.3-Regression laufen gemeinsam;
-- 0.2.0 Save/Load erhält Sketch-Topologie und exakte IDs;
-- 0.1.0 → 0.2.0 Migration erhält Sketch-Topologie und IDs;
-- StableReference/SelectionRef bleiben nach Editierung deterministisch;
-- echte Löschung ergibt `MISSING`, ohne geometrisches Rebinding;
-- Undo/Redo stellt exakt dieselben logischen IDs wieder her bzw. entfernt sie erneut;
-- zentrale sichtbare Build-ID ist `WD-21A.4`.
-
-Automatische Evidenz:
-
-- Workflow: `WD-21A.4 Foundation Integration & Contract Coverage Gate`
-- Run: `34100766621`
-- Head: `9fa28338918b60ddd8561aba87bd0c6ebc2d99c3`
-- Result: **SUCCESS / PASS**
-
-Explizit nicht enthalten:
-
-- Connect/Disconnect;
-- Snap/Merge;
-- Kreis/Bogen/Spline;
-- Profile/Pfade;
-- Profil-/Pfadreferenzen;
-- Constraints;
-- neue 3D-Features.
-
-WD-21A bleibt bis zum realen iPad-/Safari-Abschluss von A.4 **nicht FROZEN**.
+- Workflow: `WD-21B.2 Endpoint Connect Contract Regression`
+- A.2 Topology Regression: PASS
+- A.3 Mutation Regression: PASS
+- B.2 Endpoint Connect Regression: PASS
 
 ## Verbindliche Build-Kennungsregel
 
@@ -131,16 +113,6 @@ Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtb
 - `docs/06_v2_planning/V2_DEVELOPMENT_ROADMAP.md`
 - `docs/06_v2_planning/V3_BACKLOG.md`
 
-## Statuskennzeichnung
-
-- `DRAFT` – in Bearbeitung
-- `REVIEW` – fachlich zur Prüfung bereit
-- `PASS` – festgelegte Prüfungen erfolgreich bestanden
-- `FROZEN` – verbindlicher, getesteter Stand
-- `APPROVED` – formell freigegebener Planungs-/Release-Stand
-- `HOLD` – bewusst angehalten
-- `ARCHIVED` – abgelöster historischer Stand
-
 ## Nächster zulässiger Schritt
 
-Nur der reale iPad-/Safari-Abschlusscheck von WD-21A.4: Browser-Titel und sichtbares Build-Label müssen `WD-21A.4` zeigen; vorhandene Sketch-Grundfunktion, Speichern, Laden, Undo und Redo müssen unverändert funktionieren. Erst bei **PASS / 0 BLOCKER** darf WD-21A als Gesamtblock eingefroren werden. WD-21B wird nicht automatisch gestartet.
+Nur der reale iPad-/Safari-Abgleich für WD-21B.2: Browser-Titel und sichtbares Build-Label müssen konsistent `WD-21B.2` zeigen; vorhandene Sketch-Grundfunktionen dürfen nicht regressiert sein. Erst danach kann WD-21B.2 auf PASS gesetzt werden. Kein Connect-Button und kein Disconnect werden vorher begonnen.
