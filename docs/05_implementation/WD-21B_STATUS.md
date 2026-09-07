@@ -36,7 +36,7 @@ Automatische Evidenz: Workflow `WD-21B.3 Endpoint Disconnect Contract Regression
 
 ## WD-21B.4 – Connectivity Command & Selection Semantics Integration
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING
+**Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
 Umgesetzt:
 
@@ -67,6 +67,17 @@ Automatische Regression:
 - B.4 Command/Selection Regression: PASS
 - Result: **SUCCESS / PASS**
 
+Reale iPad-/Safari-Evidenz vom 2026-09-07:
+
+- Browser-Tab zeigt `CyberMotion 3D – WD-21B.4`;
+- sichtbares Header-/Build-Label zeigt konsistent `WD-21B.4`;
+- Speichern funktioniert;
+- Laden funktioniert;
+- Undo/Redo funktioniert;
+- Sketch-Punktbearbeitung funktioniert weiterhin;
+- bestehende Sketch-Grundfunktionen zeigen keine gemeldete Regression;
+- Ergebnis: **PASS / 0 BLOCKER**.
+
 Explizit nicht Bestandteil von WD-21B.4:
 
 - kein sichtbarer Connect-Button;
@@ -80,6 +91,6 @@ Explizit nicht Bestandteil von WD-21B.4:
 
 ## Freigabestatus
 
-WD-21B.2 und WD-21B.3 sind **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21B.4 ist technisch **AUTOMATED PASS**, benötigt aber noch den realen iPad-/Safari-Build-ID-/Regressionscheck. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
+WD-21B.2, WD-21B.3 und WD-21B.4 sind **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
 
-Der nächste zulässige Schritt ist ausschließlich der Gerätecheck für `WD-21B.4`: Browser-Tab und sichtbares Build-Label müssen konsistent `WD-21B.4` zeigen und die bestehenden Sketch-Grundfunktionen einschließlich Speichern, Laden, Undo/Redo und Punktbearbeitung dürfen nicht regressiert sein. Da B.4 bewusst noch keinen sichtbaren Connectivity-Trigger besitzt, ist auf dem Gerät noch keine Connect-/Disconnect-Bedienung zu testen. Kein weiterer B-Schritt wird automatisch begonnen.
+Der nächste fachlich zulässige WD-21B-Teilblock muss separat definiert und autorisiert werden. Kein weiterer B-Schritt wird automatisch begonnen.
