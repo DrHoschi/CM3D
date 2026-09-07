@@ -56,8 +56,8 @@ const pointSelection = createSelectionRef(SelectionTargetKind.SKETCH_POINT, sket
 const lineSelection = createSelectionRef(SelectionTargetKind.SKETCH_ELEMENT, sketch.objectId, lineId, 'line');
 assert.equal(resolveStableReference(store, pointRef).state, ReferenceState.RESOLVED);
 assert.equal(resolveStableReference(store, lineRef).state, ReferenceState.RESOLVED);
-assert.equal(resolveSelectionSketchTarget(store, pointSelection)?.elementId, pointId);
-assert.equal(resolveSelectionSketchTarget(store, lineSelection)?.elementId, lineId);
+assert.equal(resolveSelectionSketchTarget(store, pointSelection)?.target?.pointId, pointId);
+assert.equal(resolveSelectionSketchTarget(store, lineSelection)?.target?.lineId, lineId);
 
 // Editing keeps references resolved and creates one atomic history entry.
 const beforeEditHistory = store.undoStack.length;
