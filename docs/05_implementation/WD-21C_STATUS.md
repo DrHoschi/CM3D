@@ -9,104 +9,52 @@
 
 **Status:** PASS / INVENTORY & CONTRACT COMPLETE / 0 ELEMENT IMPLEMENTATION
 
-### Bestehender LINE-Vertrag
+C.1 hat den bestehenden LINE-Vertrag und die erforderlichen Erweiterungsstellen für Circle, Arc und Spline festgelegt. SelectionRef/StableReference bleiben bei `SKETCH_ELEMENT + subTargetId=<kind>`. Profile/Pfade bleiben bis WD-21D unangetastet.
 
-- `SketchElementKind` registriert derzeit ausschließlich `LINE`.
-- Persistenz: `sketch.data.points` + `sketch.data.lines`.
-- Linie besitzt stabile `lineId` sowie `startPointId` / `endPointId`.
-- Topologische Verbindung entsteht ausschließlich durch gemeinsame `pointId`.
-- SelectionRef und StableReference besitzen bereits den generischen Zieltyp `SKETCH_ELEMENT`; `subTargetId` transportiert den Elementtyp.
-- Der zentrale Mutation-Owner ist weiterhin `runSketchMutation(...)`; aktuelle Create/Edit/Delete-Methoden sind jedoch stark linienzentriert.
-- Viewer, Tree, Inspector und Sketch-Input behandeln Linien explizit und müssen für weitere Elementtypen generalisiert werden.
-- Save/Load ist schema-0.2.0-basiert; `createSketchObject(...)` initialisiert bislang nur `points` und `lines`.
-- Undo/Redo ist snapshot-basiert und damit grundsätzlich für zusätzliche persistierte Element-Maps geeignet, sofern alle Mutationen weiterhin zentral laufen.
-- Die bestehende Profilableitung verarbeitet ausschließlich `lines`; Circle/Arc/Spline werden erst in späteren WD-21D-Schritten in Profile/Pfade einbezogen.
+## WD-21C.2 – Generic Sketch Element Registry & Persistence Foundation
 
-### Verbindlicher Elementvertrag für WD-21C
+**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING
 
-WD-21C erweitert den bestehenden Sketch-Elementvertrag um genau drei neue Typen:
+Umgesetzt:
 
-- `CIRCLE` → persistente Map `sketch.data.circles`
-- `ARC` → persistente Map `sketch.data.arcs`
-- `SPLINE` → persistente Map `sketch.data.splines`
+1. `SketchElementKind` kennt jetzt `line`, `circle`, `arc`, `spline`.
+2. `SketchElementRegistry` ordnet jedem Elementtyp persistente Collection, ID-Feld und Endpoint-Eigenschaft zu.
+3. Neue Sketches initialisieren `circles`, `arcs` und `splines` als leere persistente Maps neben `points` und `lines`.
+4. Bestehende 0.2.0- und migrierte 0.1.0-Projekte ohne diese Maps werden beim Laden deterministisch mit leeren Collections normalisiert; `schemaVersion` bleibt 0.2.0.
+5. `getSketchElement(...)` löst alle vier Elementtypen generisch auf.
+6. `getSketchElementPointIds(...)` liefert für Line/Arc/Spline die topologischen Start-/Endpunkte; Circle liefert bewusst keine Endpoint-IDs.
+7. Validation prüft stabile Map-Key↔Element-ID-Konsistenz für `lineId`, `circleId`, `arcId`, `splineId`.
+8. Circle-Validation: endlicher Mittelpunkt und Radius > 0.
+9. Arc-Validation: existierende verschiedene Start-/Endpunkt-IDs, endlicher Controlpunkt, nicht kollinear.
+10. Spline-Validation: existierende verschiedene Start-/Endpunkt-IDs, mindestens ein Interior-Control, stabile eindeutige `controlId`, endliche Koordinaten.
+11. Direkte ältere In-Memory-Sketches nur mit `points`/`lines` bleiben für eingefrorene A/B-Verträge validierbar; neue Collections gelten dort als leer. Persistierte/neue Projekte werden dagegen vollständig normalisiert.
+12. Sichtbare Build-ID ist zentral `WD-21C.2`.
 
-Jeder Elementtyp besitzt eine stabile eigene Element-ID (`circleId`, `arcId`, `splineId`). SelectionRef/StableReference verwenden weiterhin `SKETCH_ELEMENT` + `ownerId=sketchId` + `targetId=<Element-ID>` + `subTargetId=<kind>`. Es entsteht kein neuer ReferenceTargetKind nur wegen Circle/Arc/Spline.
+Automatische Regression:
 
-### Circle Contract
+- Workflow: `WD-21C.2 Generic Sketch Element Registry Regression`
+- Run: `34163981238`
+- Head: `76a38bfe2929e5651d531e881233cccb904ba293`
+- WD-21A.2 Topology Regression: PASS
+- WD-21A.3 Mutation Regression: PASS
+- WD-21B.2 Connect Regression: PASS
+- WD-21B.3 Disconnect Regression: PASS
+- WD-21C.2 Registry/Persistence Regression: PASS
+- Result: **SUCCESS / PASS**
 
-Persistente Minimalform:
+Die ersten beiden Läufe dienten ausschließlich der Aufdeckung zweier Kompatibilitätsannahmen: alte direkte A.2-Sketches ohne neue Maps und eingefrorene B.2/B.3-Build-ID-Assertions. Beides wurde ohne Änderung der eingefrorenen A/B-Fachlogik korrigiert.
 
-`{ circleId, center:{x,y}, radius }`
+Explizit nicht Bestandteil von WD-21C.2:
 
-Regeln:
-
-- `radius` muss endlich und > 0 sein.
-- Ein Circle besitzt **keine topologischen Endpunkte**.
-- Der Mittelpunkt ist geometrischer Parameter, aber kein `pointId` und kein Connect-/Disconnect-Ziel.
-- Circle ist als vollständige geschlossene Kurve ein einzelnes Sketch-Element.
-- Circle-Auswahl erfolgt als `SKETCH_ELEMENT` auf `circleId`.
-- Circle-Editierung verändert Mittelpunkt und Radius atomar über den zentralen Mutation-Owner.
-
-### Arc Contract
-
-Persistente Minimalform:
-
-`{ arcId, startPointId, endPointId, control:{x,y} }`
-
-Regeln:
-
-- `startPointId` und `endPointId` sind echte topologische Anschlusspunkte und müssen verschiedene existierende `pointId`s referenzieren.
-- `control` ist ein geometrischer Formpunkt, aber **kein topologischer Sketch-Punkt** und kein Connect-/Disconnect-Ziel.
-- Start, Ende und Control dürfen nicht kollinear sein; andernfalls ist der Arc geometrisch ungültig.
-- Die Kurve wird deterministisch aus Startpunkt, Endpunkt und Controlpunkt abgeleitet.
-- Connect/Disconnect darf künftig Arc-Endpunkte analog zu Linien behandeln, aber nur über die generische Endpoint-Incidence-Abstraktion; keine linien-spezifischen Sonderpfade.
-
-### Spline Contract
-
-Persistente Minimalform:
-
-`{ splineId, startPointId, endPointId, controls:[{controlId,x,y}, ...] }`
-
-Regeln:
-
-- `startPointId` und `endPointId` sind echte topologische Anschlusspunkte und müssen verschiedene existierende `pointId`s referenzieren.
-- Interior-Controlpunkte besitzen stabile `controlId`, sind geometrisch editierbar, aber **keine topologischen Connect-/Disconnect-Punkte**.
-- Mindestens ein Interior-Controlpunkt ist für den ersten Spline-Contract erforderlich.
-- Reihenfolge der Controls ist autoritativ und persistiert.
-- Die Spline-Repräsentation bleibt in WD-21C auf eine deterministische offene Kurve mit zwei topologischen Endpunkten begrenzt; geschlossene Splines werden nicht vorgezogen.
-
-### Erforderliche Generalisierungen in späteren C-Schritten
-
-1. `SketchElementKind` und Element-Collection-Registry müssen Circle/Arc/Spline kennen.
-2. `getSketchElementPointIds(...)` muss zwischen **topologischen Endpunkten** und rein geometrischen Kontrollparametern unterscheiden.
-3. Topologievalidierung muss elementtypbezogene Invarianten prüfen.
-4. Create/Edit/Delete-Mutationen müssen für jeden neuen Elementtyp zentral registriert werden.
-5. Connect/Disconnect-Inzidenz darf nicht dauerhaft nur `lines` durchsuchen; Arc-/Spline-Endpunkte müssen später über einen generischen Endpoint-Contract integriert werden. Circle bleibt davon ausgeschlossen.
-6. Viewer muss jeden Elementtyp rendern und pickbar machen.
-7. Tree muss eigene Bereiche/Zeilen für Circle, Arc und Spline darstellen.
-8. Inspector benötigt typbezogene Editoren.
-9. Sketch-Input benötigt eigene Erstellmodi, jedoch erst in den jeweiligen Implementierungsschritten.
-10. Save/Load/Migration muss alte 0.2.0-Skizzen ohne neue Maps weiterhin laden können; fehlende neue Collections dürfen deterministisch als leer normalisiert werden.
-11. Undo/Redo muss IDs, Control-Reihenfolge und Topologie exakt wiederherstellen.
-12. Profil-/Pfadableitung bleibt in WD-21C unangetastet und wird erst in WD-21D generalisiert.
-
-### Explizit nicht Bestandteil von WD-21C.1
-
-- keine Circle-Implementierung;
-- keine Arc-Implementierung;
-- keine Spline-Implementierung;
-- keine neuen Sketch-Buttons;
-- keine neue Viewer-Geometrie;
+- keine Create/Edit/Delete-Mutationen für Circle/Arc/Spline;
+- keine neuen Sketch-Buttons oder Input-Modi;
+- kein Viewer-Rendering/Picking der neuen Typen;
+- kein Tree-/Inspector-Support;
 - keine Profil-/Pfadableitung;
-- keine neue Extrude-/3D-Funktion;
-- kein automatisches Snap/Merge;
-- keine Toleranzsuche;
-- keine Änderung des eingefrorenen WD-21B-Connectivity-Verhaltens.
+- keine Änderung der WD-21B-Connectivity-Semantik.
 
-### Build Identity
+## Freigabestatus
 
-Die sichtbare Build-Kennung wurde ausschließlich zur eindeutigen C.1-Identität auf `WD-21C.1` fortgeschrieben. `document.title` und sichtbares Brand-/Build-Label werden weiterhin zentral aus derselben Build-ID gesetzt.
+WD-21C.1 ist abgeschlossen. WD-21C.2 ist **AUTOMATED PASS**, benötigt aber noch den realen iPad-/Safari-Build-ID-/Bestandsregressionscheck. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
-## Nächster zulässiger Schritt
-
-Der nächste Teilblock muss separat autorisiert werden. Sinnvoll ist **WD-21C.2 – Generic Sketch Element Registry & Persistence Foundation**: ausschließlich die Daten-/Registry-/Validation-Grundlage für `circle`, `arc` und `spline`, noch ohne sichtbare Erstellung, Viewer-Rendering oder Inspector-Bedienung.
+Der nächste zulässige Schritt ist ausschließlich der Gerätecheck für `WD-21C.2`: Browser-Tab und Header müssen konsistent `WD-21C.2` zeigen; bestehende Sketch-Funktionen, Connect/Disconnect, Speichern/Laden und Undo/Redo dürfen nicht regressiert sein. Neue Circle/Arc/Spline-Funktion ist auf dem Gerät noch nicht zu erwarten.
