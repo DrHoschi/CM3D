@@ -9,18 +9,13 @@
 
 **Status:** PASS / INVENTORY & CONTRACT COMPLETE / 0 IMPLEMENTATION
 
-Festgelegt:
-
-- Punkte sind über Tree, Viewer und Inspector einzeln auswählbar.
-- Mehrfachauswahl kann mehrere Punkte derselben Skizze halten; die letzte Auswahl ist Primary Selection.
-- SelectionRef bildet Punkte als `SKETCH_POINT` mit `ownerId=sketchId` und `targetId=pointId` ab.
-- Connect/Disconnect laufen über den eingefrorenen zentralen `runSketchMutation(...)`-Pfad.
+Festgelegt wurden vorhandene Punkt-/Mehrfachauswahl, Primary-Selection-Semantik sowie der deterministische Connect-/Disconnect-Fachvertrag. Keine Produktionsfunktion in B.1.
 
 ## WD-21B.2 – Deterministic Endpoint Connect Mutation Contract
 
 **Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
-Interner Connect-Mutation-Contract ist implementiert, automatisiert regressiert und auf iPad/Safari bestätigt.
+Interner zentraler Connect-Mutation-Contract ist implementiert. Survivor bleibt autoritativ, Source wird deterministisch umgehängt und entfernt, kein geometrisches Rebinding, Undo/Redo erhält exakte Identitäten.
 
 Automatische Evidenz: Workflow `WD-21B.2 Endpoint Connect Contract Regression`, Run `34138362614`, Head `fbbab7b48fb8efc65dd0e20e150dececfd922627`, **SUCCESS / PASS**.
 
@@ -28,7 +23,7 @@ Automatische Evidenz: Workflow `WD-21B.2 Endpoint Connect Contract Regression`, 
 
 **Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
-Interner Disconnect-Mutation-Contract ist implementiert, automatisiert regressiert und auf iPad/Safari bestätigt.
+Interner Disconnect-Mutation-Contract ist implementiert. Gemeinsamer Punkt bleibt bestehen, nur die ausgewählte inzidente Linie erhält einen neuen Punkt mit neuer `pointId` und identischer Koordinate; Undo/Redo bleibt deterministisch.
 
 Automatische Evidenz: Workflow `WD-21B.3 Endpoint Disconnect Contract Regression`, Run `34149057090`, Head `3b09bc8f47f3a7849a14672e0f8e4664f9e3c613`, **SUCCESS / PASS**.
 
@@ -36,40 +31,15 @@ Automatische Evidenz: Workflow `WD-21B.3 Endpoint Disconnect Contract Regression
 
 **Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
-- nicht sichtbarer Command-Layer `src/application/sketch-connectivity-commands.js`;
-- zwei Punkte derselben Skizze: erster = Source, letzter/Primary = Survivor;
-- Connect normalisiert auf Survivor;
-- Punkt + inzidente Linie: Disconnect;
-- Disconnect normalisiert auf Linie + neuen Punkt, neuer Punkt Primary;
-- ungültige Kombinationen bleiben deaktiviert;
-- keine geometrische Suche, kein Snap/Merge, keine Toleranz.
+Der nicht sichtbare Command-Layer wertet ausschließlich explizite Auswahlzustände aus. Zwei Punkte derselben Skizze erlauben Connect, wobei der zuletzt ausgewählte Primary Point Survivor ist. Punkt + inzidente Linie erlauben Disconnect. Ungültige Kombinationen bleiben deaktiviert; keine geometrische Suche, kein Snap/Merge, keine Toleranz.
 
 Automatische Evidenz: Workflow `WD-21B.4 Connectivity Command & Selection Semantics Regression`, Run `34149960132`, Head `bc854825912b084d325a1ef535a54868a8428b7d`, **SUCCESS / PASS**.
-
-Reale iPad-/Safari-Evidenz vom 2026-09-07:
-
-- Browser-Tab und Header konsistent `WD-21B.4`;
-- Speichern, Laden, Undo/Redo und Punktbearbeitung funktionieren;
-- Ergebnis: **PASS / 0 BLOCKER**.
 
 ## WD-21B.5 – Visible Connectivity Actions & Availability Integration
 
 **Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
-Umgesetzt:
-
-1. Neuer sichtbarer UI-Layer `src/ui/sketch-connectivity-actions.js`.
-2. Die Aktionen werden ausschließlich im bestehenden Sketch-Kontextbalken eingeblendet.
-3. Sichtbare Aktion `Verbinden` ruft ausschließlich `connectSelectedSketchPoints()` aus B.4 auf.
-4. Sichtbare Aktion `Trennen` ruft ausschließlich `disconnectSelectedSketchEndpoint()` aus B.4 auf.
-5. Die UI ruft niemals direkt `connectSketchPoints(...)` oder `disconnectSketchLineFromPoint(...)` auf.
-6. `Verbinden` ist nur aktiv, wenn B.4 `connect.enabled === true` liefert.
-7. `Trennen` ist nur aktiv, wenn B.4 `disconnect.enabled === true` liefert.
-8. Bei allen anderen Auswahlzuständen bleiben die Aktionen sichtbar, aber deaktiviert.
-9. Der Aktivierungszustand wird bei `selectionChanged`, `geometryChanged`, `projectChanged` und `projectLoaded` neu synchronisiert.
-10. Nach Ausführung übernimmt die UI die bereits in B.4 definierte Auswahl-Normalisierung unverändert.
-11. Keine neue Topologie-, History-, Reference- oder Recompute-Logik wurde im UI-Layer eingeführt.
-12. Sichtbare Build-ID ist zentral `WD-21B.5`.
+Sichtbare Aktionen `Verbinden` und `Trennen` sind im Sketch-Kontextbalken integriert. Die UI konsumiert ausschließlich die B.4-Commands und besitzt keine eigene Topologie-/History-/Reference-/Recompute-Logik.
 
 Automatische Regression:
 
@@ -86,24 +56,43 @@ Automatische Regression:
 
 Reale iPad-/Safari-Evidenz vom 2026-09-07:
 
-- Browser-Tab zeigt `CyberMotion 3D – WD-21B.5`;
-- sichtbares Header-/Build-Label zeigt konsistent `WD-21B.5`;
-- sichtbare Connectivity-Bedienung wurde real getestet und funktioniert;
-- Connect/Disconnect funktionieren im vorgesehenen Auswahl-Workflow;
-- bestehende Funktionen blieben nach Nutzerprüfung erhalten;
+- Browser-Tab `CyberMotion 3D – WD-21B.5`;
+- Header-/Build-Label `WD-21B.5`;
+- Connect/Disconnect real funktional bestätigt;
+- bestehende geprüfte Funktionen erhalten;
 - Ergebnis: **PASS / DEVICE VERIFIED / 0 BLOCKER**.
 
-Explizit nicht Bestandteil von WD-21B.5:
+## WD-21B – Completion / Regression / Freeze Gate
 
-- kein automatisches Snap/Merge;
-- keine Toleranzsuche;
-- kein geometrisches Best-Guess;
-- keine Kreis-/Bogen-/Spline-Elementtypen;
-- keine Profile/Pfade;
-- keine neue 3D-Funktion.
+**Status:** PASS / FROZEN / 0 BLOCKER
 
-## Freigabestatus
+Vollständiger Branch-Abgleich gegen die eingefrorene WD-21A-Basis `4014cf865049c66c20d756db608201fa599d0948`:
 
-WD-21B.1 bis WD-21B.5 sind jeweils abgeschlossen; B.2 bis B.5 sind **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21B als Gesamtblock bleibt ausdrücklich **nicht FROZEN**, bis ein separat freigegebener Completion-/Regression-/Freeze-Schritt durchgeführt wurde.
+- Branch ist ausschließlich vorwärts von WD-21A aufgebaut (`behind_by = 0`);
+- geänderte Produktionspfade bleiben auf Sketch Connectivity & Editing Integration begrenzt;
+- keine WD-21C-Funktion, kein Kreis/Bogen/Spline, keine Profile/Pfade und keine neue 3D-Funktion wurden vorgezogen;
+- A.2 Topology Foundation: PASS;
+- A.3 Central Mutation Foundation: PASS;
+- B.2 Connect: PASS;
+- B.3 Disconnect: PASS;
+- B.4 Command/Selection: PASS;
+- B.5 Visible Actions: PASS;
+- sichtbare Completion-Build-Identität bleibt konsistent `WD-21B.5`.
 
-Der nächste zulässige Schritt muss separat definiert und autorisiert werden. Sinnvoll ist jetzt ausschließlich ein `WD-21B – Completion / Regression / Freeze Gate`, das B.1–B.5 gemeinsam gegen die eingefrorene WD-21A-Basis regressiert. Noch kein WD-21C.
+Finale Gate-Evidenz:
+
+- Workflow: `WD-21B Completion Regression Freeze Gate`
+- Run: `34158722819`
+- getesteter Head: `50e907bb4993fb0885ef73e8d3ebcd93f21fb732`
+- Branch-Boundary-Prüfung gegen WD-21A: PASS
+- A.2/A.3/B.2/B.3/B.4/B.5: PASS
+- Build-Identity-Prüfung: PASS
+- Result: **SUCCESS / PASS / 0 BLOCKER**
+
+## Freeze
+
+**WD-21B – PASS / FROZEN / 0 BLOCKER**
+
+WD-21B.1–B.5 sind gemeinsam regressiert und durch reale iPad-/Safari-Evidenz bestätigt. Die Connectivity-Grenze ist damit eingefroren. Änderungen an WD-21B erfolgen nur noch über einen ausdrücklich autorisierten Folgeblock oder zur Behebung einer konkreten Regression.
+
+Der nächste fachlich zulässige Roadmapblock ist **WD-21C – Sketch Element Type Expansion**, wird aber nicht automatisch begonnen.
