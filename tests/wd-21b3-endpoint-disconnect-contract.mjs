@@ -56,5 +56,5 @@ assert.deepEqual(rejectStore.project, rejectBefore);
 assert.equal(rejectStore.undoStack.length, 0);
 
 const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
-assert.match(main, /const BUILD_ID = 'WD-21(?:B\.[3-9]|[C-Z]\.\d+)'/);
+assert.match(main, /const BUILD_ID = 'WD-21(?:B\.[3-9]|[C-Z]\.\d+)(?:-R\d+)?'/);
 console.log('WD-21B.3 Deterministic Endpoint Disconnect Mutation Contract: PASS');
