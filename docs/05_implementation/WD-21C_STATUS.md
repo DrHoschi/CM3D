@@ -23,7 +23,9 @@ Zentrale, atomare und history-sichere Create/Edit/Delete-Grundlage für Circle, 
 
 ## WD-21C.4 – Circle Creation, Rendering & Editing Integration
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING
+**Status:** PASS / FROZEN / 0 BLOCKER
+
+Finaler sichtbarer Korrekturstand: `WD-21C.4-R1`.
 
 Umgesetzt:
 
@@ -39,7 +41,7 @@ Umgesetzt:
 - Inspector zeigt und editiert Mittelpunkt X/Y und Radius über `setSketchCircle(...)`;
 - Delete nutzt den bestehenden generischen C.3-Delete-Pfad;
 - Undo/Redo und Save/Load bewahren dieselbe `circleId` und analytische Geometrie;
-- Build-ID ist zentral `WD-21C.4`.
+- Build-ID, Browser-Tab und sichtbares Header-/Brand-Label verwenden denselben Korrekturstand `WD-21C.4-R1`.
 
 Analytic Geometry ↔ Derived Tessellation Boundary bleibt eingehalten:
 
@@ -48,11 +50,11 @@ Analytic Geometry ↔ Derived Tessellation Boundary bleibt eingehalten:
 - keine Linien werden aus dem Circle in die Sketch-Topologie geschrieben;
 - keine Circle-ID wird durch Rendering, Picking oder Inspector-Edit ersetzt.
 
-Automatische Regression:
+Automatische Completion-/Regression-Evidenz:
 
 - Workflow: `WD-21C.4 Circle Integration Regression`
-- Run: `34266145061`
-- Head: `efef9ecbdc8f53d28ea42a3386527623bea8ce51`
+- Run: `34273576840`
+- Head: `a2ad3035a877170983a51f5d70294ff566a0c511`
 - WD-21A.2: PASS
 - WD-21A.3: PASS
 - WD-21B.2 Connect: PASS
@@ -62,7 +64,23 @@ Automatische Regression:
 - WD-21C.4 Circle Integration: PASS
 - Result: **SUCCESS / PASS**
 
-Die ersten C.4-Läufe deckten ausschließlich zu enge ältere Testgrenzen auf: C.2/C.3 hatten sichtbare spätere Circle-Integration noch pauschal verboten. Diese Assertions wurden vorwärtskompatibel gemacht, ohne die eingefrorenen C.2-/C.3-Fachverträge zu verändern.
+Die sichtbare Revisionskennung `-R1` ist ab jetzt ein zulässiger Korrektur-Suffix innerhalb desselben WD-Schritts. Die Build-Gates akzeptieren deshalb `WD-21x.y-Rn`, ohne den fachlichen WD-Schritt hochzuzählen.
+
+Reale Geräte-Evidenz 2026-09-08, iPad/Safari, `WD-21C.4-R1`:
+
+- Browser-Tab zeigt `CyberMotion 3D – WD-21C.4-R1`: PASS;
+- sichtbares Header-/Brand-Label zeigt `WD-21C.4-R1`: PASS;
+- Circle-Erzeugung und sichtbare Darstellung: PASS;
+- Auswahl `Kreis 1` im Objektbaum: PASS;
+- Auswahl des Circle direkt im Viewer: PASS;
+- Circle-Inspector erscheint: PASS;
+- Mittelpunkt X/Y editierbar: PASS;
+- Radius editierbar: PASS;
+- gemeldete C.4-Blocker nach R1: 0.
+
+Nachfolgender Integrationsbedarf, ausdrücklich **kein C.4-Blocker**:
+
+Bei bestehenden Line-/Point-Skizzenelementen ist eine direkte Manipulation über die vorhandene Sketch-/Gizmo-Interaktion möglich. Der analytische Circle besitzt in C.4 bereits dieselbe fachliche Editierbarkeit über Mittelpunkt X/Y und Radius, ist aber noch nicht an eine direkte Circle-Drag-/Transform-Gizmo-Manipulation auf der Skizze angeschlossen. Dieser Punkt ist separat zu behandeln und darf C.4 nicht nachträglich um zusätzliche Transform-Semantik erweitern.
 
 Explizit nicht Bestandteil von WD-21C.4:
 
@@ -73,12 +91,13 @@ Explizit nicht Bestandteil von WD-21C.4:
 - keine frei einstellbare Segmentzahl;
 - keine Profile/Pfade;
 - keine Circle-Extrusion;
-- keine Constraints/Snapping-Erweiterung.
+- keine Constraints/Snapping-Erweiterung;
+- keine neue direkte Circle-Transform-/Gizmo-Interaktion.
 
 ## Freigabestatus
 
-WD-21C.1, C.2 und C.3 sind abgeschlossen. WD-21C.4 ist **AUTOMATED PASS**, benötigt noch die reale iPad-/Safari-Evidenz. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+WD-21C.1, C.2, C.3 und C.4 sind abgeschlossen. WD-21C.4 ist **PASS / FROZEN / 0 BLOCKER**. WD-21C als Gesamtblock bleibt **nicht FROZEN**, da Arc-/Spline-Integration und weitere WD-21C-Teilschritte noch offen sind.
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich Gerätecheck für `WD-21C.4`: Browser-Tab und Header müssen konsistent `WD-21C.4` zeigen. Circle im Sketch-Kontext erzeugen, im Viewer und Objektbaum auswählen, Mittelpunkt/Radius im Inspector ändern, Delete/Undo/Redo sowie Speichern/Laden prüfen. Zusätzlich Bestands-Sketching und Connect/Disconnect kurz regressieren. Kein weiterer C-Schritt vor PASS / 0 BLOCKER.
+Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren und separat freigeben. Noch keine Arc-/Spline-Implementierung und keine Circle-Transform-Erweiterung im selben Schritt.
