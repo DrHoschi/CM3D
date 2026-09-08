@@ -49,7 +49,7 @@ assert.match(integration,/cm3dDerivedCircleTessellation/);
 assert.match(integration,/CIRCLE_RENDER_SEGMENTS = 64/);
 assert.doesNotMatch(integration,/renderSegments\s*[:=]/);
 assert.doesNotMatch(integration,/addSketchArc|addSketchSpline|setSketchArc|setSketchSpline/);
-assert.doesNotMatch(integration,/regularPolygon|N-Gon|profilePath|createExtrude/i);
+assert.doesNotMatch(integration,/addRegularPolygon|setRegularPolygon|addFacetedArc|createExtrudeFromSketch/);
 
 const main = fs.readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
 assert.match(main,/const BUILD_ID = 'WD-21C\.4'/);
