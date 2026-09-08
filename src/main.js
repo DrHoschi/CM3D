@@ -1,6 +1,7 @@
 import { AppStore } from './application/store.js';
 import { createExtrudeFromSketch, installExtrudeSourceReferenceSync } from './application/extrude.js';
 import { installSketchMutationContract } from './application/sketch-mutation.js';
+import { installGenericSketchElementMutationContract } from './application/sketch-element-mutation-extension.js';
 import { installSketchConnectivityCommands } from './application/sketch-connectivity-commands.js';
 import { getSketchElement, getSketchPoint } from './model/sketch-topology.js';
 import { ThreeRuntime } from './runtime-three/runtime.js';
@@ -26,7 +27,7 @@ import { installProjectSettings } from './ui/project-settings.js';
 import { installCameraObjectPreview } from './ui/camera-object-preview.js';
 import { installInspectorDiagnostics } from './ui/inspector-diagnostics.js';
 
-const BUILD_ID = 'WD-21C.2';
+const BUILD_ID = 'WD-21C.3';
 const applyBuildIdentity = () => {
   document.title = `CyberMotion 3D – ${BUILD_ID}`;
   const buildLabel = document.querySelector('.brand small');
@@ -73,6 +74,7 @@ installPartialProjectPanel(store);
 installGltfPanel(store, gltfInterchange);
 installSketchEditing(store, runtime, appUI);
 const sketchMutationContract = installSketchMutationContract(store);
+const genericSketchElementMutationContract = installGenericSketchElementMutationContract(store);
 const sketchMultiSelection = installSketchMultiSelection(store, runtime, appUI);
 
 const syncSelectionRefs=()=>{
@@ -150,4 +152,4 @@ if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',ev
 store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});
 syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, extrudeSourceReferenceSync, sketchMutationContract, sketchMultiSelection, sketchConnectivityCommands, sketchConnectivityActions, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics, buildId: BUILD_ID };
+window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, extrudeSourceReferenceSync, sketchMutationContract, genericSketchElementMutationContract, sketchMultiSelection, sketchConnectivityCommands, sketchConnectivityActions, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics, buildId: BUILD_ID };
