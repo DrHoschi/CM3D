@@ -55,37 +55,35 @@ Basis: WD-21B FROZEN @ `2e8d5b0434e62bf7c7e34b11e54da077853328cc`
 
 **PASS / DEVICE VERIFIED / 0 BLOCKER**
 
-- generische Registry für `line`, `circle`, `arc`, `spline`;
-- persistente Maps `circles`, `arcs`, `splines` in neuen Sketches;
-- alte 0.2.0-/0.1.0-Sketches ohne neue Maps werden beim Laden deterministisch normalisiert;
-- schemaVersion bleibt `0.2.0`;
-- elementtypbezogene Validation für Circle, Arc und Spline;
-- Circle ohne topologische Endpunkte;
-- Arc/Spline mit echten `startPointId`/`endPointId`;
-- keine Create/Edit/Delete-Mutationen der neuen Typen, keine sichtbaren Werkzeuge, kein Rendering, kein Inspector und keine Profile/Pfade;
-- sichtbare Build-ID `WD-21C.2`.
+Registry, Persistenz und Validation für `line`, `circle`, `arc`, `spline` sind vorhanden. Reale iPad-/Safari-Evidenz bestätigte Build-ID und Bestandsregression.
+
+### WD-21C.3 – Generic Sketch Element Mutation Contract + Analytic Geometry ↔ Derived Tessellation Boundary
+
+**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING**
+
+- zentrale Create/Edit/Delete-Grundlage für Circle, Arc und Spline über `runSketchMutation(...)`;
+- atomare Validation/History-Grenze;
+- stabile Element-IDs und stabile Spline-Control-IDs;
+- generisches Delete berücksichtigt Line-/Arc-/Spline-Endpoint-Nutzung;
+- gelöschte StableReference wird `MISSING`, kein geometrisches Rebinding;
+- analytische Sketch-Identität ist von späterer Tessellierung getrennt;
+- keine feste Segmentzahl und kein `renderSegments` in der persistierten Elementidentität;
+- kein N-Gon, kein facettierter Arc, keine Tessellierungsfunktion in C.3;
+- keine sichtbare Circle-/Arc-/Spline-Bedienung, kein Viewer/Inspector und keine Profile/Pfade;
+- sichtbare Build-ID `WD-21C.3`.
 
 Automatisierte Regression:
 
-- Workflow: `WD-21C.2 Generic Sketch Element Registry Regression`
-- Run: `34163981238`
-- Head: `76a38bfe2929e5651d531e881233cccb904ba293`
+- Workflow: `WD-21C.3 Generic Sketch Element Mutation Regression`
+- Run: `34261949046`
+- Head: `498f4179b52c035ff831d2a8cb13bb82b95ba1e2`
 - A.2: PASS
 - A.3: PASS
 - B.2 Connect: PASS
 - B.3 Disconnect: PASS
 - C.2 Registry/Persistence: PASS
+- C.3 Generic Mutation: PASS
 - Result: **SUCCESS / PASS**
-
-Reale iPad-/Safari-Evidenz vom 2026-09-08:
-
-- Browser-Tab `CyberMotion 3D – WD-21C.2`: PASS.
-- Header-/Build-Label `WD-21C.2`: PASS.
-- normale Sketch-Bearbeitung: PASS.
-- Verbinden/Trennen: PASS.
-- Speichern/Laden: PASS.
-- Undo/Redo: PASS.
-- 0 BLOCKER.
 
 WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
@@ -95,4 +93,4 @@ Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtb
 
 ## Nächster zulässiger Schritt
 
-WD-21C.2 ist abgeschlossen. Der nächste WD-21C-Teilblock muss separat definiert und freigegeben werden. Noch kein weiterer C-Schritt automatisch beginnen.
+Ausschließlich der reale iPad-/Safari-Check für `WD-21C.3`: Browser-Tab und Header müssen `WD-21C.3` zeigen; bestehende Sketch-Funktionen, Connect/Disconnect, Speichern/Laden und Undo/Redo müssen weiterhin funktionieren. Noch keine sichtbare Circle-/Arc-/Spline-Bedienung erwarten und kein weiterer C-Schritt automatisch beginnen.
