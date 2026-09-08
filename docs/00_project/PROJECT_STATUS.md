@@ -71,9 +71,9 @@ Finaler sichtbarer Korrekturstand: `WD-21C.4-R1`. Circle-Erzeugung, Rendering, V
 
 ### WD-21C.5 – Generic Sketch Element Manipulation Contract
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING**
+**PASS / FROZEN / 0 BLOCKER**
 
-Implementierter Minimalumfang:
+Freigegebener Minimalumfang:
 
 - typbezogener Sketch-Gizmo-Manipulationsadapter für `point`, `line`, `circle`;
 - Circle-Gizmo-Anker = autoritativer `circle.center`;
@@ -89,15 +89,27 @@ Implementierter Minimalumfang:
 - keine Circle-Radius-/Rotate-/Scale-Manipulation;
 - keine Arc-/Spline-Funktion.
 
-Automatisierte Regression:
+Completion-/Regression-/Freeze-Evidenz:
 
-- Workflow: `WD-21C.5 Generic Sketch Manipulation Regression`
-- Run: `34277682889`
-- Head: `929143091ff6698fb0248a8f9eb02da367ee2326`
-- A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5: PASS
-- Result: **SUCCESS / PASS**
+- C.4-Freeze-Basis: `cca28626ae1bff0f888416935963fb933ee367f9`;
+- geprüfter C.5-Stand vor Freeze-Dokumentation: `e18970efe0a0b6c0d6e94af719c2aba07c15cbcf`;
+- Diff: 10 Commits voraus / 0 dahinter;
+- Workflow: `WD-21C.5 Generic Sketch Manipulation Regression`;
+- Run: `34277682889`;
+- getesteter Code-Head: `929143091ff6698fb0248a8f9eb02da367ee2326`;
+- A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5: PASS;
+- Result: **SUCCESS / PASS**.
 
-WD-21C.5 ist noch **nicht FROZEN**, bis die reale iPad-/Safari-Evidenz vorliegt. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+Reale iPad-/Safari-Evidenz 2026-09-08:
+
+- Browser-Tab und Header konsistent `WD-21C.5`: PASS;
+- Circle direkt per Gizmo verschiebbar: PASS;
+- ältere Point-/Line-Elemente funktionieren weiterhin: PASS;
+- Save: PASS;
+- Undo/Redo: PASS;
+- gemeldete Blocker: 0.
+
+WD-21C.5 ist damit **PASS / FROZEN / 0 BLOCKER**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -107,4 +119,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Gerätecheck für `WD-21C.5`: Tab/Header `WD-21C.5`, bestehende Point-/Line-Gizmo-Manipulation regressieren, Circle auswählen und direkt per Gizmo verschieben, Radius unverändert prüfen, danach Undo/Redo sowie kurzer Save/Load- und Connect/Disconnect-Bestandscheck. Noch keine Arc-/Spline-Funktion.
+Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren. Noch keine Arc-/Spline-Implementierung und keine weitere C.5-Erweiterung im selben Schritt.
