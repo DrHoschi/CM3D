@@ -59,7 +59,7 @@ Registry, Persistenz und Validation für `line`, `circle`, `arc`, `spline` sind 
 
 ### WD-21C.3 – Generic Sketch Element Mutation Contract + Analytic Geometry ↔ Derived Tessellation Boundary
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING**
+**PASS / DEVICE VERIFIED / 0 BLOCKER**
 
 - zentrale Create/Edit/Delete-Grundlage für Circle, Arc und Spline über `runSketchMutation(...)`;
 - atomare Validation/History-Grenze;
@@ -85,6 +85,16 @@ Automatisierte Regression:
 - C.3 Generic Mutation: PASS
 - Result: **SUCCESS / PASS**
 
+Reale iPad-/Safari-Evidenz vom 2026-09-08:
+
+- Browser-Tab `CyberMotion 3D – WD-21C.3`: PASS.
+- Header-/Build-Label `WD-21C.3`: PASS.
+- normale Sketch-Bearbeitung: PASS.
+- Verbinden/Trennen: PASS.
+- Speichern/Laden: PASS.
+- Undo/Redo: PASS.
+- 0 BLOCKER.
+
 WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
@@ -93,4 +103,4 @@ Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtb
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Check für `WD-21C.3`: Browser-Tab und Header müssen `WD-21C.3` zeigen; bestehende Sketch-Funktionen, Connect/Disconnect, Speichern/Laden und Undo/Redo müssen weiterhin funktionieren. Noch keine sichtbare Circle-/Arc-/Spline-Bedienung erwarten und kein weiterer C-Schritt automatisch beginnen.
+WD-21C.3 ist abgeschlossen. Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren und separat freigeben. Noch keine weitere Circle-/Arc-/Spline-Implementierung im selben Schritt.
