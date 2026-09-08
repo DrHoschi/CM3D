@@ -1,3 +1,5 @@
+import { getSketchElement, getSketchPoint } from '../model/sketch-topology.js';
+
 export function installSketchMultiSelection(store,runtime,ui){
   store.selection.sketchElements=[];
   store.sketchMultiSelectEnabled=false;
@@ -15,7 +17,9 @@ export function installSketchMultiSelection(store,runtime,ui){
   };
 
   store.selectSketchElement=(sketchId,kind,elementId,notify=true)=>{
-    const sketch=store.getObject(sketchId);const map=kind==='line'?sketch?.data?.lines:kind==='point'?sketch?.data?.points:null;if(sketch?.type!=='sketch'||!map?.[elementId])return false;
+    const sketch=store.getObject(sketchId);
+    const exists=kind==='point'?!!getSketchPoint(sketch,elementId):!!getSketchElement(sketch,elementId,kind);
+    if(sketch?.type!=='sketch'||!exists)return false;
     const next={sketchId,kind,elementId};
     if(!store.sketchMultiSelectEnabled){store.selection.sketchElements=[next];return baseSelectSketchElement(sketchId,kind,elementId,notify);}
     baseSelect(sketchId,false,false);
