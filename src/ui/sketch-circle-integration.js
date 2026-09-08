@@ -19,6 +19,7 @@ export function installSketchCircleIntegration(store, runtime, ui) {
   if (!store?.addSketchCircle || !store?.setSketchCircle) throw new Error('WD-21C.4 requires the WD-21C.3 circle mutation contract.');
   if (store.__cm3dSketchCircleIntegrationInstalled) return store.sketchCircleIntegration;
 
+  installCircleToolButton(store, runtime);
   installCircleInput(store, runtime);
   installCircleTree(store, ui);
   installCircleInspector(store, ui);
@@ -37,6 +38,28 @@ export function installSketchCircleIntegration(store, runtime, ui) {
   ui.render();
   runtime.rebuild();
   return store.sketchCircleIntegration;
+}
+
+function installCircleToolButton(store, runtime) {
+  const context = document.querySelector('.context-set[data-context="sketch"]');
+  if (!context || document.querySelector('#sketch-circle')) return;
+  const button = document.createElement('button');
+  button.id = 'sketch-circle';
+  button.className = 'tool-button';
+  button.innerHTML = '<span class="icon-tile">○</span><span>Kreis</span>';
+  const divider = context.querySelector('.context-divider');
+  context.insertBefore(button, divider ?? null);
+  button.addEventListener('click', () => {
+    const ok = runtime.toggleSketchInput('circle');
+    if (!ok) alert('Bitte zuerst „Neue Skizze“ anlegen oder eine vorhandene Skizze im Objektbaum auswählen.');
+  });
+  store.subscribe(event => {
+    if (event.type !== 'sketchInputChanged') return;
+    const active = event.enabled && event.mode === 'circle';
+    button.classList.toggle('active', active);
+    const label = button.querySelector('span:last-child');
+    if (label) label.textContent = active ? 'Kreis beenden' : 'Kreis';
+  });
 }
 
 function installCircleInput(store, runtime) {
