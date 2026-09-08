@@ -107,7 +107,7 @@ assert.equal(validateSketchTopology(store.getObject('sketch_c3')).valid,true);
 assert.ok(events.some(event=>event.type==='geometryChanged'&&event.topologyMutation===true));
 
 const main=fs.readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
-assert.match(main,/const BUILD_ID = 'WD-21C\.[3-9]'/);
+assert.match(main,/const BUILD_ID = 'WD-21C\.[3-9](?:-R\d+)?'/);
 assert.match(main,/installGenericSketchElementMutationContract/);
 assert.doesNotMatch(main,/sketch-arc-integration|sketch-spline-integration/);
 const source=fs.readFileSync(new URL('../src/application/sketch-element-mutation-extension.js',import.meta.url),'utf8');
