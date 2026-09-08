@@ -31,13 +31,13 @@ Circle-Erzeugung, Rendering, Viewer-/Baumauswahl sowie Inspector-Edit von Mittel
 
 ## WD-21C.5 – Generic Sketch Element Manipulation Contract
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING
+**Status:** PASS / FROZEN / 0 BLOCKER
 
 Verbindlicher Contract: `Selection → Elementparameter → zentrale Mutation → History/Recompute → Viewer-Refresh`.
 
 Implementierter Minimalumfang:
 
-- `src/ui/sketch-gizmo.js` besitzt jetzt einen typbezogenen Manipulationsadapter für `point`, `line` und `circle`;
+- `src/ui/sketch-gizmo.js` besitzt einen typbezogenen Manipulationsadapter für `point`, `line` und `circle`;
 - bestehende Point-/Line-Gizmo-Semantik bleibt erhalten;
 - Circle erhält einen direkten Gizmo-Anker ausschließlich aus `circle.center`;
 - reiner Circle-Move verändert ausschließlich `center.x/y`; `circleId` und `radius` bleiben unverändert;
@@ -61,11 +61,19 @@ Explizit nicht implementiert:
 - keine Profile/Pfade;
 - keine Extrusionsintegration.
 
+Completion-/Regression-Gate gegen eingefrorenen C.4-Stand `cca28626ae1bff0f888416935963fb933ee367f9`:
+
+- geprüfter Branch-Stand vor Freeze-Dokumentation: `e18970efe0a0b6c0d6e94af719c2aba07c15cbcf`;
+- Branch ist exakt 10 Commits vor C.4 und 0 Commits dahinter;
+- C.5-Diff umfasst ausschließlich C.5-Workflow/Test, Statusdokumentation, zentrale Build-ID, `sketch-gizmo.js` sowie die notwendige C.4-Build-ID-Testkompatibilität;
+- keine Arc-/Spline-, Profil-/Pfad-, Extrusions- oder N-Gon-Datei wurde durch den C.5-Diff eingeführt;
+- Build-Identity ist auf realem iPad/Safari konsistent `WD-21C.5` in Browser-Tab und sichtbarem Header bestätigt.
+
 Automatische Regression:
 
 - Workflow: `WD-21C.5 Generic Sketch Manipulation Regression`
 - Run: `34277682889`
-- Head: `929143091ff6698fb0248a8f9eb02da367ee2326`
+- getesteter Code-Head: `929143091ff6698fb0248a8f9eb02da367ee2326`
 - WD-21A.2: PASS
 - WD-21A.3: PASS
 - WD-21B.2 Connect: PASS
@@ -76,10 +84,20 @@ Automatische Regression:
 - WD-21C.5 Manipulation Contract: PASS
 - Result: **SUCCESS / PASS**
 
+Reale Geräte-Evidenz 2026-09-08, iPad/Safari, `WD-21C.5`:
+
+- Browser-Tab und sichtbares Header-/Brand-Label zeigen konsistent `WD-21C.5`: PASS;
+- Circle-Auswahl und direkter Gizmo-Move: PASS;
+- bestehende ältere Sketch-Elemente / Point-/Line-Manipulation: PASS;
+- Save: PASS;
+- Undo/Redo: PASS;
+- vom Nutzer gemeldetes Ergebnis: „Perfekt.“;
+- gemeldete C.5-Blocker: 0.
+
 ## Freigabestatus
 
-WD-21C.1, C.2, C.3 und C.4 sind abgeschlossen. WD-21C.4 bleibt **PASS / FROZEN / 0 BLOCKER**. WD-21C.5 ist **IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING** und noch nicht FROZEN. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+WD-21C.1, C.2, C.3, C.4 und C.5 sind abgeschlossen. WD-21C.4 und WD-21C.5 sind **PASS / FROZEN / 0 BLOCKER**. WD-21C als Gesamtblock bleibt **nicht FROZEN**, da spätere WD-21C-Teilblöcke noch nicht definiert/abgeschlossen sind.
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Gerätecheck für `WD-21C.5`: Browser-Tab und Header müssen konsistent `WD-21C.5` zeigen; Point und Line müssen sich weiterhin wie zuvor per Gizmo verschieben lassen; ein ausgewählter Circle muss jetzt direkt per Gizmo auf der Skizze verschiebbar sein; dabei muss der Radius unverändert bleiben. Anschließend Undo/Redo sowie kurzer Save/Load- und Connect/Disconnect-Bestandscheck. Noch keine Arc-/Spline-Funktion.
+Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren. Noch keine Arc-/Spline-Implementierung und keine weitere C.5-Erweiterung im selben Schritt.
