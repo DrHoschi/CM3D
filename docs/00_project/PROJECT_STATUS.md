@@ -71,7 +71,9 @@ Registry, Persistenz und Validation für `line`, `circle`, `arc`, `spline` sind 
 
 ### WD-21C.4 – Circle Creation, Rendering & Editing Integration
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING**
+**PASS / FROZEN / 0 BLOCKER**
+
+Finaler sichtbarer Korrekturstand: `WD-21C.4-R1`.
 
 - sichtbarer Sketch-Toolbutton `Kreis`;
 - zweistufiger Input: Mittelpunkt setzen, Radius mit zweitem Punkt bestimmen;
@@ -79,18 +81,17 @@ Registry, Persistenz und Validation für `line`, `circle`, `arc`, `spline` sind 
 - persistente analytische Identität bleibt `{ circleId, center, radius }`;
 - Mittelpunkt bleibt geometrischer Parameter und ist kein topologischer `pointId`;
 - Viewer stellt den Circle über abgeleitete temporäre Rendersegmente dar; diese werden nicht persistiert und nicht zu Sketch-Linien;
-- Circle kann im Viewer als ein `SKETCH_ELEMENT` ausgewählt werden;
-- Objektbaum zeigt `Kreise (N)` und einzelne Kreise;
+- Circle ist im Viewer und Objektbaum als ein `SKETCH_ELEMENT` auswählbar;
 - Inspector erlaubt Mittelpunkt X/Y und Radius zu ändern;
-- Delete, Undo/Redo und Save/Load laufen über die bestehende zentrale Grundlage;
+- Delete, Undo/Redo und Save/Load bleiben über die bestehende zentrale C.3-Grundlage abgesichert;
 - keine sichtbare Arc-/Spline-Integration, kein N-Gon, keine Profile/Pfade und keine Circle-Extrusion in C.4;
-- sichtbare Build-ID ist `WD-21C.4`.
+- sichtbare Build-ID, Browser-Tab und Header sind konsistent `WD-21C.4-R1`.
 
-Automatisierte Regression:
+Completion-/Regression-Evidenz:
 
 - Workflow: `WD-21C.4 Circle Integration Regression`
-- Run: `34266145061`
-- Head: `efef9ecbdc8f53d28ea42a3386527623bea8ce51`
+- Run: `34273576840`
+- Head: `a2ad3035a877170983a51f5d70294ff566a0c511`
 - A.2: PASS
 - A.3: PASS
 - B.2 Connect: PASS
@@ -100,12 +101,26 @@ Automatisierte Regression:
 - C.4 Circle Integration: PASS
 - Result: **SUCCESS / PASS**
 
+Reale iPad-/Safari-Evidenz `WD-21C.4-R1`:
+
+- Browser-Tab und Header: PASS;
+- Circle-Erzeugung/Darstellung: PASS;
+- Auswahl im Objektbaum: PASS;
+- Auswahl im Viewer: PASS;
+- Circle-Inspector: PASS;
+- Mittelpunkt X/Y und Radius editierbar: PASS;
+- 0 BLOCKER.
+
+Dokumentierter nachfolgender Integrationsbedarf, kein C.4-Blocker: Im Gegensatz zu bestehenden Line-/Point-Skizzenelementen ist der analytische Circle noch nicht an eine direkte Circle-Drag-/Transform-Gizmo-Manipulation auf der Skizze angeschlossen. Seine fachliche Position ist in C.4 bereits über Mittelpunkt X/Y editierbar. Die direkte Gizmo-/Transform-Integration wird separat behandelt.
+
 WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
 Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtbare Build-/Brand-Kennung und WD-/Projektstatusdokumentation konsistent sein. Eine widersprüchliche sichtbare Kennung ist ein **BLOCKER** und verhindert PASS/FROZEN.
 
+Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revisionskennung `-R1`, `-R2`, … tragen. Diese Kennung muss ebenfalls in Browser-Tab und Header konsistent sichtbar sein und wird von den Build-Gates akzeptiert.
+
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Check für `WD-21C.4`: Browser-Tab und Header müssen `WD-21C.4` zeigen. Kreis im Sketch-Kontext erzeugen, Viewer-/Baum-Auswahl, Inspector-Edit von Mittelpunkt/Radius, Delete/Undo/Redo und Speichern/Laden prüfen; anschließend Bestands-Sketching sowie Connect/Disconnect kurz regressieren. Kein weiterer C-Schritt vor PASS / 0 BLOCKER.
+WD-21C.4 ist abgeschlossen und eingefroren. Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren und separat freigeben. Noch keine Arc-/Spline-Implementierung und keine Circle-Transform-Erweiterung im selben Schritt.
