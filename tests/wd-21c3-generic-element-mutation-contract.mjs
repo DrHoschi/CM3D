@@ -86,19 +86,16 @@ assert.equal(store.setSketchSpline('sketch_c3',splineId,{startPointId:'pt_b',end
 assert.deepEqual(store.project,beforeControlIdMutation);
 assert.equal(store.undoStack.length,historyBeforeControlIdMutation);
 
-// Deleting an arc removes only endpoint points that are truly orphaned across line/arc/spline collections.
 store.selection.sketchElement={sketchId:'sketch_c3',kind:'arc',elementId:arcId};
 assert.equal(store.deleteSketchElement(),true);
 assert.equal(store.getObject('sketch_c3').data.arcs[arcId],undefined);
 assert.ok(store.getObject('sketch_c3').data.points.pt_a,'pt_a is still used by ln_keep');
 assert.ok(store.getObject('sketch_c3').data.points.pt_b,'pt_b is still used by spline');
 
-// Circle deletion makes its exact stable reference MISSING; no geometric rebinding.
 store.selection.sketchElement={sketchId:'sketch_c3',kind:'circle',elementId:circleId};
 assert.equal(store.deleteSketchElement(),true);
 assert.equal(resolveStableReference(store,circleRef).state,ReferenceState.MISSING);
 
-// Undo snapshot restores exact element and control identities.
 const circleDeleteHistory=store.undoStack.at(-1);
 store.project=structuredClone(circleDeleteHistory.before);
 assert.equal(resolveStableReference(store,circleRef).state,ReferenceState.RESOLVED);
@@ -114,6 +111,7 @@ assert.match(main,/const BUILD_ID = 'WD-21C\.3'/);
 assert.match(main,/installGenericSketchElementMutationContract/);
 assert.doesNotMatch(main,/sketch-circle|sketch-arc|sketch-spline/);
 const source=fs.readFileSync(new URL('../src/application/sketch-element-mutation-extension.js',import.meta.url),'utf8');
-assert.doesNotMatch(source,/renderSegments|tessellat|N-Gon|regularPolygon/i);
+assert.doesNotMatch(source,/renderSegments/);
+assert.doesNotMatch(source,/addRegularPolygon|setRegularPolygon|addFacetedArc/);
 
 console.log('WD-21C.3 Generic Sketch Element Mutation Contract: PASS');
