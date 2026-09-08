@@ -60,7 +60,7 @@ assert.deepEqual(pairStore.project, pairBefore);
 assert.equal(pairStore.undoStack.length, 0);
 
 const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
-assert.match(main, /const BUILD_ID = 'WD-21(?:B\.[2-9]|[C-Z]\.\d+)'/);
+assert.match(main, /const BUILD_ID = 'WD-21(?:B\.[2-9]|[C-Z]\.\d+)(?:-R\d+)?'/);
 const mutationSource = fs.readFileSync(new URL('../src/application/sketch-mutation.js', import.meta.url), 'utf8');
 assert.match(mutationSource, /connectSketchPoints/);
 assert.doesNotMatch(main, /connectSketchPoints\(/, 'B.2 must not wire a visible connect action directly');
