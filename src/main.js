@@ -28,7 +28,7 @@ import { installProjectSettings } from './ui/project-settings.js';
 import { installCameraObjectPreview } from './ui/camera-object-preview.js';
 import { installInspectorDiagnostics } from './ui/inspector-diagnostics.js';
 
-const BUILD_ID = 'WD-21C.4';
+const BUILD_ID = 'WD-21C.4-R1';
 const applyBuildIdentity = () => {
   document.title = `CyberMotion 3D – ${BUILD_ID}`;
   const buildLabel = document.querySelector('.brand small');
