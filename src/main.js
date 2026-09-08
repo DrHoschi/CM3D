@@ -14,6 +14,7 @@ import { installCommandSurface } from './ui/command-surface.js';
 import { installGltfPanel } from './ui/gltf-panel.js';
 import { installPartialProjectPanel } from './ui/partial-project-panel.js';
 import { installSketchEditing } from './ui/sketch-editing.js';
+import { installSketchCircleIntegration } from './ui/sketch-circle-integration.js';
 import { installSketchMultiSelection } from './ui/sketch-multiselect.js';
 import { installSketchConnectivityActions } from './ui/sketch-connectivity-actions.js';
 import { installSketchGizmo } from './ui/sketch-gizmo.js';
@@ -27,7 +28,7 @@ import { installProjectSettings } from './ui/project-settings.js';
 import { installCameraObjectPreview } from './ui/camera-object-preview.js';
 import { installInspectorDiagnostics } from './ui/inspector-diagnostics.js';
 
-const BUILD_ID = 'WD-21C.3';
+const BUILD_ID = 'WD-21C.4';
 const applyBuildIdentity = () => {
   document.title = `CyberMotion 3D – ${BUILD_ID}`;
   const buildLabel = document.querySelector('.brand small');
@@ -75,6 +76,7 @@ installGltfPanel(store, gltfInterchange);
 installSketchEditing(store, runtime, appUI);
 const sketchMutationContract = installSketchMutationContract(store);
 const genericSketchElementMutationContract = installGenericSketchElementMutationContract(store);
+const sketchCircleIntegration = installSketchCircleIntegration(store, runtime, appUI);
 const sketchMultiSelection = installSketchMultiSelection(store, runtime, appUI);
 
 const syncSelectionRefs=()=>{
@@ -149,7 +151,6 @@ applyBuildIdentity();
 const focusButton=document.querySelector('#focus-selection');
 const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
 if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();if(!store.getObject(store.selection.activeObjectId))return;runtime.focusSelection();});}
-store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});
-syncFocusButton();
+store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});syncFocusButton();
 
-window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, extrudeSourceReferenceSync, sketchMutationContract, genericSketchElementMutationContract, sketchMultiSelection, sketchConnectivityCommands, sketchConnectivityActions, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics, buildId: BUILD_ID };
+window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, extrudeSourceReferenceSync, sketchMutationContract, genericSketchElementMutationContract, sketchCircleIntegration, sketchMultiSelection, sketchConnectivityCommands, sketchConnectivityActions, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics, buildId: BUILD_ID };
