@@ -72,6 +72,6 @@ invalidSpline.data.splines.s_1.controls = [];
 assert.equal(validateSketchTopology(invalidSpline).valid,false);
 
 const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
-assert.match(main, /const BUILD_ID = 'WD-21C\.[2-9]'/);
+assert.match(main, /const BUILD_ID = 'WD-21C\.[2-9](?:-R\d+)?'/);
 
 console.log('WD-21C.2 Generic Sketch Element Registry & Persistence Foundation: PASS');
