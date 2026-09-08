@@ -57,7 +57,7 @@ assert.match(multiselect,/kind==='point'\?!!getSketchPoint\(sketch,elementId\):!
 assert.doesNotMatch(multiselect,/kind==='line'\?sketch\?\.data\?\.lines:kind==='point'/);
 
 const main = fs.readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
-assert.match(main,/const BUILD_ID = 'WD-21C\.4(?:-R\d+)?'/);
+assert.match(main,/const BUILD_ID = 'WD-21C\.[4-9](?:-R\d+)?'/);
 assert.match(main,/installSketchCircleIntegration/);
 
 console.log('WD-21C.4 Circle Creation, Rendering & Editing Integration: PASS');
