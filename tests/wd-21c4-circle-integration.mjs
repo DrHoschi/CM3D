@@ -51,6 +51,11 @@ assert.doesNotMatch(integration,/renderSegments\s*[:=]/);
 assert.doesNotMatch(integration,/addSketchArc|addSketchSpline|setSketchArc|setSketchSpline/);
 assert.doesNotMatch(integration,/addRegularPolygon|setRegularPolygon|addFacetedArc|createExtrudeFromSketch/);
 
+const multiselect = fs.readFileSync(new URL('../src/ui/sketch-multiselect.js',import.meta.url),'utf8');
+assert.match(multiselect,/getSketchElement/);
+assert.match(multiselect,/kind==='point'\?!!getSketchPoint\(sketch,elementId\):!!getSketchElement\(sketch,elementId,kind\)/);
+assert.doesNotMatch(multiselect,/kind==='line'\?sketch\?\.data\?\.lines:kind==='point'/);
+
 const main = fs.readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
 assert.match(main,/const BUILD_ID = 'WD-21C\.4'/);
 assert.match(main,/installSketchCircleIntegration/);
