@@ -109,7 +109,45 @@ Reale iPad-/Safari-Evidenz 2026-09-08:
 - Undo/Redo: PASS;
 - gemeldete Blocker: 0.
 
-WD-21C.5 ist damit **PASS / FROZEN / 0 BLOCKER**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+WD-21C.5 ist damit **PASS / FROZEN / 0 BLOCKER**.
+
+### WD-21C.6 – Generic Endpoint Element Connectivity Contract
+
+**DEFINED / NOT IMPLEMENTED**
+
+Verbindliches Ziel: die B.2/B.3-Connectivity von line-spezifischer Verarbeitung auf alle registrierten endpoint-basierten Sketch-Elemente zu generalisieren, ohne sichtbare Arc-/Spline-Funktion einzuführen.
+
+Reconciled gegen frozen C.5 `37db2ee9815435e9ff92023d9fbd6132f0664239`:
+
+- Registry: `line`, `arc`, `spline` sind `topologyEndpoints: true`; `circle` ist ausgeschlossen;
+- `getSketchElementPointIds(...)` besitzt bereits die gemeinsame Endpoint-Lesegrenze;
+- bestehende Command-/Mutation-Pfade zählen, prüfen, rewiren und trennen jedoch noch ausschließlich Lines;
+- `pointId` bleibt einzige Connectivity-Autorität; geometrische Gleichheit erzeugt niemals Verbindung.
+
+C.6 Contract-Grenzen:
+
+- Endpoint-Eligibility ausschließlich über die registrierte `topologyEndpoints: true`-Eigenschaft;
+- generische Inzidenz über Line/Arc/Spline;
+- Connect: exakt zwei Punkte derselben Skizze, erster = Source, letzter/Primary = Survivor; alle Source-Endpoint-Referenzen werden auf Survivor umgehängt;
+- Direct-Pair Guard gilt generisch für jedes endpoint-basierte Element;
+- Disconnect: exakt `point + ein incident endpoint element`; nur dessen ausgewählter Endpoint wird auf einen neuen Punkt mit identischen Koordinaten umgehängt;
+- Minimum-Incidence wird über alle endpoint-basierten Elemente bestimmt;
+- Element-ID und ursprüngliche Survivor-/Shared-Point-ID bleiben stabil;
+- Circle-Center, Arc-Control und Spline-Controls bleiben ausdrücklich nicht-topologisch und von Connect/Disconnect ausgeschlossen;
+- finaler Write bleibt innerhalb `runSketchMutation(...)` mit Validation, History, Recompute und Selection-Events;
+- bestehende sichtbare Aktionen `Verbinden` / `Trennen` und alle Line-only-Fälle bleiben rückwärtskompatibel;
+- keine geometrische Rebinding-, Snap-, Merge- oder Tolerance-Semantik.
+
+Nicht Bestandteil von C.6:
+
+- keine sichtbare Arc-/Spline-Erstellung, Darstellung, Auswahl, Inspector- oder Gizmo-Funktion;
+- keine Circle-Connectivity;
+- keine Constraints;
+- kein N-Gon;
+- keine Profile/Pfade;
+- keine Extrusionsintegration.
+
+WD-21C.6 ist **DEFINED / NOT IMPLEMENTED**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -119,4 +157,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren. Noch keine Arc-/Spline-Implementierung und keine weitere C.5-Erweiterung im selben Schritt.
+Ausschließlich das **WD-21C.6 Definition/Implementation Gate** gegen den eingefrorenen C.5-Stand durchführen und daraus den exakten minimalen Implementierungsumfang sowie die betroffenen autoritativen Connectivity-Grenzen ableiten. Noch keine Code-Implementierung im selben Schritt und weiterhin keine sichtbare Arc-/Spline-Funktion.
