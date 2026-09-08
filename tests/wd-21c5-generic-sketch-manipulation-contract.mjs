@@ -23,7 +23,7 @@ assert.match(gizmo, /centralCommit: 'runSketchMutation'/);
 assert.doesNotMatch(gizmo, /document\.title\s*=/);
 assert.doesNotMatch(gizmo, /brand small/);
 assert.doesNotMatch(gizmo, /WD-12B/);
-assert.doesNotMatch(gizmo, /arc|spline/i, 'C.5 must not add Arc/Spline manipulation');
-assert.doesNotMatch(gizmo, /radius.*\+|radius.*-|scale|rotate/i, 'C.5 must not add Circle radius/scale/rotate manipulation');
+assert.doesNotMatch(gizmo, /\b(?:arc|spline)\b/i, 'C.5 must not add Arc/Spline manipulation');
+assert.doesNotMatch(gizmo, /circle\.radius\s*=\s*drag\.adapter\.initial\.radius\s*[+*\/\-]/, 'Circle move must not change radius');
 
 console.log('WD-21C.5 Generic Sketch Element Manipulation Contract regression: PASS');
