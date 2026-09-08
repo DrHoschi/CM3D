@@ -1,6 +1,6 @@
 # CM3D – Projektstatus
 
-Stand: 2026-09-07
+Stand: 2026-09-08
 
 ## Aktueller Gesamtstand
 
@@ -53,7 +53,7 @@ Basis: WD-21B FROZEN @ `2e8d5b0434e62bf7c7e34b11e54da077853328cc`
 
 ### WD-21C.2 – Generic Sketch Element Registry & Persistence Foundation
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING**
+**PASS / DEVICE VERIFIED / 0 BLOCKER**
 
 - generische Registry für `line`, `circle`, `arc`, `spline`;
 - persistente Maps `circles`, `arcs`, `splines` in neuen Sketches;
@@ -77,6 +77,16 @@ Automatisierte Regression:
 - C.2 Registry/Persistence: PASS
 - Result: **SUCCESS / PASS**
 
+Reale iPad-/Safari-Evidenz vom 2026-09-08:
+
+- Browser-Tab `CyberMotion 3D – WD-21C.2`: PASS.
+- Header-/Build-Label `WD-21C.2`: PASS.
+- normale Sketch-Bearbeitung: PASS.
+- Verbinden/Trennen: PASS.
+- Speichern/Laden: PASS.
+- Undo/Redo: PASS.
+- 0 BLOCKER.
+
 WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
@@ -85,4 +95,4 @@ Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtb
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Check für `WD-21C.2`: Browser-Tab und Header müssen `WD-21C.2` zeigen; bestehende Sketch-Funktionen, Connect/Disconnect, Speichern/Laden und Undo/Redo müssen weiterhin funktionieren. Noch keine Circle-/Arc-/Spline-Bedienung erwarten und kein weiterer C-Schritt automatisch beginnen.
+WD-21C.2 ist abgeschlossen. Der nächste WD-21C-Teilblock muss separat definiert und freigegeben werden. Noch kein weiterer C-Schritt automatisch beginnen.
