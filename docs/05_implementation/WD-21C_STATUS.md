@@ -78,26 +78,48 @@ Reale Geräte-Evidenz 2026-09-08, iPad/Safari, `WD-21C.4-R1`:
 - Radius editierbar: PASS;
 - gemeldete C.4-Blocker nach R1: 0.
 
-Nachfolgender Integrationsbedarf, ausdrücklich **kein C.4-Blocker**:
+## WD-21C.5 – Generic Sketch Element Manipulation Contract
 
-Bei bestehenden Line-/Point-Skizzenelementen ist eine direkte Manipulation über die vorhandene Sketch-/Gizmo-Interaktion möglich. Der analytische Circle besitzt in C.4 bereits dieselbe fachliche Editierbarkeit über Mittelpunkt X/Y und Radius, ist aber noch nicht an eine direkte Circle-Drag-/Transform-Gizmo-Manipulation auf der Skizze angeschlossen. Dieser Punkt ist separat zu behandeln und darf C.4 nicht nachträglich um zusätzliche Transform-Semantik erweitern.
+**Status:** DEFINED / NOT IMPLEMENTED
 
-Explizit nicht Bestandteil von WD-21C.4:
+Ziel: direkte Sketch-Manipulation verbindlich auf `Selection → Elementparameter → zentrale Mutation → History/Recompute → Viewer-Refresh` normieren und die Grenze zwischen Owner-Skizze und ausgewähltem Element eindeutig festlegen.
 
-- keine sichtbare Arc-/Spline-Erstellung;
-- keine Arc-/Spline-Viewer-/Inspector-Integration;
+Reconciliation gegen den eingefrorenen C.4-Stand:
+
+- die bestehende Sketch-Gizmo-Implementierung ist aktuell auf Point/Line ausgerichtet und leitet ihre Manipulationsanker aus realen `pointId`s ab;
+- der Circle besitzt deshalb trotz funktionierender Auswahl und Inspector-Bearbeitung noch keinen direkten Gizmo-/Drag-Anker;
+- C.3 stellt mit `setSketchCircle(...) → runSketchMutation(...)` bereits die autoritative atomare Mutationsgrenze für Circle-Parameter bereit;
+- C.4 bestätigt, dass Circle-Rendersegmente ausschließlich abgeleitete Viewer-Geometrie sind und niemals Manipulations- oder Modellautorität erhalten dürfen;
+- die Owner-Skizze ist Koordinatenraum/Container eines ausgewählten Sketch-Elements, nicht automatisch eine zweite fachliche Primärauswahl.
+
+Verbindlicher C.5-Contract:
+
+- **Selection Authority:** Primäre fachliche Auswahl ist der konkrete Sketch-Point bzw. das konkrete `SKETCH_ELEMENT`. Die Owner-Skizze bleibt Owner und lokaler Koordinatenraum.
+- **Manipulation Adapter:** Jeder manipulierbare Sketch-Typ bildet direkte Manipulation deterministisch auf seine autoritativen Modellparameter ab. Point → `x/y`; Line → autoritative Endpunkte; Circle → `center.x/center.y`. Spätere Arc-/Spline-Adapter müssen dieselbe Grenze verwenden.
+- **Mutation Authority:** Der endgültige Commit einer Manipulation muss über die jeweilige zentrale Sketch-Mutation laufen. Temporäre Preview darf keine zweite dauerhafte Modellautorität bilden.
+- **Identity Preservation:** Move verändert keine stabilen Element-/Point-IDs. Beim reinen Circle-Move bleibt `radius` unverändert.
+- **Derived Geometry Boundary:** Rendersegmente, Viewer-Punkte und Raycast-Geometrie bleiben ausschließlich Anzeige/Picking und dürfen nicht als persistierte Sketch-Geometrie oder neue Parameterquelle verwendet werden.
+- **Transaction Semantics:** Pointer-down erfasst den autoritativen Ausgangszustand; Pointer-move darf deterministische Preview erzeugen; Pointer-up führt genau einen zentralen Commit und damit genau einen Undo-Schritt aus. Cancel stellt den Ausgangszustand vollständig wieder her.
+- **Snap / Coordinate Space:** Manipulation erfolgt im lokalen Koordinatenraum der Owner-Skizze. Bestehendes Translate-Snap darf angewendet werden, erzeugt aber keine topologische Verbindung, Verschmelzung oder geometrische Rebinding-Semantik.
+- **History / Recompute / Refresh:** Erfolgreicher Commit führt zu Validation, History, abhängigem Recompute, Viewer-Refresh und Erhalt derselben Elementauswahl. No-op/Cancel erzeugt keinen History-Eintrag.
+- **Multi-Selection:** C.5 definiert die generische Grenze, erweitert aber nicht automatisch gemischte Multi-Selection. Bestehende Point-/Line-Multiselection bleibt kompatibel; Circle + andere Elementtypen benötigt separate Freigabe.
+- **Build Authority:** `document.title` und sichtbares Brand-/Build-Label dürfen nur aus der zentralen Build-Identity-Autorität gesetzt werden. Historische lokale Build-Zuweisungen in Sketch-/Gizmo-Modulen sind bei einer späteren C.5-Implementierung zu entfernen und dürfen keine konkurrierende sichtbare Autorität bleiben.
+
+Explizit nicht Bestandteil der C.5-Definition:
+
+- keine Circle-Gizmo-/Drag-Implementierung in diesem Definitionsschritt;
+- kein Circle-Radius-Gizmo;
+- kein Rotate/Scale für Sketch-Elemente;
+- keine sichtbare Arc-/Spline-Erstellung oder -Manipulation;
+- keine neuen Constraints oder automatische Connect-/Merge-/Tolerance-Semantik;
 - kein N-Gon / Regular Polygon;
-- kein facettierter Circle/Arc als Benutzerfunktion;
-- keine frei einstellbare Segmentzahl;
 - keine Profile/Pfade;
-- keine Circle-Extrusion;
-- keine Constraints/Snapping-Erweiterung;
-- keine neue direkte Circle-Transform-/Gizmo-Interaktion.
+- keine Extrusionsintegration.
 
 ## Freigabestatus
 
-WD-21C.1, C.2, C.3 und C.4 sind abgeschlossen. WD-21C.4 ist **PASS / FROZEN / 0 BLOCKER**. WD-21C als Gesamtblock bleibt **nicht FROZEN**, da Arc-/Spline-Integration und weitere WD-21C-Teilschritte noch offen sind.
+WD-21C.1, C.2, C.3 und C.4 sind abgeschlossen. WD-21C.4 ist **PASS / FROZEN / 0 BLOCKER**. WD-21C.5 ist **DEFINED / NOT IMPLEMENTED**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren und separat freigeben. Noch keine Arc-/Spline-Implementierung und keine Circle-Transform-Erweiterung im selben Schritt.
+Ausschließlich das **WD-21C.5 Definition/Implementation Gate** gegen den eingefrorenen C.4-Stand durchführen: aus dem dokumentierten Contract den exakten minimalen Implementierungsumfang und die betroffenen autoritativen Grenzen ableiten. Noch keine Code-Implementierung im selben Schritt und weiterhin keine Arc-/Spline-Funktion.
