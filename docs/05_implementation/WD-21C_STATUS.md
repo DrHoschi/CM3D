@@ -3,7 +3,7 @@
 **Branch:** `feature/wd-21c-sketch-element-type-expansion`  
 **Basis:** WD-21B FROZEN @ `2e8d5b0434e62bf7c7e34b11e54da077853328cc`  
 **RB:** RB-02 – Sketch Topology & Profiles  
-**Stand:** 2026-09-07
+**Stand:** 2026-09-08
 
 ## WD-21C.1 – Existing Sketch Element Type & Creation/Editing Inventory
 
@@ -13,7 +13,7 @@ C.1 hat den bestehenden LINE-Vertrag und die erforderlichen Erweiterungsstellen 
 
 ## WD-21C.2 – Generic Sketch Element Registry & Persistence Foundation
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE BUILD-ID CHECK PENDING
+**Status:** PASS / DEVICE VERIFIED / 0 BLOCKER
 
 Umgesetzt:
 
@@ -42,7 +42,17 @@ Automatische Regression:
 - WD-21C.2 Registry/Persistence Regression: PASS
 - Result: **SUCCESS / PASS**
 
-Die ersten beiden Läufe dienten ausschließlich der Aufdeckung zweier Kompatibilitätsannahmen: alte direkte A.2-Sketches ohne neue Maps und eingefrorene B.2/B.3-Build-ID-Assertions. Beides wurde ohne Änderung der eingefrorenen A/B-Fachlogik korrigiert.
+Reale Geräte-Evidenz 2026-09-08, iPad/Safari:
+
+- Browser-Tab zeigt `CyberMotion 3D – WD-21C.2`.
+- sichtbares Header-/Brand-Label zeigt `WD-21C.2`.
+- normale Sketch-Bearbeitung: PASS.
+- Verbinden/Trennen: PASS.
+- Speichern/Laden: PASS.
+- Undo/Redo: PASS.
+- gemeldete Blocker: 0.
+
+Die ersten beiden automatischen Läufe dienten ausschließlich der Aufdeckung zweier Kompatibilitätsannahmen: alte direkte A.2-Sketches ohne neue Maps und eingefrorene B.2/B.3-Build-ID-Assertions. Beides wurde ohne Änderung der eingefrorenen A/B-Fachlogik korrigiert.
 
 Explizit nicht Bestandteil von WD-21C.2:
 
@@ -55,6 +65,8 @@ Explizit nicht Bestandteil von WD-21C.2:
 
 ## Freigabestatus
 
-WD-21C.1 ist abgeschlossen. WD-21C.2 ist **AUTOMATED PASS**, benötigt aber noch den realen iPad-/Safari-Build-ID-/Bestandsregressionscheck. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+WD-21C.1 ist abgeschlossen. WD-21C.2 ist **PASS / DEVICE VERIFIED / 0 BLOCKER**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
-Der nächste zulässige Schritt ist ausschließlich der Gerätecheck für `WD-21C.2`: Browser-Tab und Header müssen konsistent `WD-21C.2` zeigen; bestehende Sketch-Funktionen, Connect/Disconnect, Speichern/Laden und Undo/Redo dürfen nicht regressiert sein. Neue Circle/Arc/Spline-Funktion ist auf dem Gerät noch nicht zu erwarten.
+## Nächster zulässiger Schritt
+
+Der nächste WD-21C-Teilblock muss separat definiert und freigegeben werden. Kein weiterer C-Schritt wird durch den C.2-PASS automatisch begonnen.
