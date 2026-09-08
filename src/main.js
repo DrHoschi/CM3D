@@ -29,128 +29,33 @@ import { installCameraObjectPreview } from './ui/camera-object-preview.js';
 import { installInspectorDiagnostics } from './ui/inspector-diagnostics.js';
 
 const BUILD_ID = 'WD-21C.4-R1';
-const applyBuildIdentity = () => {
-  document.title = `CyberMotion 3D – ${BUILD_ID}`;
-  const buildLabel = document.querySelector('.brand small');
-  if (buildLabel) buildLabel.textContent = BUILD_ID;
-};
-
+const applyBuildIdentity = () => { document.title = `CyberMotion 3D – ${BUILD_ID}`; const buildLabel = document.querySelector('.brand small'); if (buildLabel) buildLabel.textContent = BUILD_ID; };
 const store = new AppStore();
 const extrudeSourceReferenceSync = installExtrudeSourceReferenceSync(store);
 const viewport = document.querySelector('#viewport');
-
 const runtime = new ThreeRuntime(viewport, store);
 installExtrudeRuntime(runtime);
 const gltfInterchange = installGltfInterchange(runtime, store);
 const viewportReferenceSystem = installViewportReferenceSystem(runtime);
 const appUI = new AppUI(store);
 installMaterialPanel(store);
-
-for (const button of document.querySelectorAll('[data-fixed-view]')) {
-  button.addEventListener('click', () => runtime.setFixedView(button.dataset.fixedView));
-}
-
-const sketchPlane=document.querySelector('#sketch-plane');
-const newSketchButton=document.querySelector('#new-sketch');
-newSketchButton?.addEventListener('click',()=>runtime.createSketchOnPlane(sketchPlane?.value||'front'));
-
+for (const button of document.querySelectorAll('[data-fixed-view]')) button.addEventListener('click', () => runtime.setFixedView(button.dataset.fixedView));
+const sketchPlane=document.querySelector('#sketch-plane'); const newSketchButton=document.querySelector('#new-sketch'); newSketchButton?.addEventListener('click',()=>runtime.createSketchOnPlane(sketchPlane?.value||'front'));
 const sketchButtons={line:document.querySelector('#sketch-line'),rectangle:document.querySelector('#sketch-rectangle'),polygon:document.querySelector('#sketch-polygon')};
 for(const [mode,button] of Object.entries(sketchButtons))button?.addEventListener('click',()=>{const ok=runtime.toggleSketchInput(mode);if(!ok)alert('Bitte zuerst „Neue Skizze“ anlegen oder eine vorhandene Skizze im Objektbaum auswählen.');});
-
-const extrudeDepth=document.querySelector('#extrude-depth');
-const extrudeButton=document.querySelector('#extrude-sketch');
+const extrudeDepth=document.querySelector('#extrude-depth'); const extrudeButton=document.querySelector('#extrude-sketch');
 extrudeButton?.addEventListener('click',()=>{if(runtime.sketchInput?.enabled)runtime.disableSketchInput(false);const selected=store.getObject(store.selection.activeObjectId);const sketchId=selected?.type==='sketch'?selected.objectId:null;if(!sketchId){alert('Bitte zuerst eine geschlossene Skizze im Objektbaum auswählen.');return;}const result=createExtrudeFromSketch(store,sketchId,extrudeDepth?.value??1);if(!result.ok)alert(result.message||'Extrusion konnte nicht erzeugt werden.');});
-
-store.subscribe(event=>{
-  if(event.type==='sketchSessionCreated'&&sketchPlane)sketchPlane.value=event.plane;
-  if(event.type!=='sketchInputChanged')return;
-  for(const [mode,button] of Object.entries(sketchButtons)){
-    if(!button)continue;const active=event.enabled&&event.mode===mode;button.classList.toggle('active',active);const label=button.querySelector('span:last-child');if(!label)continue;
-    if(mode==='line')label.textContent=active?'Linie beenden':'Linie';if(mode==='rectangle')label.textContent=active?'Rechteck beenden':'Rechteck';if(mode==='polygon')label.textContent=active?'Polygon schließen':'Polygon';
-  }
-});
-
-installCommandSurface(store);
-installPartialProjectPanel(store);
-installGltfPanel(store, gltfInterchange);
-installSketchEditing(store, runtime, appUI);
-const sketchMutationContract = installSketchMutationContract(store);
-const genericSketchElementMutationContract = installGenericSketchElementMutationContract(store);
-const sketchCircleIntegration = installSketchCircleIntegration(store, runtime, appUI);
-const sketchMultiSelection = installSketchMultiSelection(store, runtime, appUI);
-
-const syncSelectionRefs=()=>{
-  const sketchElements=Array.isArray(store.selection.sketchElements)&&store.selection.sketchElements.length?store.selection.sketchElements:(store.selection.sketchElement?[store.selection.sketchElement]:[]);
-  const refs=sketchElements.length
-    ?sketchElements.map(item=>({targetKind:item.kind==='point'?'SKETCH_POINT':'SKETCH_ELEMENT',ownerId:item.sketchId,targetId:item.elementId,...(item.kind==='point'?{}:{subTargetId:item.kind})}))
-    :store.selection.selectedObjectIds.map(objectId=>({targetKind:store.getObject(objectId)?.type==='sketch'?'SKETCH':'OBJECT',ownerId:objectId,targetId:objectId}));
-  store.selection.refs=refs;
-  store.selection.primaryRef=refs.length?refs[refs.length-1]:null;
-};
-store.getSelectionRefs=()=>store.selection.refs.map(ref=>({...ref}));
-store.getPrimarySelectionRef=()=>store.selection.primaryRef?{...store.selection.primaryRef}:null;
-store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded'].includes(event.type))syncSelectionRefs();});
-syncSelectionRefs();
-
+store.subscribe(event=>{if(event.type==='sketchSessionCreated'&&sketchPlane)sketchPlane.value=event.plane;if(event.type!=='sketchInputChanged')return;for(const [mode,button] of Object.entries(sketchButtons)){if(!button)continue;const active=event.enabled&&event.mode===mode;button.classList.toggle('active',active);const label=button.querySelector('span:last-child');if(!label)continue;if(mode==='line')label.textContent=active?'Linie beenden':'Linie';if(mode==='rectangle')label.textContent=active?'Rechteck beenden':'Rechteck';if(mode==='polygon')label.textContent=active?'Polygon schließen':'Polygon';}});
+installCommandSurface(store); installPartialProjectPanel(store); installGltfPanel(store,gltfInterchange); installSketchEditing(store,runtime,appUI);
+const sketchMutationContract=installSketchMutationContract(store); const genericSketchElementMutationContract=installGenericSketchElementMutationContract(store); const sketchCircleIntegration=installSketchCircleIntegration(store,runtime,appUI); const sketchMultiSelection=installSketchMultiSelection(store,runtime,appUI);
+const syncSelectionRefs=()=>{const sketchElements=Array.isArray(store.selection.sketchElements)&&store.selection.sketchElements.length?store.selection.sketchElements:(store.selection.sketchElement?[store.selection.sketchElement]:[]);const refs=sketchElements.length?sketchElements.map(item=>({targetKind:item.kind==='point'?'SKETCH_POINT':'SKETCH_ELEMENT',ownerId:item.sketchId,targetId:item.elementId,...(item.kind==='point'?{}:{subTargetId:item.kind})})):store.selection.selectedObjectIds.map(objectId=>({targetKind:store.getObject(objectId)?.type==='sketch'?'SKETCH':'OBJECT',ownerId:objectId,targetId:objectId}));store.selection.refs=refs;store.selection.primaryRef=refs.at(-1)??null;};
+store.getSelectionRefs=()=>store.selection.refs.map(ref=>({...ref})); store.getPrimarySelectionRef=()=>store.selection.primaryRef?{...store.selection.primaryRef}:null; store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded'].includes(event.type))syncSelectionRefs();}); syncSelectionRefs();
 const legacyObjectSelect=store.select.bind(store);
-const legacySketchElementSelect=store.selectSketchElement.bind(store);
-store.selectRef=(ref,notify=true,additive=false)=>{
-  if(!ref)return false;
-  if(ref.targetKind==='SKETCH_ELEMENT'){
-    const sketch=store.getObject(ref.ownerId);
-    const resolved=getSketchElement(sketch,ref.targetId,ref.subTargetId??null);
-    if(!resolved)return false;
-    const result=legacySketchElementSelect(ref.ownerId,resolved.kind,ref.targetId,notify);
-    syncSelectionRefs();
-    return result;
-  }
-  if(ref.targetKind==='SKETCH_POINT'){
-    const sketch=store.getObject(ref.ownerId);
-    if(!getSketchPoint(sketch,ref.targetId))return false;
-    const result=legacySketchElementSelect(ref.ownerId,'point',ref.targetId,notify);
-    syncSelectionRefs();
-    return result;
-  }
-  if(!['OBJECT','SKETCH'].includes(ref.targetKind))return false;
-  const object=store.getObject(ref.targetId);
-  if(!object)return false;
-  if(ref.targetKind==='SKETCH'&&object.type!=='sketch')return false;
-  if(ref.targetKind==='OBJECT'&&object.type==='sketch')return false;
-  legacyObjectSelect(ref.targetId,notify,additive);
-  syncSelectionRefs();
-  return true;
-};
-store.select=(id,notify=true,additive=false)=>{
-  if(!id)return legacyObjectSelect(id,notify,additive);
-  const object=store.getObject(id);
-  if(!object)return legacyObjectSelect(id,notify,additive);
-  const targetKind=object.type==='sketch'?'SKETCH':'OBJECT';
-  return store.selectRef({targetKind,ownerId:id,targetId:id},notify,additive);
-};
-store.selectSketchElement=(sketchId,kind,elementId,notify=true)=>{
-  if(kind==='point')return store.selectRef({targetKind:'SKETCH_POINT',ownerId:sketchId,targetId:elementId},notify,false);
-  if(getSketchElement(store.getObject(sketchId),elementId,kind))return store.selectRef({targetKind:'SKETCH_ELEMENT',ownerId:sketchId,targetId:elementId,subTargetId:kind},notify,false);
-  return legacySketchElementSelect(sketchId,kind,elementId,notify);
-};
-
-const sketchConnectivityCommands = installSketchConnectivityCommands(store);
-const sketchConnectivityActions = installSketchConnectivityActions(store);
-const sketchGizmo = installSketchGizmo(store, runtime);
-const featureOperationsTree = installFeatureOperationsTree(store, appUI);
-const featureParametersInspector = installFeatureParametersInspector(store, appUI);
-const objectVisibility = installObjectVisibility(store, runtime, appUI);
-const objectLocking = installObjectLocking(store, runtime, appUI);
-const objectTreeScalability = installObjectTreeScalability(store, appUI);
-const projectLifecycle = installProjectLifecycle(store, appUI);
-const projectSettings = installProjectSettings(store, appUI);
-const cameraObjectPreview = installCameraObjectPreview(store, runtime, appUI);
-const inspectorDiagnostics = installInspectorDiagnostics(store, runtime, appUI);
-
+const selectRegisteredSketchTarget=(sketchId,kind,elementId,notify=true)=>{const sketch=store.getObject(sketchId);const exists=kind==='point'?!!getSketchPoint(sketch,elementId):!!getSketchElement(sketch,elementId,kind);if(sketch?.type!=='sketch'||!exists)return false;legacyObjectSelect(sketchId,false,false);const next={sketchId,kind,elementId};if(store.sketchMultiSelectEnabled){store.selection.sketchElements=(store.selection.sketchElements??[]).filter(item=>item.sketchId===sketchId);const index=store.selection.sketchElements.findIndex(item=>item.kind===kind&&item.elementId===elementId);if(index>=0)store.selection.sketchElements.splice(index,1);else store.selection.sketchElements.push(next);store.selection.sketchElement=store.selection.sketchElements.at(-1)??null;}else{store.selection.sketchElements=[next];store.selection.sketchElement=next;}if(notify)store.emit('selectionChanged',{sketchElement:store.selection.sketchElement?structuredClone(store.selection.sketchElement):null});syncSelectionRefs();return true;};
+store.selectRef=(ref,notify=true,additive=false)=>{if(!ref)return false;if(ref.targetKind==='SKETCH_ELEMENT')return selectRegisteredSketchTarget(ref.ownerId,ref.subTargetId,ref.targetId,notify);if(ref.targetKind==='SKETCH_POINT')return selectRegisteredSketchTarget(ref.ownerId,'point',ref.targetId,notify);if(!['OBJECT','SKETCH'].includes(ref.targetKind))return false;const object=store.getObject(ref.targetId);if(!object)return false;if(ref.targetKind==='SKETCH'&&object.type!=='sketch')return false;if(ref.targetKind==='OBJECT'&&object.type==='sketch')return false;legacyObjectSelect(ref.targetId,notify,additive);syncSelectionRefs();return true;};
+store.select=(id,notify=true,additive=false)=>{if(!id)return legacyObjectSelect(id,notify,additive);const object=store.getObject(id);if(!object)return legacyObjectSelect(id,notify,additive);return store.selectRef({targetKind:object.type==='sketch'?'SKETCH':'OBJECT',ownerId:id,targetId:id},notify,additive);};
+store.selectSketchElement=(sketchId,kind,elementId,notify=true)=>selectRegisteredSketchTarget(sketchId,kind,elementId,notify);
+const sketchConnectivityCommands=installSketchConnectivityCommands(store); const sketchConnectivityActions=installSketchConnectivityActions(store); const sketchGizmo=installSketchGizmo(store,runtime); const featureOperationsTree=installFeatureOperationsTree(store,appUI); const featureParametersInspector=installFeatureParametersInspector(store,appUI); const objectVisibility=installObjectVisibility(store,runtime,appUI); const objectLocking=installObjectLocking(store,runtime,appUI); const objectTreeScalability=installObjectTreeScalability(store,appUI); const projectLifecycle=installProjectLifecycle(store,appUI); const projectSettings=installProjectSettings(store,appUI); const cameraObjectPreview=installCameraObjectPreview(store,runtime,appUI); const inspectorDiagnostics=installInspectorDiagnostics(store,runtime,appUI);
 applyBuildIdentity();
-
-const focusButton=document.querySelector('#focus-selection');
-const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);};
-if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();if(!store.getObject(store.selection.activeObjectId))return;runtime.focusSelection();});}
-store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();});syncFocusButton();
-
-window.cm3d = { store, runtime, gltfInterchange, viewportReferenceSystem, extrudeSourceReferenceSync, sketchMutationContract, genericSketchElementMutationContract, sketchCircleIntegration, sketchMultiSelection, sketchConnectivityCommands, sketchConnectivityActions, sketchGizmo, featureOperationsTree, featureParametersInspector, objectVisibility, objectLocking, objectTreeScalability, projectLifecycle, projectSettings, cameraObjectPreview, inspectorDiagnostics, buildId: BUILD_ID };
+const focusButton=document.querySelector('#focus-selection'); const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);}; if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();if(!store.getObject(store.selection.activeObjectId))return;runtime.focusSelection();});} store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();}); syncFocusButton();
+window.cm3d={store,runtime,gltfInterchange,viewportReferenceSystem,extrudeSourceReferenceSync,sketchMutationContract,genericSketchElementMutationContract,sketchCircleIntegration,sketchMultiSelection,sketchConnectivityCommands,sketchConnectivityActions,sketchGizmo,featureOperationsTree,featureParametersInspector,objectVisibility,objectLocking,objectTreeScalability,projectLifecycle,projectSettings,cameraObjectPreview,inspectorDiagnostics,buildId:BUILD_ID};
