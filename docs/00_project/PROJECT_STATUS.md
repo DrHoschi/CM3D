@@ -64,36 +64,41 @@ Registry, Persistenz und Validation für `line`, `circle`, `arc`, `spline` sind 
 - zentrale Create/Edit/Delete-Grundlage für Circle, Arc und Spline über `runSketchMutation(...)`;
 - atomare Validation/History-Grenze;
 - stabile Element-IDs und stabile Spline-Control-IDs;
-- generisches Delete berücksichtigt Line-/Arc-/Spline-Endpoint-Nutzung;
-- gelöschte StableReference wird `MISSING`, kein geometrisches Rebinding;
-- analytische Sketch-Identität ist von späterer Tessellierung getrennt;
-- keine feste Segmentzahl und kein `renderSegments` in der persistierten Elementidentität;
-- kein N-Gon, kein facettierter Arc, keine Tessellierungsfunktion in C.3;
-- keine sichtbare Circle-/Arc-/Spline-Bedienung, kein Viewer/Inspector und keine Profile/Pfade;
-- sichtbare Build-ID `WD-21C.3`.
+- analytische Sketch-Identität bleibt von späterer Tessellierung getrennt;
+- keine feste Segmentzahl in der persistierten Elementidentität;
+- keine sichtbare Circle-/Arc-/Spline-Bedienung in C.3;
+- reale iPad-/Safari-Evidenz bestätigte `WD-21C.3` und die Bestandsregression.
+
+### WD-21C.4 – Circle Creation, Rendering & Editing Integration
+
+**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING**
+
+- sichtbarer Sketch-Toolbutton `Kreis`;
+- zweistufiger Input: Mittelpunkt setzen, Radius mit zweitem Punkt bestimmen;
+- Circle-Erzeugung und -Änderung ausschließlich über den zentralen C.3-Mutationsvertrag;
+- persistente analytische Identität bleibt `{ circleId, center, radius }`;
+- Mittelpunkt bleibt geometrischer Parameter und ist kein topologischer `pointId`;
+- Viewer stellt den Circle über abgeleitete temporäre Rendersegmente dar; diese werden nicht persistiert und nicht zu Sketch-Linien;
+- Circle kann im Viewer als ein `SKETCH_ELEMENT` ausgewählt werden;
+- Objektbaum zeigt `Kreise (N)` und einzelne Kreise;
+- Inspector erlaubt Mittelpunkt X/Y und Radius zu ändern;
+- Delete, Undo/Redo und Save/Load laufen über die bestehende zentrale Grundlage;
+- keine sichtbare Arc-/Spline-Integration, kein N-Gon, keine Profile/Pfade und keine Circle-Extrusion in C.4;
+- sichtbare Build-ID ist `WD-21C.4`.
 
 Automatisierte Regression:
 
-- Workflow: `WD-21C.3 Generic Sketch Element Mutation Regression`
-- Run: `34261949046`
-- Head: `498f4179b52c035ff831d2a8cb13bb82b95ba1e2`
+- Workflow: `WD-21C.4 Circle Integration Regression`
+- Run: `34266145061`
+- Head: `efef9ecbdc8f53d28ea42a3386527623bea8ce51`
 - A.2: PASS
 - A.3: PASS
 - B.2 Connect: PASS
 - B.3 Disconnect: PASS
 - C.2 Registry/Persistence: PASS
 - C.3 Generic Mutation: PASS
+- C.4 Circle Integration: PASS
 - Result: **SUCCESS / PASS**
-
-Reale iPad-/Safari-Evidenz vom 2026-09-08:
-
-- Browser-Tab `CyberMotion 3D – WD-21C.3`: PASS.
-- Header-/Build-Label `WD-21C.3`: PASS.
-- normale Sketch-Bearbeitung: PASS.
-- Verbinden/Trennen: PASS.
-- Speichern/Laden: PASS.
-- Undo/Redo: PASS.
-- 0 BLOCKER.
 
 WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
@@ -103,4 +108,4 @@ Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtb
 
 ## Nächster zulässiger Schritt
 
-WD-21C.3 ist abgeschlossen. Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren und separat freigeben. Noch keine weitere Circle-/Arc-/Spline-Implementierung im selben Schritt.
+Ausschließlich der reale iPad-/Safari-Check für `WD-21C.4`: Browser-Tab und Header müssen `WD-21C.4` zeigen. Kreis im Sketch-Kontext erzeugen, Viewer-/Baum-Auswahl, Inspector-Edit von Mittelpunkt/Radius, Delete/Undo/Redo und Speichern/Laden prüfen; anschließend Bestands-Sketching sowie Connect/Disconnect kurz regressieren. Kein weiterer C-Schritt vor PASS / 0 BLOCKER.
