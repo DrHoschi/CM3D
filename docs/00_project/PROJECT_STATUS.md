@@ -111,7 +111,39 @@ Reale iPad-/Safari-Evidenz `WD-21C.4-R1`:
 - Mittelpunkt X/Y und Radius editierbar: PASS;
 - 0 BLOCKER.
 
-Dokumentierter nachfolgender Integrationsbedarf, kein C.4-Blocker: Im Gegensatz zu bestehenden Line-/Point-Skizzenelementen ist der analytische Circle noch nicht an eine direkte Circle-Drag-/Transform-Gizmo-Manipulation auf der Skizze angeschlossen. Seine fachliche Position ist in C.4 bereits über Mittelpunkt X/Y editierbar. Die direkte Gizmo-/Transform-Integration wird separat behandelt.
+### WD-21C.5 – Generic Sketch Element Manipulation Contract
+
+**DEFINED / NOT IMPLEMENTED**
+
+Verbindliches Ziel: direkte Sketch-Manipulation auf `Selection → Elementparameter → zentrale Mutation → History/Recompute → Viewer-Refresh` normieren und Owner-Skizze vs. ausgewähltes Sketch-Element eindeutig trennen.
+
+Reconciled gegen C.4:
+
+- bestehendes Sketch-Gizmo ist Point-/Line-orientiert und arbeitet über reale `pointId`s;
+- Circle besitzt daher noch keinen direkten Drag-/Gizmo-Anker, obwohl Auswahl und Inspector-Edit funktionieren;
+- Circle-Parameter besitzen bereits die autoritative C.3-Mutationsgrenze `setSketchCircle(...) → runSketchMutation(...)`;
+- abgeleitete Circle-Tessellierung bleibt reine Viewer-/Picking-Geometrie und darf keine Modell- oder Manipulationsautorität werden;
+- Owner-Skizze bleibt Container und lokaler Koordinatenraum, nicht zweite fachliche Primärauswahl.
+
+C.5 Contract-Grenzen:
+
+- direkte Manipulation wird typbezogen auf autoritative Parameter abgebildet: Point → `x/y`, Line → Endpunkte, Circle → `center.x/center.y`;
+- endgültige Änderungen laufen über zentrale Sketch-Mutationen; Preview darf keine dauerhafte zweite Autorität erzeugen;
+- stabile IDs bleiben bei Move unverändert; Circle-Radius bleibt bei reinem Move unverändert;
+- Pointer-down → Ausgangszustand, Pointer-move → Preview, Pointer-up → genau ein zentraler Commit / ein Undo-Schritt, Cancel → vollständige Wiederherstellung;
+- Manipulation erfolgt im lokalen Koordinatenraum der Owner-Skizze; Translate-Snap darf keine Connect-/Merge-/Rebinding-Semantik erzeugen;
+- erfolgreicher Commit führt zu Validation, History, Recompute, Viewer-Refresh und Erhalt derselben Elementauswahl;
+- gemischte Multi-Selection wird durch C.5 nicht automatisch erweitert;
+- sichtbare Build-Identität besitzt nur eine zentrale Autorität; historische lokale `document.title`-/Brand-Zuweisungen in Sketch-/Gizmo-Modulen müssen bei späterer C.5-Implementierung entfernt werden.
+
+Nicht Bestandteil der Definition/aktuellen Freigabe:
+
+- keine Circle-Gizmo-/Drag-Implementierung;
+- kein Circle-Radius-Gizmo, Rotate oder Scale;
+- keine sichtbare Arc-/Spline-Funktion;
+- keine neuen Constraints/automatischen Verbindungen;
+- kein N-Gon;
+- keine Profile/Pfade oder Extrusionsintegration.
 
 WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
@@ -123,4 +155,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-WD-21C.4 ist abgeschlossen und eingefroren. Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren und separat freigeben. Noch keine Arc-/Spline-Implementierung und keine Circle-Transform-Erweiterung im selben Schritt.
+Ausschließlich das **WD-21C.5 Definition/Implementation Gate** gegen den eingefrorenen C.4-Stand durchführen und daraus den exakten minimalen Implementierungsumfang ableiten. Noch keine Code-Implementierung im selben Schritt und weiterhin keine Arc-/Spline-Funktion.
