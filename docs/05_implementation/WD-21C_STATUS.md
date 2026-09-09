@@ -33,119 +33,124 @@ Direkter Circle-Gizmo-Move, bestehende Point-/Line-Manipulation, Save und Undo/R
 
 **Status:** PASS / FROZEN / 0 BLOCKER
 
-Finaler sichtbarer Korrekturstand: `WD-21C.6-R1`.
-
-C.6 generalisiert die bestehende B.2/B.3-Connectivity ausschließlich auf registrierte endpoint-basierte Sketch-Elemente (`topologyEndpoints: true` → aktuell Line/Arc/Spline). Circle bleibt ausgeschlossen; `pointId` bleibt einzige Connectivity-Autorität.
-
-WD-21C.6-R1 korrigiert ausschließlich die beim realen Gerätecheck gefundene Mehrfachauswahlregression. Der reale iPad-/Safari-Recheck bestätigt Zeichnen/Polygon, Mehrfachauswahl, Verbinden/Trennen, erneutes Zusammenführen, Undo/Redo und Speichern/Laden. Completion-Regression Run `34363013788`: SUCCESS. C.6 ist PASS / FROZEN / 0 BLOCKER.
+Finaler sichtbarer Korrekturstand: `WD-21C.6-R1`. C.6 generalisiert Connect/Disconnect auf registrierte endpoint-basierte Elemente. Reale iPad-/Safari-Evidenz und Completion-Regression Run `34363013788`: PASS / 0 BLOCKER.
 
 ## WD-21C.7 – Arc Creation, Rendering & Editing Integration
 
 **Status:** PASS / FROZEN / 0 BLOCKER
 
-**Reconciliation-Basis:** eingefrorener WD-21C.6-R1-Stand `a16a1f6b70a10fb10b469ff45e3795a95ddbbc45`.
+Finaler sichtbarer Stand: `WD-21C.7`. Completion-Regression Run `34369150959`: SUCCESS. Reale iPad-/Safari-Evidenz bestätigt Drei-Punkt-Bogen, Tree-/Viewer-Auswahl, Inspector, C.6-Connectivity mit geeigneten Punkten, Undo/Redo und Save/Load. 0 BLOCKER.
 
-### Implementierter Minimalumfang
+## WD-21C.8 – Spline Creation, Rendering & Editing Integration
 
-- neue zentrale Application-Grenze `src/application/sketch-arc-creation.js`;
-- `addSketchArcFromPoints(sketchId,start,end,control)` erzeugt innerhalb genau einer `runSketchMutation(...)`-Transaktion zwei stabile Endpoint-Punkte und genau einen Arc;
-- eine sichtbare Arc-Erzeugung erzeugt damit genau einen History-/Undo-Schritt;
-- kollineare/ungültige Drei-Punkt-Geometrie wird durch die zentrale Topologievalidation atomar verworfen, ohne persistente Teilpunkte;
-- `setSketchArcGeometry(...)` editiert Start-/Endpunktkoordinaten und Control innerhalb einer zentralen Mutation und erhält `arcId`, `startPointId` und `endPointId`;
-- neues UI-Modul `src/ui/sketch-arc-integration.js`;
-- sichtbares Sketch-Werkzeug `Bogen`;
-- deterministischer Drei-Tap-Input `Start → Ende → Control`;
-- vor der dritten gültigen Eingabe ausschließlich Preview-State;
-- abgeleitete analytische Arc-Tessellation für Preview und Viewer;
-- keine Rendersegmente werden persistiert oder als Sketch-Lines erzeugt;
-- Arc erscheint als genau ein `SKETCH_ELEMENT` und als Tree-Gruppe `Bögen (n)`;
-- Tree- und Viewer-Picking verwenden die bestehende generische SelectionRef-/Sketch-Element-Grenze;
-- Inspector zeigt Start X/Y, Ende X/Y und Kontrollpunkt X/Y;
-- C.6-Connect/Disconnect wird für Arc-Endpunkte unverändert wiederverwendet;
-- sichtbare Build-ID ist `WD-21C.7`; die zentrale `applyBuildIdentity()`-Grenze bleibt alleinige Build-Autorität.
+**Status:** DEFINED / NOT IMPLEMENTED
 
-### Unveränderte Ausschlüsse
+**Reconciliation-Basis:** eingefrorener WD-21C.7-Stand `feaee19c72977a98dc86090a99e57162aa27a0cc`.
 
-- keine Spline-Erstellung, kein Spline-Rendering und kein Spline-Editing;
-- kein Arc-Gizmo und kein gesamter Arc-Drag;
-- kein sichtbares Control-Handle im Viewer;
-- keine alternative Radius-/Mittelpunkt-/Winkel-Parametrisierung;
-- keine Tangentialität oder Constraints;
-- kein Snap, Auto-Merge, Tolerance oder geometrisches Rebinding;
-- kein N-Gon/facettierter Arc als eigenes Sketch-Modell;
-- keine Profile/Pfade;
-- keine Extrusionsintegration;
-- keine Änderung an der eingefrorenen C.6-Connectivity-Semantik.
+### Ziel
 
-### Completion / Regression / Freeze Gate
+Den bereits vorhandenen offenen Spline-Vertrag erstmals als sichtbares, auswählbares und numerisch bearbeitbares Sketch-Element integrieren, ohne C.6/C.7 zu erweitern und ohne Profile/Pfade vorwegzunehmen.
 
-Der vollständige C.7-Branchstand vor Freeze-Dokumentation wurde gegen den eingefrorenen C.6-R1-Stand `a16a1f6b70a10fb10b469ff45e3795a95ddbbc45` geprüft.
+Autoritative Spline-Identität:
 
-Ergebnis des vollständigen Vergleichs:
+`{ splineId, startPointId, endPointId, controls:[{controlId,x,y}, ...] }`
 
-- **12 Commits voraus / 0 dahinter**;
-- geänderte Produktdateien ausschließlich `src/application/sketch-arc-creation.js`, `src/ui/sketch-arc-integration.js` und die notwendige C.7-Integration/Build-ID in `src/main.js`;
-- neue C.7-Regression und Workflow;
-- zwei historische Regressionstests ausschließlich forward-kompatibel angepasst;
-- Statusdokumentation synchronisiert;
-- keine Spline-Funktion, kein Arc-Gizmo, keine Profile/Pfade, kein N-Gon, keine Extrusionsintegration und keine C.6-Fachänderung im Diff.
+- `splineId` bleibt stabil.
+- `startPointId` und `endPointId` sind echte topologische Sketch-Punkte.
+- `controls[]` enthält mindestens einen geometrischen Kontrollpunkt.
+- jeder Control besitzt eine stabile `controlId`.
+- Controls sind ausdrücklich keine Topologiepunkte und keine Connect-/Disconnect-Ziele.
+- Reihenfolge und Anzahl der Controls bleiben beim C.8-Editing autoritativ und unverändert.
 
-### Automatisierte Regression
+### Reconciled vorhandene Grenzen
 
-Workflow: `WD-21C.7 Arc Integration Regression`  
-Run: `34369150959`  
-Getesteter Code-Head: `9b49ec2fd16dda35de38cf185230692272997b46`  
-Result: **SUCCESS / PASS**
+- C.2 registriert `spline` mit `topologyEndpoints: true` und persistiert/validiert stabile `splineId`, Endpoint-Referenzen sowie eindeutige `controlId`s.
+- C.3 stellt `addSketchSpline(...)` und `setSketchSpline(...)` über die zentrale `runSketchMutation(...)`-Grenze bereit. `setSketchSpline(...)` verlangt dieselbe Control-Anzahl, dieselbe Reihenfolge und dieselben `controlId`s.
+- C.6 behandelt ausschließlich Start/Ende des Splines über die generische Endpoint-Connectivity; Controls bleiben ausgeschlossen.
+- C.4/C.7 liefern das Integrationsmuster für Werkzeugbutton, Preview/Input, Tree, Inspector, Viewer/Picking und ausschließlich abgeleitete Tessellation.
 
-Bestätigt:
+### Mathematische Spline-Semantik
 
-- WD-21A.2 Topology: PASS;
-- WD-21A.3 Mutation: PASS;
-- WD-21B.2 Connect: PASS;
-- WD-21B.3 Disconnect: PASS;
-- WD-21C.2 Registry/Persistence: PASS;
-- WD-21C.3 Generic Mutation: PASS;
-- WD-21C.4 Circle Integration: PASS;
-- WD-21C.5 Manipulation: PASS;
-- WD-21C.6 Generic Endpoint Connectivity: PASS;
-- WD-21C.7 Arc Integration: PASS.
+C.8 schließt die bislang offene mathematische Kurvensemantik verbindlich als **geordnete Bézier-Kurve**.
 
-Der C.7-Test bestätigt zusätzlich atomare Arc-Erzeugung, einen History-Eintrag pro Creation, Rollback ungültiger/kollinearer Geometrie, stabile Endpoint-IDs beim Editing, C.6-Connect/Disconnect für Arc-Endpunkte mit unverändertem Control, Persistenz über Save/Load sowie die Ausschlussgrenzen zu Spline/Gizmo/Extrusion.
+Control-Polygon-Reihenfolge:
 
-Die nach dem getesteten Code-Head hinzugekommenen Commits bis zum auditierten Branchstand betreffen ausschließlich Statusdokumentation; während des Freeze-Gates wurde kein Produktcode geändert.
+`Start → controls[0] → controls[1] → … → Ende`
 
-### Test-Gate-Korrekturen während der Implementierung
+Die Kurve wird deterministisch mit dem de-Casteljau-Verfahren ausgewertet. Ein Control ergibt eine quadratische Bézier-Kurve; mehrere Controls ergeben entsprechend eine Bézier-Kurve höheren Grades. Es entstehen keine zusätzlichen persistenten Kurvenparameter und keine zweite Spline-Identität.
 
-Die ersten roten Läufe waren keine freizugebenden Produktregressionen, sondern veraltete bzw. fehlerhafte Testgrenzen:
+### Creation Contract
 
-- Run `34367616484` stoppte in C.3, weil der eingefrorene C.3-Test sichtbare Arc-Integration ausdrücklich noch verbot. Diese historische Negativgrenze wurde für spätere C-Teilschritte forward-kompatibel gemacht; Commit `ba5ed7c0013c47dc23b9a757500b966aa83f43d9`. Spline bleibt weiterhin ausgeschlossen.
-- Der nächste Lauf erreichte C.6 und stoppte an dessen alter Build-ID-Grenze, die ausschließlich `WD-21C.6(-Rn)` akzeptierte. Die Build-Grenze wurde auf spätere WD-21C-Builds forward-kompatibel erweitert; Commit `30a86d992c2a500dacef7193dcc8befe78079e38`. Die C.6-Fachsemantik wurde nicht verändert.
-- Run `34368990817` erreichte C.7 und zeigte einen Fehler im neuen Test-Harness: nach zentralen Transaktionen wurde eine veraltete Objekt-Referenz geprüft. Der Test liest nach Mutationen jetzt den autoritativen Sketch erneut aus dem Store; Commit `9b49ec2fd16dda35de38cf185230692272997b46`. Produktcode wurde dafür nicht verändert.
+Die sichtbare Spline-Erzeugung folgt:
 
-Erst der anschließende maßgebliche Run `34369150959` ist das C.7-Automatik-Gate und vollständig SUCCESS.
+`Start → Control 1 → optional weitere Controls → Ende/Abschluss`
 
-### Reale Geräte-Evidenz 2026-09-09 – iPad/Safari
+- mindestens ein Control ist erforderlich;
+- vor dem Abschluss existiert ausschließlich Preview-State;
+- erneutes Betätigen des aktiven `Spline`-Werkzeugs ist das explizite Abschlusskommando;
+- beim Abschluss muss eine einzige zentrale Sketch-Transaktion zwei stabile Endpoint-Punkte, stabile `controlId`s für alle Controls und genau einen Spline erzeugen;
+- eine sichtbare Spline-Erzeugung entspricht genau einer Mutation, einem History-Eintrag und einem Undo-Schritt;
+- ungültige Eingaben dürfen keine persistenten Teilreste hinterlassen;
+- beim Zeichnen erfolgt keine geometrische Suche oder automatische Übernahme vorhandener Punkte; topologische Verbindung entsteht ausschließlich explizit über C.6.
 
-Der reale Gerätecheck auf `WD-21C.7` bestätigt:
+Für die spätere Implementierung ist dafür analog C.7 eine eng begrenzte atomare Application-Grenze zulässig, z. B. `addSketchSplineFromPoints(...)`. Das bestehende `addSketchSpline(...)` wird nicht umdefiniert.
 
-- Browser-Tab und sichtbares Header-/Brand-Label konsistent `WD-21C.7`: PASS;
-- Bogen über drei Punkte zeichnen: PASS;
-- Tree-Auswahl: PASS;
-- Viewer-Auswahl: PASS;
-- Inspector-Änderungen: PASS;
-- Arc-Endpunkte über Mehrfachauswahl mit anderen geeigneten Punkten verbinden/trennen: PASS;
-- Undo: PASS;
-- Redo: PASS;
-- Speichern: PASS;
-- Laden: PASS;
-- 0 gemeldete Blocker.
+### Viewer / Picking
 
-Der Versuch, Start- und Endpunkt **desselben einzelnen Arc** miteinander zu verbinden, wird erwartungsgemäß abgelehnt und ist **kein Blocker**. Die eingefrorene C.6-Direct-Pair-/Self-Loop-Regel verhindert dadurch `startPointId === endPointId` innerhalb desselben endpoint-basierten Elements. Für einen analytisch geschlossenen Kreis bleibt das separate Circle-Element zuständig.
+- Preview und Viewer werden ausschließlich aus der autoritativen Bézier-Geometrie abgeleitet tesselliert.
+- Tessellierungssegmente werden nicht persistiert und nicht als Sketch-Lines erzeugt.
+- die interne Renderauflösung ist keine Modelleigenschaft.
+- der komplette Spline ist genau ein auswählbares `SKETCH_ELEMENT`.
+- SelectionRef/StableReference bleibt `SKETCH_ELEMENT + ownerId=sketchId + targetId=splineId + subTargetId=spline`.
+
+### Object Tree
+
+- eigene Gruppe `Splines (n)` innerhalb der Skizze;
+- jeder Spline erscheint genau einmal als einzelnes Sketch-Element;
+- Tree-Auswahl selektiert den konkreten Spline.
+
+### Inspector / Editing
+
+Der Spline-Inspector zeigt mindestens:
+
+- Start X/Y;
+- Ende X/Y;
+- alle vorhandenen Controls in autoritativer Reihenfolge mit stabiler `controlId` und X/Y.
+
+Endpoint-Editing bewegt die vorhandenen topologischen Punkte und erhält `pointId`s. Control-Editing verändert ausschließlich die Koordinaten vorhandener Controls und erhält deren `controlId`s, Reihenfolge und Anzahl. Controls hinzufügen, löschen oder umsortieren ist ausdrücklich nicht Bestandteil von C.8.
+
+Koordinierte numerische Änderungen müssen über eine zentrale Mutation erfolgen und dürfen keine Ersatzpunkte, Ersatz-Control-IDs, geometrisches Rebinding oder zweite persistente Modellautorität erzeugen.
+
+### Connectivity
+
+C.8 implementiert keine neue Connect-/Disconnect-Logik. Nur Start- und Endpunkt eines sichtbaren Splines verwenden die eingefrorene C.6-Grenze. Innere Controls bleiben vollständig von Connectivity ausgeschlossen.
+
+### Persistenz / History
+
+Delete, Undo/Redo und Save/Load verwenden ausschließlich die vorhandenen zentralen Sketch-/Persistenzgrenzen. `splineId`, Endpoint-`pointId`s sowie Control-`controlId`s müssen über Editing, Undo/Redo und Save/Load stabil bleiben.
+
+### Explizit ausgeschlossen
+
+- geschlossene Splines;
+- Controls nach der Erstellung hinzufügen, löschen oder umsortieren;
+- sichtbare Control-Handles im Viewer;
+- Spline-Gizmo oder direkter Spline-/Control-Drag;
+- Tangentialität, Smooth-/Continuity-Constraints;
+- Catmull-Rom, B-Spline oder alternative Kurventypen;
+- Snap, Auto-Merge, Tolerance oder geometrisches Rebinding;
+- Profile/Pfade;
+- N-Gon;
+- Extrusionsintegration;
+- Änderungen an C.6 oder C.7.
+
+### Build-Grenze
+
+Bei einer später separat freigegebenen Implementierung lautet die sichtbare Build-ID `WD-21C.8`. `document.title`, sichtbares Header-/Brand-Label und Statusdokumentation müssen konsistent sein; Abweichungen sind BLOCKER.
 
 ## Freigabestatus
 
-WD-21C.4, WD-21C.5, WD-21C.6 und WD-21C.7 sind **PASS / FROZEN / 0 BLOCKER**. WD-21C als Gesamtblock bleibt ausdrücklich **nicht FROZEN**, da weitere WD-21C-Teilblöcke noch ausstehen.
+WD-21C.4, WD-21C.5, WD-21C.6 und WD-21C.7 sind **PASS / FROZEN / 0 BLOCKER**. WD-21C.8 ist **DEFINED / NOT IMPLEMENTED**. WD-21C als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren. Noch keine Spline-Implementierung und keine weitere C.7-Erweiterung im selben Schritt.
+Ausschließlich das WD-21C.8 Definition/Implementation Gate gegen den eingefrorenen C.7-Stand durchführen und daraus den exakt minimalen Implementierungsumfang und die tatsächlich notwendigen Integrationsstellen ableiten. Noch keine C.8-Codeimplementierung und keine weitere C.7-Änderung.
