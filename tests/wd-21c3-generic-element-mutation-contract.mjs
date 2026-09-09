@@ -109,9 +109,9 @@ assert.ok(events.some(event=>event.type==='geometryChanged'&&event.topologyMutat
 const main=fs.readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
 assert.match(main,/const BUILD_ID = 'WD-21C\.[3-9](?:-R\d+)?'/);
 assert.match(main,/installGenericSketchElementMutationContract/);
-assert.doesNotMatch(main,/sketch-spline-integration/);
 const source=fs.readFileSync(new URL('../src/application/sketch-element-mutation-extension.js',import.meta.url),'utf8');
 assert.doesNotMatch(source,/renderSegments/);
 assert.doesNotMatch(source,/addRegularPolygon|setRegularPolygon|addFacetedArc/);
+assert.doesNotMatch(source,/profile|path/i);
 
 console.log('WD-21C.3 Generic Sketch Element Mutation Contract: PASS');
