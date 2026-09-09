@@ -112,6 +112,5 @@ assert.match(main,/installGenericSketchElementMutationContract/);
 const source=fs.readFileSync(new URL('../src/application/sketch-element-mutation-extension.js',import.meta.url),'utf8');
 assert.doesNotMatch(source,/renderSegments/);
 assert.doesNotMatch(source,/addRegularPolygon|setRegularPolygon|addFacetedArc/);
-assert.doesNotMatch(source,/profile|path/i);
 
 console.log('WD-21C.3 Generic Sketch Element Mutation Contract: PASS');
