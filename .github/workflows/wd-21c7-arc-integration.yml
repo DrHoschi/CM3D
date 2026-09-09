@@ -1,0 +1,36 @@
+name: WD-21C.7 Arc Integration Regression
+
+on:
+  push:
+    branches:
+      - feature/wd-21c-sketch-element-type-expansion
+  workflow_dispatch:
+
+jobs:
+  arc-integration-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run WD-21A.2 topology regression
+        run: node tests/wd-21a2-sketch-topology-contract.mjs
+      - name: Run WD-21A.3 mutation regression
+        run: node tests/wd-21a3-sketch-mutation-contract.mjs
+      - name: Run WD-21B.2 connect regression
+        run: node tests/wd-21b2-endpoint-connect-contract.mjs
+      - name: Run WD-21B.3 disconnect regression
+        run: node tests/wd-21b3-endpoint-disconnect-contract.mjs
+      - name: Run WD-21C.2 registry persistence regression
+        run: node tests/wd-21c2-generic-element-registry-persistence.mjs
+      - name: Run WD-21C.3 generic mutation regression
+        run: node tests/wd-21c3-generic-element-mutation-contract.mjs
+      - name: Run WD-21C.4 circle integration regression
+        run: node tests/wd-21c4-circle-integration.mjs
+      - name: Run WD-21C.5 manipulation contract regression
+        run: node tests/wd-21c5-generic-sketch-manipulation-contract.mjs
+      - name: Run WD-21C.6 endpoint connectivity regression
+        run: node tests/wd-21c6-generic-endpoint-connectivity.mjs
+      - name: Run WD-21C.7 arc integration regression
+        run: node tests/wd-21c7-arc-integration.mjs
