@@ -37,7 +37,7 @@ Direkter Circle-Move über den generischen Sketch-Gizmo ist freigegeben; `circle
 
 ## WD-21C.6 – Generic Endpoint Element Connectivity Contract
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING
+**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK FAILED / 1 BLOCKER
 
 ### Verbindliche Grenze
 
@@ -93,12 +93,26 @@ Bestätigt:
 
 Die C.6-Regressionsfälle prüfen zusätzlich synthetisch Line/Arc/Spline-Rewire, Arc-/Spline-Disconnect, Circle-Ausschluss, generischen Direct-Pair-Guard, unveränderte Arc-/Spline-Control-Daten und die bestehende Line-Kompatibilität.
 
-Der erste C.6-Lauf `34334248395` scheiterte ausschließlich an einer veralteten C.5-Build-ID-Testgrenze, die nur `WD-21C.5` akzeptierte. Diese Testgrenze wurde ohne Änderung der C.5-Funktionsinvarianten forward-kompatibel gemacht. Der anschließende C.6-Lauf `34334339592` ist vollständig SUCCESS.
+Der erste C.6-Lauf `34334248395` scheiterte ausschließlich an einer veralteten C.5-Build-ID-Testgrenze. Nach deren forward-kompatibler Korrektur ist der anschließende C.6-Lauf `34334339592` vollständig SUCCESS.
+
+### Reale Geräte-Evidenz 2026-09-09 – iPad/Safari
+
+- Browser-Tab und sichtbares Header-/Brand-Label zeigen konsistent `WD-21C.6`: PASS;
+- Save/Load: PASS;
+- Undo/Redo: PASS;
+- bestehende Mehrfachauswahl: FAIL;
+- dadurch sind bestehendes Point-/Line-`Verbinden` und `Trennen` auf dem Gerät praktisch nicht ausführbar: BLOCKER;
+- sichtbare Arc-/Spline-Funktion wurde nicht als neue Funktion gemeldet;
+- Geräte-Gesamtergebnis: **FAIL / 1 BLOCKER**.
+
+### Eingrenzung des Blockers
+
+Der C.6-Diff gegen frozen C.5 verändert `src/ui/sketch-multiselect.js` nicht. Betroffen sind jedoch die neue generische Connectivity-Erweiterung, die Connectivity-Command-Schicht, die sichtbaren Connectivity-Actions und deren Integration in `src/main.js`. Deshalb ist vor jedem Fix gezielt die Übergabe `Mehrfachauswahl / SelectionRef → C.6 Command State → Verbinden/Trennen` zu prüfen. Kein Arc-/Spline-Ausbau im selben Schritt.
 
 ## Freigabestatus
 
-WD-21C.1, C.2, C.3, C.4 und C.5 sind abgeschlossen. WD-21C.4 und WD-21C.5 bleiben **PASS / FROZEN / 0 BLOCKER**. WD-21C.6 ist **IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING** und ausdrücklich noch **nicht FROZEN**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+WD-21C.1, C.2, C.3, C.4 und C.5 sind abgeschlossen. WD-21C.4 und WD-21C.5 bleiben **PASS / FROZEN / 0 BLOCKER**. WD-21C.6 ist **IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK FAILED / 1 BLOCKER** und ausdrücklich **nicht FROZEN**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Gerätecheck für `WD-21C.6`: Browser-Tab und sichtbares Header-/Brand-Label müssen konsistent `WD-21C.6` zeigen; bestehendes Point-/Line-Verbinden und -Trennen regressieren; Circle-Auswahl und direkter Circle-Move müssen weiterhin funktionieren; anschließend kurzer Save/Load- und Undo/Redo-Check. Zusätzlich prüfen, dass keine sichtbare Arc-/Spline-Funktion versehentlich hinzugekommen ist. Noch kein C.6-Freeze-Gate und keine Arc-/Spline-Implementierung im selben Schritt.
+Ausschließlich **WD-21C.6-R1 – Multiselect / Connectivity Regression Diagnosis & Minimal Fix**: zuerst die konkrete Ursache zwischen bestehender Mehrfachauswahl/SelectionRef und dem C.6-Command-State reproduzierbar bestimmen, anschließend nur den kleinsten notwendigen Fix innerhalb der bestehenden C.6-Grenze umsetzen. Danach vollständige C.6-Regression und erneuter iPad-/Safari-Gerätecheck. Noch keine sichtbare Arc-/Spline-Funktion und kein nächster C-Teilblock.
