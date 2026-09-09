@@ -12,9 +12,7 @@ Repository `DrHoschi/CM3D` ist die zentrale Projektbasis.
 
 **RB-01 – PASS / FROZEN**
 
-Freigegebener `main`-Stand nach Abschlussdokumentation:
-
-`1edae185c6207db9d754c94d00d23cf10218c56c`
+Freigegebener `main`-Stand nach Abschlussdokumentation: `1edae185c6207db9d754c94d00d23cf10218c56c`
 
 ## RB-02 – Sketch Topology & Profiles
 
@@ -34,100 +32,70 @@ Geplante WD-Zerlegung:
 
 **PASS / FROZEN / 0 BLOCKER**
 
-Freeze-Dokumentation: `4014cf865049c66c20d756db608201fa599d0948`
-
 ## WD-21B – Sketch Connectivity & Editing Integration
 
 **PASS / FROZEN / 0 BLOCKER**
 
-Freeze-Dokumentation: `2e8d5b0434e62bf7c7e34b11e54da077853328cc`
-
 ## WD-21C – Sketch Element Type Expansion
 
-Aktiver Branch: `feature/wd-21c-sketch-element-type-expansion`  
-Basis: WD-21B FROZEN @ `2e8d5b0434e62bf7c7e34b11e54da077853328cc`
+Aktiver Branch: `feature/wd-21c-sketch-element-type-expansion`
 
 ### WD-21C.1
-
 **PASS / INVENTORY & CONTRACT COMPLETE / 0 ELEMENT IMPLEMENTATION**
 
 ### WD-21C.2
-
 **PASS / DEVICE VERIFIED / 0 BLOCKER**
 
 ### WD-21C.3
-
 **PASS / DEVICE VERIFIED / 0 BLOCKER**
 
 ### WD-21C.4 – Circle Creation, Rendering & Editing Integration
-
 **PASS / FROZEN / 0 BLOCKER**
-
-Finaler sichtbarer Korrekturstand `WD-21C.4-R1`; Completion-Regression Run `34273576840`: SUCCESS; reale iPad-/Safari-Evidenz: PASS.
 
 ### WD-21C.5 – Generic Sketch Element Manipulation Contract
-
 **PASS / FROZEN / 0 BLOCKER**
-
-Direkter Circle-Gizmo-Move, bestehende Point-/Line-Manipulation, Save und Undo/Redo sind auf iPad/Safari bestätigt. Regression Run `34277682889`: SUCCESS.
 
 ### WD-21C.6 – Generic Endpoint Element Connectivity Contract
-
 **PASS / FROZEN / 0 BLOCKER**
 
-Finaler sichtbarer Korrekturstand `WD-21C.6-R1`. Completion-Regression Run `34363013788`: SUCCESS. Reale iPad-/Safari-Evidenz bestätigt Zeichnen/Polygon, Mehrfachauswahl, Verbinden/Trennen, erneutes Zusammenführen, Undo/Redo und Speichern/Laden. 0 BLOCKER.
+Finaler sichtbarer Korrekturstand `WD-21C.6-R1`; Completion-Regression Run `34363013788`: SUCCESS; reale iPad-/Safari-Evidenz: PASS.
 
 ### WD-21C.7 – Arc Creation, Rendering & Editing Integration
-
 **PASS / FROZEN / 0 BLOCKER**
 
-Reconciliation-Basis: eingefrorener C.6-R1-Stand `a16a1f6b70a10fb10b469ff45e3795a95ddbbc45`.
+Finaler sichtbarer Stand `WD-21C.7`; Completion-Regression Run `34369150959`: SUCCESS; reale iPad-/Safari-Evidenz: PASS / 0 BLOCKER.
 
-Implementierter Umfang:
+### WD-21C.8 – Spline Creation, Rendering & Editing Integration
 
-- atomare zentrale Arc-Erzeugung über `addSketchArcFromPoints(...)`: zwei stabile Endpoint-Punkte + genau ein Arc in einer `runSketchMutation(...)`-Transaktion und einem Undo-Schritt;
-- `setSketchArcGeometry(...)` erhält `arcId` und beide Endpoint-IDs beim numerischen Editing;
-- sichtbares Werkzeug `Bogen` mit Drei-Tap-Input `Start → Ende → Control`;
-- vor der dritten gültigen Eingabe ausschließlich Preview-State;
-- abgeleitete Arc-Tessellation, nicht persistent und keine Sketch-Line-Repräsentation;
-- Arc als ein `SKETCH_ELEMENT` im Viewer und in `Bögen (n)` im Objektbaum;
-- Viewer-/Tree-Picking über die bestehende generische SelectionRef-Grenze;
-- Inspector für Start X/Y, Ende X/Y und Kontrollpunkt X/Y;
-- eingefrorene C.6-Connectivity wird für Arc-Endpunkte wiederverwendet, nicht erweitert;
-- sichtbare Build-ID `WD-21C.7`.
+**DEFINED / NOT IMPLEMENTED**
 
-Completion-/Freeze-Audit gegen `a16a1f6b70a10fb10b469ff45e3795a95ddbbc45`:
+Reconciliation-Basis: eingefrorener C.7-Stand `feaee19c72977a98dc86090a99e57162aa27a0cc`.
 
-- **12 Commits voraus / 0 dahinter**;
-- Produktänderungen ausschließlich Arc-Creation, Arc-UI-Integration und notwendige `main.js`-Integration/Build-ID;
-- C.7-Test und Workflow hinzugefügt;
-- C.3-/C.6-Regressionsgrenzen ausschließlich forward-kompatibel gemacht;
-- keine Spline-Funktion, kein Arc-Gizmo, keine Profile/Pfade, kein N-Gon, keine Extrusionsintegration und keine C.6-Fachänderung.
+Verbindliche C.8-Grenze:
 
-Automatisierte Regression:
+- autoritative Identität `{ splineId, startPointId, endPointId, controls:[{controlId,x,y}, ...] }`;
+- Start/Ende sind echte topologische Punkte; Controls besitzen stabile `controlId`s, sind aber keine Topologiepunkte;
+- Control-Anzahl, Reihenfolge und IDs bleiben beim C.8-Editing stabil;
+- mathematische Semantik ist eine geordnete Bézier-Kurve `Start → controls[0] → ... → Ende`, deterministisch per de Casteljau ausgewertet;
+- sichtbare Erstellung `Start → Control 1 → optional weitere Controls → Ende/Abschluss`;
+- erneutes Betätigen des aktiven `Spline`-Werkzeugs ist das explizite Abschlusskommando;
+- vor Abschluss ausschließlich Preview-State;
+- finale Erstellung atomar in genau einer zentralen Sketch-Transaktion: zwei stabile Endpoint-Punkte + stabile Control-IDs + genau ein Spline;
+- eine Creation entspricht einem History-/Undo-Schritt und hinterlässt bei ungültiger Eingabe keine persistenten Teilreste;
+- keine geometrische Übernahme vorhandener Punkte beim Zeichnen; Connectivity ausschließlich explizit über C.6;
+- Viewer-/Preview-Tessellation ausschließlich abgeleitet, nicht persistent und keine Sketch-Line-Repräsentation;
+- Spline im Viewer und Objektbaum als genau ein `SKETCH_ELEMENT`;
+- eigene Tree-Gruppe `Splines (n)`;
+- Inspector für Start/Ende und alle Controls in autoritativer Reihenfolge;
+- Endpoint-Editing erhält `pointId`s, Control-Editing erhält `controlId`s, Reihenfolge und Anzahl;
+- C.6-Connectivity wird ausschließlich für Start/Ende konsumiert, nicht erweitert;
+- Delete, Undo/Redo und Save/Load verwenden vorhandene zentrale Grenzen.
 
-- Workflow: `WD-21C.7 Arc Integration Regression`;
-- Run: `34369150959`;
-- getesteter Code-Head: `9b49ec2fd16dda35de38cf185230692272997b46`;
-- A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5, C.6 und C.7: PASS;
-- Result: **SUCCESS / PASS**.
+Explizit nicht Bestandteil von C.8: geschlossene Splines; Controls nach Creation hinzufügen/löschen/umsortieren; Control-Handles; Spline-Gizmo/Drag; Tangentialität/Smooth-/Continuity-Constraints; Catmull-Rom/B-Spline/alternative Kurventypen; Snap/Auto-Merge/Tolerance/geometrisches Rebinding; Profile/Pfade; N-Gon; Extrusion; Änderungen an C.6/C.7.
 
-Reale iPad-/Safari-Evidenz auf `WD-21C.7`:
+Bei späterer Implementierung ist die sichtbare Build-ID `WD-21C.8`; Tab, Header/Brand und Status müssen konsistent sein.
 
-- Browser-Tab/Header-Build-ID konsistent: PASS;
-- Bogen über drei Punkte: PASS;
-- Tree-/Viewer-Auswahl: PASS;
-- Inspector-Änderungen: PASS;
-- Arc-Endpunkte mit anderen geeigneten Punkten über Mehrfachauswahl Verbinden/Trennen: PASS;
-- Undo/Redo: PASS;
-- Speichern/Laden: PASS;
-- **0 BLOCKER**.
-
-Das Verbinden von Start- und Endpunkt desselben einzelnen Arc wird erwartungsgemäß durch die eingefrorene C.6-Direct-Pair-/Self-Loop-Regel verhindert. Dies ist kein Fehler und kein Blocker, da ein einzelner Arc keine identische Start-/End-`pointId` erhalten darf. Ein analytisch geschlossener Kreis bleibt ein separates Circle-Element.
-
-Explizit ausgeschlossen bleiben Spline, Arc-Gizmo/Arc-Drag, sichtbares Control-Handle, alternative Arc-Parametrisierung, Constraints/Tangentialität, Snap/Auto-Merge/Tolerance/geometrisches Rebinding, N-Gon/facettierter Arc, Profile/Pfade und Extrusionsintegration.
-
-WD-21C.7 ist damit **PASS / FROZEN / 0 BLOCKER**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+WD-21C.8 bleibt bis zu einer separaten Implementierungsfreigabe **NOT IMPLEMENTED**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -137,4 +105,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren. Noch keine Spline-Implementierung und keine weitere C.7-Erweiterung im selben Schritt.
+Ausschließlich das WD-21C.8 Definition/Implementation Gate gegen den eingefrorenen C.7-Stand durchführen und daraus den exakt minimalen Implementierungsumfang und die tatsächlich notwendigen Integrationsstellen ableiten. Noch keine C.8-Codeimplementierung und keine weitere C.7-Änderung.
