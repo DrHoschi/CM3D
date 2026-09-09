@@ -1,31 +1,5 @@
 import * as THREE from 'three';
-
-const SPLINE_RENDER_SEGMENTS = 64;
-
-function deCasteljau(points, t) {
-  let level = points.map(point => ({ x: point.x, y: point.y }));
-  while (level.length > 1) {
-    const next = [];
-    for (let index = 0; index < level.length - 1; index += 1) {
-      next.push({
-        x: level[index].x + (level[index + 1].x - level[index].x) * t,
-        y: level[index].y + (level[index + 1].y - level[index].y) * t
-      });
-    }
-    level = next;
-  }
-  return level[0] ?? null;
-}
-
-export function buildSplineRenderPoints(start, controls, end, segments = SPLINE_RENDER_SEGMENTS) {
-  if (!start || !end || !Array.isArray(controls) || controls.length < 1) return [];
-  const polygon = [start, ...controls, end].map(point => ({ x: Number(point?.x), y: Number(point?.y) }));
-  if (polygon.some(point => !Number.isFinite(point.x) || !Number.isFinite(point.y))) return [];
-  const count = Math.max(8, Math.floor(Number(segments) || SPLINE_RENDER_SEGMENTS));
-  const result = [];
-  for (let index = 0; index <= count; index += 1) result.push(deCasteljau(polygon, index / count));
-  return result;
-}
+import { buildSplineRenderPoints, SPLINE_RENDER_SEGMENTS } from '../application/sketch-spline-geometry.js';
 
 export function installSketchSplineIntegration(store, runtime, ui) {
   if (!store?.addSketchSplineFromPoints || !store?.setSketchSplineGeometry) {
@@ -46,6 +20,7 @@ export function installSketchSplineIntegration(store, runtime, ui) {
     creationSequence: 'start-controls-end-explicit-finish',
     persistedTessellation: false,
     renderSegmentsInternalOnly: true,
+    renderSegments: SPLINE_RENDER_SEGMENTS,
     connectivityContractReused: true,
     controlPointsAreTopology: false,
     gizmoIncluded: false,
@@ -111,7 +86,7 @@ function installSplineInput(store, runtime) {
       if (!vertices.length) return;
       if (vertices.length === 1) runtime.updateSketchPreview([vertices[0], point]);
       else {
-        const preview = buildSplineRenderPoints(vertices[0], [...vertices.slice(1), point].slice(0, -1), point);
+        const preview = buildSplineRenderPoints(vertices[0], vertices.slice(1), point);
         if (preview.length) runtime.updateSketchPreview(preview);
       }
       return;
