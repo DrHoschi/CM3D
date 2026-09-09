@@ -103,4 +103,7 @@ assert.match(main, /installGenericEndpointConnectivityContract/);
 const extensionSource = fs.readFileSync(new URL('../src/application/sketch-endpoint-connectivity-extension.js', import.meta.url), 'utf8');
 assert.match(extensionSource, /topologyEndpoints/);
 assert.doesNotMatch(extensionSource, /circle\.center|arc\.control|spline\.controls/);
+const multiselectSource = fs.readFileSync(new URL('../src/ui/sketch-multiselect.js', import.meta.url), 'utf8');
+assert.match(multiselectSource, /preserveSketchElements=store\.sketchMultiSelectEnabled/);
+assert.match(multiselectSource, /store\.selection\.sketchElements\.every\(item=>item\.sketchId===id\)/);
 console.log('WD-21C.6 Generic Endpoint Element Connectivity Contract: PASS');
