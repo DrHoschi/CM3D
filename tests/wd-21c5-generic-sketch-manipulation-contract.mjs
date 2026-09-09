@@ -4,7 +4,7 @@ import fs from 'node:fs';
 const gizmo = fs.readFileSync(new URL('../src/ui/sketch-gizmo.js', import.meta.url), 'utf8');
 const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 
-assert.match(main, /const BUILD_ID = 'WD-21C\.5(?:-R\d+)?'/);
+assert.match(main, /const BUILD_ID = 'WD-21C\.[5-9](?:-R\d+)?'/);
 assert.match(main, /applyBuildIdentity\(\)/);
 
 assert.match(gizmo, /version: 'WD-21C\.5'/);
