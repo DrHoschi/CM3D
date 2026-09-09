@@ -31,7 +31,11 @@ export function installSketchMultiSelection(store,runtime,ui){
     return true;
   };
 
-  store.select=(id,notify=true,additive=false)=>{store.selection.sketchElements=[];return baseSelect(id,notify,additive);};
+  store.select=(id,notify=true,additive=false)=>{
+    const preserveSketchElements=store.sketchMultiSelectEnabled&&store.getObject(id)?.type==='sketch'&&store.selection.sketchElements.every(item=>item.sketchId===id);
+    if(!preserveSketchElements)store.selection.sketchElements=[];
+    return baseSelect(id,notify,additive);
+  };
   store.clearSelection=(notify=true)=>{store.selection.sketchElements=[];return baseClear(notify);};
   store.getSelectedSketchElements=()=>store.selection.sketchElements.length?store.selection.sketchElements:store.selection.sketchElement?[store.selection.sketchElement]:[];
 
