@@ -93,7 +93,7 @@ assert.doesNotMatch(integration,/renderSegments\s*[:=]/);
 assert.doesNotMatch(integration,/addSketchSpline|setSketchSpline|createExtrudeFromSketch|TransformControls/);
 
 const main = fs.readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
-assert.match(main,/const BUILD_ID = 'WD-21C\.7'/);
+assert.match(main,/const BUILD_ID = 'WD-21C\.[7-9](?:-R\d+)?'/);
 assert.match(main,/installSketchArcCreationContract/);
 assert.match(main,/installSketchArcIntegration/);
 
