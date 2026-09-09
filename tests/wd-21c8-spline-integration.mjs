@@ -4,7 +4,7 @@ import { installSketchMutationContract } from '../src/application/sketch-mutatio
 import { installGenericSketchElementMutationContract } from '../src/application/sketch-element-mutation-extension.js';
 import { installSketchSplineCreationContract } from '../src/application/sketch-spline-creation.js';
 import { installGenericEndpointConnectivityContract } from '../src/application/sketch-endpoint-connectivity-extension.js';
-import { buildSplineRenderPoints } from '../src/ui/sketch-spline-integration.js';
+import { buildSplineRenderPoints, SPLINE_RENDER_SEGMENTS } from '../src/application/sketch-spline-geometry.js';
 import { createProject, createSketchObject, migrateAndValidateProject } from '../src/model/project.js';
 
 const project = createProject('WD-21C.8');
@@ -69,6 +69,7 @@ assert.ok(detached?.newPointId);
 authoritativeSketch=store.getObject(sketch.objectId);
 assert.deepEqual(authoritativeSketch.data.splines[second.splineId].controls.map(control=>control.controlId),secondControlIds,'connectivity must not touch controls');
 
+assert.equal(SPLINE_RENDER_SEGMENTS,64);
 const quadratic=buildSplineRenderPoints({x:0,y:0},[{x:1,y:2}],{x:2,y:0},8);
 assert.equal(quadratic.length,9);
 assert.deepEqual(quadratic[0],{x:0,y:0});
@@ -84,12 +85,15 @@ assert.deepEqual(saved.controls.map(control=>control.controlId),controlIds);
 const app=fs.readFileSync(new URL('../src/application/sketch-spline-creation.js',import.meta.url),'utf8');
 assert.match(app,/addSketchSplineFromPoints/); assert.match(app,/setSketchSplineGeometry/); assert.match(app,/runSketchMutation/);
 assert.match(app,/historyEntriesPerCreation: 1/); assert.match(app,/evaluator: 'de-casteljau'/);
-assert.doesNotMatch(app,/createExtrudeFromSketch|profile|path/i);
+assert.doesNotMatch(app,/createExtrudeFromSketch|TransformControls/);
+
+const geometry=fs.readFileSync(new URL('../src/application/sketch-spline-geometry.js',import.meta.url),'utf8');
+assert.match(geometry,/deCasteljau/); assert.match(geometry,/SPLINE_RENDER_SEGMENTS = 64/);
 
 const integration=fs.readFileSync(new URL('../src/ui/sketch-spline-integration.js',import.meta.url),'utf8');
 assert.match(integration,/installSketchSplineIntegration/); assert.match(integration,/buildSplineRenderPoints/);
 assert.match(integration,/Splines \(\$\{splines\.length\}\)/); assert.match(integration,/cm3dDerivedSplineTessellation/);
-assert.match(integration,/Spline abschließen/); assert.match(integration,/SPLINE_RENDER_SEGMENTS = 64/);
+assert.match(integration,/Spline abschließen/); assert.match(integration,/SPLINE_RENDER_SEGMENTS/);
 assert.doesNotMatch(integration,/TransformControls|createExtrudeFromSketch|closedSpline\s*:\s*true/);
 
 const main=fs.readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
