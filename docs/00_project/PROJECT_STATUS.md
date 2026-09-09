@@ -1,6 +1,6 @@
 # CM3D – Projektstatus
 
-Stand: 2026-09-08
+Stand: 2026-09-09
 
 ## Aktueller Gesamtstand
 
@@ -55,7 +55,7 @@ Basis: WD-21B FROZEN @ `2e8d5b0434e62bf7c7e34b11e54da077853328cc`
 
 **PASS / DEVICE VERIFIED / 0 BLOCKER**
 
-Registry, Persistenz und Validation für `line`, `circle`, `arc`, `spline` sind vorhanden. Reale iPad-/Safari-Evidenz bestätigte Build-ID und Bestandsregression.
+Registry, Persistenz und Validation für `line`, `circle`, `arc`, `spline` sind vorhanden.
 
 ### WD-21C.3 – Generic Sketch Element Mutation Contract + Analytic Geometry ↔ Derived Tessellation Boundary
 
@@ -67,87 +67,48 @@ Zentrale Create/Edit/Delete-Grundlage für Circle, Arc und Spline über `runSket
 
 **PASS / FROZEN / 0 BLOCKER**
 
-Finaler sichtbarer Korrekturstand: `WD-21C.4-R1`. Circle-Erzeugung, Rendering, Viewer-/Baumauswahl und Inspector-Edit sind auf realem iPad/Safari bestätigt. Completion-Regression Run `34273576840`: SUCCESS.
+Finaler sichtbarer Korrekturstand `WD-21C.4-R1`; Completion-Regression Run `34273576840`: SUCCESS; reale iPad-/Safari-Evidenz: PASS.
 
 ### WD-21C.5 – Generic Sketch Element Manipulation Contract
 
 **PASS / FROZEN / 0 BLOCKER**
 
-Freigegebener Minimalumfang:
-
-- typbezogener Sketch-Gizmo-Manipulationsadapter für `point`, `line`, `circle`;
-- Circle-Gizmo-Anker = autoritativer `circle.center`;
-- Circle-Move ändert ausschließlich `center.x/y`, nicht `circleId` oder `radius`;
-- Point-/Line-Verhalten bleibt funktional erhalten;
-- Preview wird vor dem finalen Commit auf den Ausgangszustand zurückgesetzt;
-- Pointer-up → genau ein zentraler `runSketchMutation(...)`-Commit / ein History-Schritt;
-- Pointer-Cancel → vollständige Wiederherstellung ohne Commit;
-- Translate-Snap bleibt erhalten, ohne neue Connect-/Merge-/Tolerance-/Rebinding-Semantik;
-- lokale historische `WD-12B`-Build-Zuweisung aus `sketch-gizmo.js` entfernt;
-- zentrale sichtbare Build-ID ist `WD-21C.5`;
-- keine gemischte Circle+Line-/Point-Multiselection-Erweiterung;
-- keine Circle-Radius-/Rotate-/Scale-Manipulation;
-- keine Arc-/Spline-Funktion.
-
-Completion-/Regression-/Freeze-Evidenz:
-
-- C.4-Freeze-Basis: `cca28626ae1bff0f888416935963fb933ee367f9`;
-- geprüfter C.5-Stand vor Freeze-Dokumentation: `e18970efe0a0b6c0d6e94af719c2aba07c15cbcf`;
-- Diff: 10 Commits voraus / 0 dahinter;
-- Workflow: `WD-21C.5 Generic Sketch Manipulation Regression`;
-- Run: `34277682889`;
-- getesteter Code-Head: `929143091ff6698fb0248a8f9eb02da367ee2326`;
-- A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5: PASS;
-- Result: **SUCCESS / PASS**.
-
-Reale iPad-/Safari-Evidenz 2026-09-08:
-
-- Browser-Tab und Header konsistent `WD-21C.5`: PASS;
-- Circle direkt per Gizmo verschiebbar: PASS;
-- ältere Point-/Line-Elemente funktionieren weiterhin: PASS;
-- Save: PASS;
-- Undo/Redo: PASS;
-- gemeldete Blocker: 0.
-
-WD-21C.5 ist damit **PASS / FROZEN / 0 BLOCKER**.
+Direkter Circle-Gizmo-Move, bestehende Point-/Line-Manipulation, Save und Undo/Redo sind auf iPad/Safari bestätigt. Regression Run `34277682889`: SUCCESS.
 
 ### WD-21C.6 – Generic Endpoint Element Connectivity Contract
 
-**DEFINED / NOT IMPLEMENTED**
+**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING**
 
-Verbindliches Ziel: die B.2/B.3-Connectivity von line-spezifischer Verarbeitung auf alle registrierten endpoint-basierten Sketch-Elemente zu generalisieren, ohne sichtbare Arc-/Spline-Funktion einzuführen.
+Implementierter Minimalumfang:
 
-Reconciled gegen frozen C.5 `37db2ee9815435e9ff92023d9fbd6132f0664239`:
-
-- Registry: `line`, `arc`, `spline` sind `topologyEndpoints: true`; `circle` ist ausgeschlossen;
-- `getSketchElementPointIds(...)` besitzt bereits die gemeinsame Endpoint-Lesegrenze;
-- bestehende Command-/Mutation-Pfade zählen, prüfen, rewiren und trennen jedoch noch ausschließlich Lines;
-- `pointId` bleibt einzige Connectivity-Autorität; geometrische Gleichheit erzeugt niemals Verbindung.
-
-C.6 Contract-Grenzen:
-
-- Endpoint-Eligibility ausschließlich über die registrierte `topologyEndpoints: true`-Eigenschaft;
-- generische Inzidenz über Line/Arc/Spline;
-- Connect: exakt zwei Punkte derselben Skizze, erster = Source, letzter/Primary = Survivor; alle Source-Endpoint-Referenzen werden auf Survivor umgehängt;
-- Direct-Pair Guard gilt generisch für jedes endpoint-basierte Element;
-- Disconnect: exakt `point + ein incident endpoint element`; nur dessen ausgewählter Endpoint wird auf einen neuen Punkt mit identischen Koordinaten umgehängt;
-- Minimum-Incidence wird über alle endpoint-basierten Elemente bestimmt;
-- Element-ID und ursprüngliche Survivor-/Shared-Point-ID bleiben stabil;
-- Circle-Center, Arc-Control und Spline-Controls bleiben ausdrücklich nicht-topologisch und von Connect/Disconnect ausgeschlossen;
-- finaler Write bleibt innerhalb `runSketchMutation(...)` mit Validation, History, Recompute und Selection-Events;
-- bestehende sichtbare Aktionen `Verbinden` / `Trennen` und alle Line-only-Fälle bleiben rückwärtskompatibel;
-- keine geometrische Rebinding-, Snap-, Merge- oder Tolerance-Semantik.
-
-Nicht Bestandteil von C.6:
-
+- neue generische Endpoint-Connectivity-Erweiterung über die bestehende `SketchElementRegistry`;
+- Connectivity-Eligibility ausschließlich `topologyEndpoints: true` → aktuell Line/Arc/Spline;
+- Circle bleibt vollständig ausgeschlossen;
+- `connectSketchPoints(...)` rewired Source-Endpoint-Referenzen über Line/Arc/Spline auf den expliziten Survivor;
+- generischer Direct-Pair-/Self-Loop-Guard;
+- neue zentrale Operation `disconnectSketchElementFromPoint(...)` für exakt einen ausgewählten Endpoint eines endpoint-basierten Elements;
+- Inzidenz wird über alle endpoint-basierten Elemente bestimmt;
+- neuer detached `pointId` mit exakt gleicher Koordinate, Element-ID bleibt stabil;
+- `disconnectSketchLineFromPoint(...)` bleibt als rückwärtskompatibler Line-Adapter bestehen;
+- Connectivity-Command-State verwendet `elementKind + elementId` statt line-spezifischem `lineId`;
+- sichtbare Aktionen bleiben `Verbinden` / `Trennen`; nur der Disconnect-Hinweis ist neutral auf Element-Endpunkt formuliert;
+- `circle.center`, `arc.control` und `spline.controls[*]` bleiben nicht-topologisch und unverändert;
+- keine geometrische Rebinding-/Snap-/Merge-/Tolerance-Semantik;
 - keine sichtbare Arc-/Spline-Erstellung, Darstellung, Auswahl, Inspector- oder Gizmo-Funktion;
-- keine Circle-Connectivity;
-- keine Constraints;
-- kein N-Gon;
-- keine Profile/Pfade;
-- keine Extrusionsintegration.
+- keine Profile/Pfade, kein N-Gon und keine Extrusionsintegration;
+- zentrale sichtbare Build-ID: `WD-21C.6`.
 
-WD-21C.6 ist **DEFINED / NOT IMPLEMENTED**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+Automatisierte Regression:
+
+- Workflow: `WD-21C.6 Generic Endpoint Connectivity Regression`;
+- Run: `34334339592`;
+- getesteter Code-Head: `e91526716bcd6431a4e793fcce2ba4e1dc4fbefd`;
+- A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5, C.6: PASS;
+- Result: **SUCCESS / PASS**.
+
+Die C.6-Regressionsfälle decken zusätzlich synthetische Line-/Arc-/Spline-Connectivity, Circle-Ausschluss, generischen Direct-Pair-Guard, Control-Daten-Unverändertheit und Line-Rückwärtskompatibilität ab. Der vorherige Run `34334248395` war ausschließlich wegen einer veralteten C.5-Build-ID-Testgrenze rot; nach deren forward-kompatibler Korrektur ist der vollständige C.6-Lauf grün.
+
+WD-21C.6 ist noch **nicht FROZEN**, bis die reale iPad-/Safari-Bestandsregression vorliegt. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -157,4 +118,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich das **WD-21C.6 Definition/Implementation Gate** gegen den eingefrorenen C.5-Stand durchführen und daraus den exakten minimalen Implementierungsumfang sowie die betroffenen autoritativen Connectivity-Grenzen ableiten. Noch keine Code-Implementierung im selben Schritt und weiterhin keine sichtbare Arc-/Spline-Funktion.
+Ausschließlich der reale iPad-/Safari-Gerätecheck für `WD-21C.6`: Tab und Header müssen konsistent `WD-21C.6` zeigen; bestehendes Point-/Line-Verbinden und -Trennen regressieren; Circle-Auswahl und direkter Circle-Move müssen weiterhin funktionieren; danach kurzer Save/Load- und Undo/Redo-Check. Außerdem prüfen, dass keine sichtbare Arc-/Spline-Funktion hinzugekommen ist. Noch kein C.6-Freeze-Gate und keine Arc-/Spline-Implementierung im selben Schritt.
