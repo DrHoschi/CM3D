@@ -47,21 +47,17 @@ Freeze-Dokumentation: `2e8d5b0434e62bf7c7e34b11e54da077853328cc`
 Aktiver Branch: `feature/wd-21c-sketch-element-type-expansion`  
 Basis: WD-21B FROZEN @ `2e8d5b0434e62bf7c7e34b11e54da077853328cc`
 
-### WD-21C.1 – Existing Sketch Element Type & Creation/Editing Inventory
+### WD-21C.1
 
 **PASS / INVENTORY & CONTRACT COMPLETE / 0 ELEMENT IMPLEMENTATION**
 
-### WD-21C.2 – Generic Sketch Element Registry & Persistence Foundation
+### WD-21C.2
 
 **PASS / DEVICE VERIFIED / 0 BLOCKER**
 
-Registry, Persistenz und Validation für `line`, `circle`, `arc`, `spline` sind vorhanden.
-
-### WD-21C.3 – Generic Sketch Element Mutation Contract + Analytic Geometry ↔ Derived Tessellation Boundary
+### WD-21C.3
 
 **PASS / DEVICE VERIFIED / 0 BLOCKER**
-
-Zentrale Create/Edit/Delete-Grundlage für Circle, Arc und Spline über `runSketchMutation(...)`; analytische Sketch-Identität bleibt von abgeleiteter Tessellierung getrennt.
 
 ### WD-21C.4 – Circle Creation, Rendering & Editing Integration
 
@@ -77,28 +73,35 @@ Direkter Circle-Gizmo-Move, bestehende Point-/Line-Manipulation, Save und Undo/R
 
 ### WD-21C.6 – Generic Endpoint Element Connectivity Contract
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK FAILED / 1 BLOCKER**
+**IMPLEMENTED / R1 CORRECTION / AUTOMATED REGRESSION PASS / DEVICE RECHECK PENDING / NOT FROZEN**
 
-Automatisierte Regression:
+Die C.6-Basis generalisiert Connect/Disconnect auf registrierte endpoint-basierte Elemente Line/Arc/Spline; Circle bleibt ausgeschlossen. Keine sichtbare Arc-/Spline-Funktion wurde eingeführt.
 
-- Workflow: `WD-21C.6 Generic Endpoint Connectivity Regression`;
-- Run: `34334339592`;
-- getesteter Code-Head: `e91526716bcd6431a4e793fcce2ba4e1dc4fbefd`;
-- A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5, C.6: PASS;
-- Result: **SUCCESS / PASS**.
+Der erste reale iPad-/Safari-Check auf `WD-21C.6` ergab:
 
-Reale iPad-/Safari-Evidenz 2026-09-09:
+- Build-ID Tab/Header: PASS
+- Save/Load: PASS
+- Undo/Redo: PASS
+- Mehrfachauswahl: FAIL
+- dadurch bestehendes Point-/Line-`Verbinden`/`Trennen` nicht praktikabel
+- **1 BLOCKER**
 
-- Browser-Tab und Header konsistent `WD-21C.6`: PASS;
-- Save/Load: PASS;
-- Undo/Redo: PASS;
-- bestehende Mehrfachauswahl: FAIL;
-- dadurch bestehendes Point-/Line-`Verbinden` und `Trennen` auf dem Gerät praktisch nicht ausführbar: **BLOCKER**;
-- Geräte-Gesamtergebnis: **FAIL / 1 BLOCKER**.
+R1-Ursache: Bei jeder generischen Sketch-Element-Auswahl wurde zuerst der Owner-Sketch über einen bereits von der Mehrfachauswahl umwickelten `store.select(...)`-Pfad gesetzt. Dieser Pfad leerte `store.selection.sketchElements`, sodass die vorherige Auswahl vor dem zweiten Tap verloren ging.
 
-Eingrenzung: `src/ui/sketch-multiselect.js` wurde durch den C.6-Diff selbst nicht verändert. Zu prüfen ist deshalb gezielt die Integration `Mehrfachauswahl / SelectionRef → C.6 Connectivity Command State → Verbinden/Trennen`. Kein Freeze und kein Arc-/Spline-Ausbau, solange dieser Bestandsregressionsblocker offen ist.
+R1-Minimalfix: Bei aktiver Mehrfachauswahl bleibt die vorhandene Sketch-Element-Liste erhalten, wenn der Owner-Sketch derselbe ist. Alle anderen Selektionsfälle behalten ihr bisheriges Clear-Verhalten. Keine Connectivity-Fachregel wurde geändert.
 
-WD-21C.6 ist **nicht FROZEN**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+R1-Evidenz:
+
+- sichtbare Build-ID: `WD-21C.6-R1`
+- Multiselect-Fix: `bbfd768744e4b0aded323c741dbfb9194e575698`
+- Build-ID: `ddab664c753ea6cf6b8b81ddfff98405609861e9`
+- Regressionstest-Head: `e4c0d91df1f0ae9a2baf0df9d2d30782772ebe4a`
+- Workflow: `WD-21C.6 Generic Endpoint Connectivity Regression`
+- Run: `34363013788`
+- A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5, C.6: PASS
+- Result: **SUCCESS / PASS**
+
+WD-21C.6-R1 bleibt bis zum realen Geräte-Recheck ausdrücklich **nicht FROZEN**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -108,4 +111,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich **WD-21C.6-R1 – Multiselect / Connectivity Regression Diagnosis & Minimal Fix**: konkrete Ursache zwischen bestehender Mehrfachauswahl/SelectionRef und C.6-Command-State bestimmen und anschließend nur den kleinsten notwendigen Fix innerhalb der bestehenden C.6-Grenze umsetzen. Danach vollständige Regression und erneuter iPad-/Safari-Gerätecheck. Noch keine sichtbare Arc-/Spline-Funktion und kein nächster C-Teilblock.
+Ausschließlich der reale iPad-/Safari-Geräte-Recheck auf **`WD-21C.6-R1`**: Tab/Header prüfen, Mehrfachauswahl aktivieren, zwei Punkte derselben Skizze nacheinander auswählen und sicherstellen, dass beide erhalten bleiben; anschließend `Verbinden` und `Trennen` testen. Save/Load und Undo/Redo kurz regressieren. Noch kein Freeze-Gate, keine Arc-/Spline-Funktion und kein nächster C-Teilblock.
