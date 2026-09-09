@@ -77,26 +77,7 @@ Direkter Circle-Gizmo-Move, bestehende Point-/Line-Manipulation, Save und Undo/R
 
 ### WD-21C.6 – Generic Endpoint Element Connectivity Contract
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING**
-
-Implementierter Minimalumfang:
-
-- neue generische Endpoint-Connectivity-Erweiterung über die bestehende `SketchElementRegistry`;
-- Connectivity-Eligibility ausschließlich `topologyEndpoints: true` → aktuell Line/Arc/Spline;
-- Circle bleibt vollständig ausgeschlossen;
-- `connectSketchPoints(...)` rewired Source-Endpoint-Referenzen über Line/Arc/Spline auf den expliziten Survivor;
-- generischer Direct-Pair-/Self-Loop-Guard;
-- neue zentrale Operation `disconnectSketchElementFromPoint(...)` für exakt einen ausgewählten Endpoint eines endpoint-basierten Elements;
-- Inzidenz wird über alle endpoint-basierten Elemente bestimmt;
-- neuer detached `pointId` mit exakt gleicher Koordinate, Element-ID bleibt stabil;
-- `disconnectSketchLineFromPoint(...)` bleibt als rückwärtskompatibler Line-Adapter bestehen;
-- Connectivity-Command-State verwendet `elementKind + elementId` statt line-spezifischem `lineId`;
-- sichtbare Aktionen bleiben `Verbinden` / `Trennen`; nur der Disconnect-Hinweis ist neutral auf Element-Endpunkt formuliert;
-- `circle.center`, `arc.control` und `spline.controls[*]` bleiben nicht-topologisch und unverändert;
-- keine geometrische Rebinding-/Snap-/Merge-/Tolerance-Semantik;
-- keine sichtbare Arc-/Spline-Erstellung, Darstellung, Auswahl, Inspector- oder Gizmo-Funktion;
-- keine Profile/Pfade, kein N-Gon und keine Extrusionsintegration;
-- zentrale sichtbare Build-ID: `WD-21C.6`.
+**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK FAILED / 1 BLOCKER**
 
 Automatisierte Regression:
 
@@ -106,9 +87,18 @@ Automatisierte Regression:
 - A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5, C.6: PASS;
 - Result: **SUCCESS / PASS**.
 
-Die C.6-Regressionsfälle decken zusätzlich synthetische Line-/Arc-/Spline-Connectivity, Circle-Ausschluss, generischen Direct-Pair-Guard, Control-Daten-Unverändertheit und Line-Rückwärtskompatibilität ab. Der vorherige Run `34334248395` war ausschließlich wegen einer veralteten C.5-Build-ID-Testgrenze rot; nach deren forward-kompatibler Korrektur ist der vollständige C.6-Lauf grün.
+Reale iPad-/Safari-Evidenz 2026-09-09:
 
-WD-21C.6 ist noch **nicht FROZEN**, bis die reale iPad-/Safari-Bestandsregression vorliegt. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+- Browser-Tab und Header konsistent `WD-21C.6`: PASS;
+- Save/Load: PASS;
+- Undo/Redo: PASS;
+- bestehende Mehrfachauswahl: FAIL;
+- dadurch bestehendes Point-/Line-`Verbinden` und `Trennen` auf dem Gerät praktisch nicht ausführbar: **BLOCKER**;
+- Geräte-Gesamtergebnis: **FAIL / 1 BLOCKER**.
+
+Eingrenzung: `src/ui/sketch-multiselect.js` wurde durch den C.6-Diff selbst nicht verändert. Zu prüfen ist deshalb gezielt die Integration `Mehrfachauswahl / SelectionRef → C.6 Connectivity Command State → Verbinden/Trennen`. Kein Freeze und kein Arc-/Spline-Ausbau, solange dieser Bestandsregressionsblocker offen ist.
+
+WD-21C.6 ist **nicht FROZEN**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -118,4 +108,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Gerätecheck für `WD-21C.6`: Tab und Header müssen konsistent `WD-21C.6` zeigen; bestehendes Point-/Line-Verbinden und -Trennen regressieren; Circle-Auswahl und direkter Circle-Move müssen weiterhin funktionieren; danach kurzer Save/Load- und Undo/Redo-Check. Außerdem prüfen, dass keine sichtbare Arc-/Spline-Funktion hinzugekommen ist. Noch kein C.6-Freeze-Gate und keine Arc-/Spline-Implementierung im selben Schritt.
+Ausschließlich **WD-21C.6-R1 – Multiselect / Connectivity Regression Diagnosis & Minimal Fix**: konkrete Ursache zwischen bestehender Mehrfachauswahl/SelectionRef und C.6-Command-State bestimmen und anschließend nur den kleinsten notwendigen Fix innerhalb der bestehenden C.6-Grenze umsetzen. Danach vollständige Regression und erneuter iPad-/Safari-Gerätecheck. Noch keine sichtbare Arc-/Spline-Funktion und kein nächster C-Teilblock.
