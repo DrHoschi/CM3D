@@ -41,7 +41,7 @@ WD-21C.6-R1 korrigiert ausschließlich die beim realen Gerätecheck gefundene Me
 
 ## WD-21C.7 – Arc Creation, Rendering & Editing Integration
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING / NOT FROZEN
+**Status:** PASS / FROZEN / 0 BLOCKER
 
 **Reconciliation-Basis:** eingefrorener WD-21C.6-R1-Stand `a16a1f6b70a10fb10b469ff45e3795a95ddbbc45`.
 
@@ -77,6 +77,19 @@ WD-21C.6-R1 korrigiert ausschließlich die beim realen Gerätecheck gefundene Me
 - keine Extrusionsintegration;
 - keine Änderung an der eingefrorenen C.6-Connectivity-Semantik.
 
+### Completion / Regression / Freeze Gate
+
+Der vollständige C.7-Branchstand vor Freeze-Dokumentation wurde gegen den eingefrorenen C.6-R1-Stand `a16a1f6b70a10fb10b469ff45e3795a95ddbbc45` geprüft.
+
+Ergebnis des vollständigen Vergleichs:
+
+- **12 Commits voraus / 0 dahinter**;
+- geänderte Produktdateien ausschließlich `src/application/sketch-arc-creation.js`, `src/ui/sketch-arc-integration.js` und die notwendige C.7-Integration/Build-ID in `src/main.js`;
+- neue C.7-Regression und Workflow;
+- zwei historische Regressionstests ausschließlich forward-kompatibel angepasst;
+- Statusdokumentation synchronisiert;
+- keine Spline-Funktion, kein Arc-Gizmo, keine Profile/Pfade, kein N-Gon, keine Extrusionsintegration und keine C.6-Fachänderung im Diff.
+
 ### Automatisierte Regression
 
 Workflow: `WD-21C.7 Arc Integration Regression`  
@@ -99,6 +112,8 @@ Bestätigt:
 
 Der C.7-Test bestätigt zusätzlich atomare Arc-Erzeugung, einen History-Eintrag pro Creation, Rollback ungültiger/kollinearer Geometrie, stabile Endpoint-IDs beim Editing, C.6-Connect/Disconnect für Arc-Endpunkte mit unverändertem Control, Persistenz über Save/Load sowie die Ausschlussgrenzen zu Spline/Gizmo/Extrusion.
 
+Die nach dem getesteten Code-Head hinzugekommenen Commits bis zum auditierten Branchstand betreffen ausschließlich Statusdokumentation; während des Freeze-Gates wurde kein Produktcode geändert.
+
 ### Test-Gate-Korrekturen während der Implementierung
 
 Die ersten roten Läufe waren keine freizugebenden Produktregressionen, sondern veraltete bzw. fehlerhafte Testgrenzen:
@@ -109,14 +124,28 @@ Die ersten roten Läufe waren keine freizugebenden Produktregressionen, sondern 
 
 Erst der anschließende maßgebliche Run `34369150959` ist das C.7-Automatik-Gate und vollständig SUCCESS.
 
-### Geräte-Evidenz
+### Reale Geräte-Evidenz 2026-09-09 – iPad/Safari
 
-Noch nicht durchgeführt. WD-21C.7 bleibt deshalb ausdrücklich **NOT FROZEN**.
+Der reale Gerätecheck auf `WD-21C.7` bestätigt:
+
+- Browser-Tab und sichtbares Header-/Brand-Label konsistent `WD-21C.7`: PASS;
+- Bogen über drei Punkte zeichnen: PASS;
+- Tree-Auswahl: PASS;
+- Viewer-Auswahl: PASS;
+- Inspector-Änderungen: PASS;
+- Arc-Endpunkte über Mehrfachauswahl mit anderen geeigneten Punkten verbinden/trennen: PASS;
+- Undo: PASS;
+- Redo: PASS;
+- Speichern: PASS;
+- Laden: PASS;
+- 0 gemeldete Blocker.
+
+Der Versuch, Start- und Endpunkt **desselben einzelnen Arc** miteinander zu verbinden, wird erwartungsgemäß abgelehnt und ist **kein Blocker**. Die eingefrorene C.6-Direct-Pair-/Self-Loop-Regel verhindert dadurch `startPointId === endPointId` innerhalb desselben endpoint-basierten Elements. Für einen analytisch geschlossenen Kreis bleibt das separate Circle-Element zuständig.
 
 ## Freigabestatus
 
-WD-21C.4, WD-21C.5 und WD-21C.6 bleiben **PASS / FROZEN / 0 BLOCKER**. WD-21C.7 ist **IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING / NOT FROZEN**. WD-21C als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
+WD-21C.4, WD-21C.5, WD-21C.6 und WD-21C.7 sind **PASS / FROZEN / 0 BLOCKER**. WD-21C als Gesamtblock bleibt ausdrücklich **nicht FROZEN**, da weitere WD-21C-Teilblöcke noch ausstehen.
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Gerätecheck auf **`WD-21C.7`**: Tab/Header-Build-ID prüfen, `Bogen`-Werkzeug testen, Start→Ende→Control zeichnen, Viewer-/Tree-Auswahl und Inspector prüfen, Arc-Endpunkte über die bestehende C.6-Mehrfachauswahl verbinden/trennen, Undo/Redo sowie Speichern/Laden regressieren und kontrollieren, dass keine Spline-Funktion und kein Arc-Gizmo hinzugekommen sind. Noch kein Freeze-Gate und kein nächster C-Teilblock.
+Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren. Noch keine Spline-Implementierung und keine weitere C.7-Erweiterung im selben Schritt.
