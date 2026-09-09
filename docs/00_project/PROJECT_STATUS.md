@@ -79,11 +79,11 @@ Finaler sichtbarer Korrekturstand `WD-21C.6-R1`. Completion-Regression Run `3436
 
 ### WD-21C.7 – Arc Creation, Rendering & Editing Integration
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING / NOT FROZEN**
+**PASS / FROZEN / 0 BLOCKER**
 
 Reconciliation-Basis: eingefrorener C.6-R1-Stand `a16a1f6b70a10fb10b469ff45e3795a95ddbbc45`.
 
-Implementierter Minimalumfang:
+Implementierter Umfang:
 
 - atomare zentrale Arc-Erzeugung über `addSketchArcFromPoints(...)`: zwei stabile Endpoint-Punkte + genau ein Arc in einer `runSketchMutation(...)`-Transaktion und einem Undo-Schritt;
 - `setSketchArcGeometry(...)` erhält `arcId` und beide Endpoint-IDs beim numerischen Editing;
@@ -96,6 +96,14 @@ Implementierter Minimalumfang:
 - eingefrorene C.6-Connectivity wird für Arc-Endpunkte wiederverwendet, nicht erweitert;
 - sichtbare Build-ID `WD-21C.7`.
 
+Completion-/Freeze-Audit gegen `a16a1f6b70a10fb10b469ff45e3795a95ddbbc45`:
+
+- **12 Commits voraus / 0 dahinter**;
+- Produktänderungen ausschließlich Arc-Creation, Arc-UI-Integration und notwendige `main.js`-Integration/Build-ID;
+- C.7-Test und Workflow hinzugefügt;
+- C.3-/C.6-Regressionsgrenzen ausschließlich forward-kompatibel gemacht;
+- keine Spline-Funktion, kein Arc-Gizmo, keine Profile/Pfade, kein N-Gon, keine Extrusionsintegration und keine C.6-Fachänderung.
+
 Automatisierte Regression:
 
 - Workflow: `WD-21C.7 Arc Integration Regression`;
@@ -104,11 +112,22 @@ Automatisierte Regression:
 - A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5, C.6 und C.7: PASS;
 - Result: **SUCCESS / PASS**.
 
-Die vorherigen roten Läufe waren Test-Gate-/Harness-Probleme, keine C.7-Freigabe: C.3 hatte eine historische Negativgrenze gegen sichtbare Arc-Integration (`ba5ed7c0013c47dc23b9a757500b966aa83f43d9` korrigiert), C.6 akzeptierte im Build-Gate noch ausschließlich C.6-Kennungen (`30a86d992c2a500dacef7193dcc8befe78079e38` forward-kompatibel gemacht), und der neue C.7-Test hielt nach zentralen Transaktionen eine veraltete Objekt-Referenz (`9b49ec2fd16dda35de38cf185230692272997b46` korrigiert). Keine Connectivity-Fachregel und kein zusätzlicher Produktumfang wurden dadurch geändert.
+Reale iPad-/Safari-Evidenz auf `WD-21C.7`:
+
+- Browser-Tab/Header-Build-ID konsistent: PASS;
+- Bogen über drei Punkte: PASS;
+- Tree-/Viewer-Auswahl: PASS;
+- Inspector-Änderungen: PASS;
+- Arc-Endpunkte mit anderen geeigneten Punkten über Mehrfachauswahl Verbinden/Trennen: PASS;
+- Undo/Redo: PASS;
+- Speichern/Laden: PASS;
+- **0 BLOCKER**.
+
+Das Verbinden von Start- und Endpunkt desselben einzelnen Arc wird erwartungsgemäß durch die eingefrorene C.6-Direct-Pair-/Self-Loop-Regel verhindert. Dies ist kein Fehler und kein Blocker, da ein einzelner Arc keine identische Start-/End-`pointId` erhalten darf. Ein analytisch geschlossener Kreis bleibt ein separates Circle-Element.
 
 Explizit ausgeschlossen bleiben Spline, Arc-Gizmo/Arc-Drag, sichtbares Control-Handle, alternative Arc-Parametrisierung, Constraints/Tangentialität, Snap/Auto-Merge/Tolerance/geometrisches Rebinding, N-Gon/facettierter Arc, Profile/Pfade und Extrusionsintegration.
 
-WD-21C.7 bleibt bis zum realen Gerätecheck ausdrücklich **NOT FROZEN**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+WD-21C.7 ist damit **PASS / FROZEN / 0 BLOCKER**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -118,4 +137,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Gerätecheck auf **`WD-21C.7`**: Tab/Header-Build-ID prüfen, `Bogen`-Werkzeug testen, Start→Ende→Control zeichnen, Arc im Viewer/Objektbaum auswählen und Inspector editieren, Arc-Endpunkte über C.6 verbinden/trennen, Undo/Redo sowie Speichern/Laden regressieren und kontrollieren, dass keine Spline-Funktion und kein Arc-Gizmo hinzugekommen sind. Noch kein Freeze-Gate und kein nächster C-Teilblock.
+Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren. Noch keine Spline-Implementierung und keine weitere C.7-Erweiterung im selben Schritt.
