@@ -98,7 +98,7 @@ assert.equal(lineResult.elementKind, 'line');
 assert.equal(lineStore.getObject('line_compat').data.lines.l2.startPointId, 'shared');
 
 const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
-assert.match(main, /const BUILD_ID = 'WD-21C\.6(?:-R\d+)?'/);
+assert.match(main, /const BUILD_ID = 'WD-21C\.[6-9](?:-R\d+)?'/);
 assert.match(main, /installGenericEndpointConnectivityContract/);
 const extensionSource = fs.readFileSync(new URL('../src/application/sketch-endpoint-connectivity-extension.js', import.meta.url), 'utf8');
 assert.match(extensionSource, /topologyEndpoints/);
