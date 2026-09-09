@@ -79,32 +79,36 @@ Finaler sichtbarer Korrekturstand `WD-21C.6-R1`. Completion-Regression Run `3436
 
 ### WD-21C.7 – Arc Creation, Rendering & Editing Integration
 
-**DEFINED / NOT IMPLEMENTED**
+**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING / NOT FROZEN**
 
 Reconciliation-Basis: eingefrorener C.6-R1-Stand `a16a1f6b70a10fb10b469ff45e3795a95ddbbc45`.
 
-Verbindliche C.7-Grenze:
+Implementierter Minimalumfang:
 
-- analytische Identität `arcId + startPointId + endPointId + control{x,y}`;
-- Start/Ende sind echte topologische Punkte; Control ist ausschließlich geometrischer Parameter;
-- sichtbare Erstellung deterministisch `Start → Ende → Control`;
-- vor dem dritten gültigen Punkt ausschließlich Preview-State;
-- finale Erstellung atomar in genau einer zentralen Sketch-Transaktion: zwei stabile Endpoint-Punkte + genau ein Arc, damit genau ein History-/Undo-Schritt entsteht;
-- keine geometrische Übernahme bereits vorhandener Punkte beim Zeichnen; Verbindung ausschließlich explizit über C.6;
-- ungültige/kollineare Drei-Punkt-Geometrie ohne persistente Teilreste ablehnen;
-- Viewer-Tessellation ausschließlich abgeleitet und nicht persistent;
-- Arc im Viewer und Objektbaum als genau ein `SKETCH_ELEMENT`;
-- eigene Tree-Gruppe `Bögen (n)`;
-- Inspector für Start X/Y, Ende X/Y und Control X/Y;
-- Endpoint-Editing erhält bestehende `pointId`s; Control-Editing verändert ausschließlich `arc.control`;
-- vorhandene C.6-Connectivity wird konsumiert, nicht erweitert;
-- Delete, Undo/Redo und Save/Load verwenden vorhandene zentrale Grenzen.
+- atomare zentrale Arc-Erzeugung über `addSketchArcFromPoints(...)`: zwei stabile Endpoint-Punkte + genau ein Arc in einer `runSketchMutation(...)`-Transaktion und einem Undo-Schritt;
+- `setSketchArcGeometry(...)` erhält `arcId` und beide Endpoint-IDs beim numerischen Editing;
+- sichtbares Werkzeug `Bogen` mit Drei-Tap-Input `Start → Ende → Control`;
+- vor der dritten gültigen Eingabe ausschließlich Preview-State;
+- abgeleitete Arc-Tessellation, nicht persistent und keine Sketch-Line-Repräsentation;
+- Arc als ein `SKETCH_ELEMENT` im Viewer und in `Bögen (n)` im Objektbaum;
+- Viewer-/Tree-Picking über die bestehende generische SelectionRef-Grenze;
+- Inspector für Start X/Y, Ende X/Y und Kontrollpunkt X/Y;
+- eingefrorene C.6-Connectivity wird für Arc-Endpunkte wiederverwendet, nicht erweitert;
+- sichtbare Build-ID `WD-21C.7`.
 
-Explizit nicht Bestandteil von C.7: Spline, Arc-Gizmo/Arc-Drag, sichtbares Control-Handle, alternative Radius-/Mittelpunkt-/Winkel-Parametrisierung, Tangentialität/Constraints, Snap/Auto-Merge/Tolerance/geometrisches Rebinding, N-Gon/facettierter Arc, Profile/Pfade, Extrusionsintegration oder C.6-Erweiterungen.
+Automatisierte Regression:
 
-Bei späterer Implementierung ist die sichtbare Build-ID `WD-21C.7`; Tab, Header/Brand und Status müssen konsistent sein.
+- Workflow: `WD-21C.7 Arc Integration Regression`;
+- Run: `34369150959`;
+- getesteter Code-Head: `9b49ec2fd16dda35de38cf185230692272997b46`;
+- A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5, C.6 und C.7: PASS;
+- Result: **SUCCESS / PASS**.
 
-WD-21C.7 bleibt bis zu einer separaten Implementierungsfreigabe **NOT IMPLEMENTED**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+Die vorherigen roten Läufe waren Test-Gate-/Harness-Probleme, keine C.7-Freigabe: C.3 hatte eine historische Negativgrenze gegen sichtbare Arc-Integration (`ba5ed7c0013c47dc23b9a757500b966aa83f43d9` korrigiert), C.6 akzeptierte im Build-Gate noch ausschließlich C.6-Kennungen (`30a86d992c2a500dacef7193dcc8befe78079e38` forward-kompatibel gemacht), und der neue C.7-Test hielt nach zentralen Transaktionen eine veraltete Objekt-Referenz (`9b49ec2fd16dda35de38cf185230692272997b46` korrigiert). Keine Connectivity-Fachregel und kein zusätzlicher Produktumfang wurden dadurch geändert.
+
+Explizit ausgeschlossen bleiben Spline, Arc-Gizmo/Arc-Drag, sichtbares Control-Handle, alternative Arc-Parametrisierung, Constraints/Tangentialität, Snap/Auto-Merge/Tolerance/geometrisches Rebinding, N-Gon/facettierter Arc, Profile/Pfade und Extrusionsintegration.
+
+WD-21C.7 bleibt bis zum realen Gerätecheck ausdrücklich **NOT FROZEN**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -114,4 +118,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich das WD-21C.7 Definition/Implementation Gate gegen den eingefrorenen C.6-R1-Stand durchführen und daraus den exakt minimalen Implementierungsumfang ableiten. Noch keine C.7-Codeimplementierung und weiterhin keine Spline-Funktion.
+Ausschließlich der reale iPad-/Safari-Gerätecheck auf **`WD-21C.7`**: Tab/Header-Build-ID prüfen, `Bogen`-Werkzeug testen, Start→Ende→Control zeichnen, Arc im Viewer/Objektbaum auswählen und Inspector editieren, Arc-Endpunkte über C.6 verbinden/trennen, Undo/Redo sowie Speichern/Laden regressieren und kontrollieren, dass keine Spline-Funktion und kein Arc-Gizmo hinzugekommen sind. Noch kein Freeze-Gate und kein nächster C-Teilblock.
