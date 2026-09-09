@@ -73,35 +73,41 @@ Direkter Circle-Gizmo-Move, bestehende Point-/Line-Manipulation, Save und Undo/R
 
 ### WD-21C.6 – Generic Endpoint Element Connectivity Contract
 
-**IMPLEMENTED / R1 CORRECTION / AUTOMATED REGRESSION PASS / DEVICE RECHECK PENDING / NOT FROZEN**
+**PASS / FROZEN / 0 BLOCKER**
 
-Die C.6-Basis generalisiert Connect/Disconnect auf registrierte endpoint-basierte Elemente Line/Arc/Spline; Circle bleibt ausgeschlossen. Keine sichtbare Arc-/Spline-Funktion wurde eingeführt.
+Finaler sichtbarer Korrekturstand: `WD-21C.6-R1`.
 
-Der erste reale iPad-/Safari-Check auf `WD-21C.6` ergab:
+C.6 generalisiert Connect/Disconnect auf registrierte endpoint-basierte Elemente Line/Arc/Spline; Circle bleibt ausgeschlossen. Keine sichtbare Arc-/Spline-Funktion wurde eingeführt.
 
-- Build-ID Tab/Header: PASS
-- Save/Load: PASS
-- Undo/Redo: PASS
-- Mehrfachauswahl: FAIL
-- dadurch bestehendes Point-/Line-`Verbinden`/`Trennen` nicht praktikabel
-- **1 BLOCKER**
+Der erste Gerätecheck auf `WD-21C.6` zeigte eine Mehrfachauswahlregression. R1 korrigiert ausschließlich diesen Integrationsfehler: Bei aktiver Mehrfachauswahl bleibt die bestehende Sketch-Element-Auswahl über die Owner-Sketch-Selektion hinweg erhalten, solange derselbe Sketch Owner bleibt. Die Connect-/Disconnect-Fachregeln selbst wurden nicht verändert.
 
-R1-Ursache: Bei jeder generischen Sketch-Element-Auswahl wurde zuerst der Owner-Sketch über einen bereits von der Mehrfachauswahl umwickelten `store.select(...)`-Pfad gesetzt. Dieser Pfad leerte `store.selection.sketchElements`, sodass die vorherige Auswahl vor dem zweiten Tap verloren ging.
+Completion-/Freeze-Evidenz:
 
-R1-Minimalfix: Bei aktiver Mehrfachauswahl bleibt die vorhandene Sketch-Element-Liste erhalten, wenn der Owner-Sketch derselbe ist. Alle anderen Selektionsfälle behalten ihr bisheriges Clear-Verhalten. Keine Connectivity-Fachregel wurde geändert.
-
-R1-Evidenz:
-
-- sichtbare Build-ID: `WD-21C.6-R1`
-- Multiselect-Fix: `bbfd768744e4b0aded323c741dbfb9194e575698`
-- Build-ID: `ddab664c753ea6cf6b8b81ddfff98405609861e9`
-- Regressionstest-Head: `e4c0d91df1f0ae9a2baf0df9d2d30782772ebe4a`
+- C.6-Vergleichsbasis: `e91526716bcd6431a4e793fcce2ba4e1dc4fbefd`
+- auditierter R1-Branchstand vor Freeze-Dokumentation: `beaeb9c9d45c988e3b2a2cad6aab2ddc6013ad2e`
+- Diff: **9 Commits voraus / 0 dahinter**
+- R1-Multiselect-Fix: `bbfd768744e4b0aded323c741dbfb9194e575698`
+- R1-Build-ID: `ddab664c753ea6cf6b8b81ddfff98405609861e9`
+- getesteter Code-Head: `e4c0d91df1f0ae9a2baf0df9d2d30782772ebe4a`
 - Workflow: `WD-21C.6 Generic Endpoint Connectivity Regression`
 - Run: `34363013788`
-- A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5, C.6: PASS
+- A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5 und C.6: PASS
 - Result: **SUCCESS / PASS**
 
-WD-21C.6-R1 bleibt bis zum realen Geräte-Recheck ausdrücklich **nicht FROZEN**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+Reale iPad-/Safari-Evidenz auf `WD-21C.6-R1`:
+
+- Tab/Header Build-ID: PASS
+- Zeichnen/Polygon: PASS
+- Mehrfachauswahl: PASS
+- Verbinden/Trennen: PASS
+- Verbindung erneut zusammenführen: PASS
+- Undo/Redo: PASS
+- Speichern/Laden: PASS
+- **0 BLOCKER**
+
+Keine Arc-/Spline-Erstellung, kein Arc-/Spline-Rendering/Inspector/Gizmo, keine Profile/Pfade, kein N-Gon und keine Extrusionsintegration wurden durch C.6-R1 eingeführt.
+
+WD-21C.6 ist damit **PASS / FROZEN / 0 BLOCKER**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -111,4 +117,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Geräte-Recheck auf **`WD-21C.6-R1`**: Tab/Header prüfen, Mehrfachauswahl aktivieren, zwei Punkte derselben Skizze nacheinander auswählen und sicherstellen, dass beide erhalten bleiben; anschließend `Verbinden` und `Trennen` testen. Save/Load und Undo/Redo kurz regressieren. Noch kein Freeze-Gate, keine Arc-/Spline-Funktion und kein nächster C-Teilblock.
+Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren. Noch keine Arc-/Spline-Implementierung und keine weitere C.6-Erweiterung im selben Schritt.
