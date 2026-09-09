@@ -75,39 +75,36 @@ Direkter Circle-Gizmo-Move, bestehende Point-/Line-Manipulation, Save und Undo/R
 
 **PASS / FROZEN / 0 BLOCKER**
 
-Finaler sichtbarer Korrekturstand: `WD-21C.6-R1`.
+Finaler sichtbarer Korrekturstand `WD-21C.6-R1`. Completion-Regression Run `34363013788`: SUCCESS. Reale iPad-/Safari-Evidenz bestätigt Zeichnen/Polygon, Mehrfachauswahl, Verbinden/Trennen, erneutes Zusammenführen, Undo/Redo und Speichern/Laden. 0 BLOCKER.
 
-C.6 generalisiert Connect/Disconnect auf registrierte endpoint-basierte Elemente Line/Arc/Spline; Circle bleibt ausgeschlossen. Keine sichtbare Arc-/Spline-Funktion wurde eingeführt.
+### WD-21C.7 – Arc Creation, Rendering & Editing Integration
 
-Der erste Gerätecheck auf `WD-21C.6` zeigte eine Mehrfachauswahlregression. R1 korrigiert ausschließlich diesen Integrationsfehler: Bei aktiver Mehrfachauswahl bleibt die bestehende Sketch-Element-Auswahl über die Owner-Sketch-Selektion hinweg erhalten, solange derselbe Sketch Owner bleibt. Die Connect-/Disconnect-Fachregeln selbst wurden nicht verändert.
+**DEFINED / NOT IMPLEMENTED**
 
-Completion-/Freeze-Evidenz:
+Reconciliation-Basis: eingefrorener C.6-R1-Stand `a16a1f6b70a10fb10b469ff45e3795a95ddbbc45`.
 
-- C.6-Vergleichsbasis: `e91526716bcd6431a4e793fcce2ba4e1dc4fbefd`
-- auditierter R1-Branchstand vor Freeze-Dokumentation: `beaeb9c9d45c988e3b2a2cad6aab2ddc6013ad2e`
-- Diff: **9 Commits voraus / 0 dahinter**
-- R1-Multiselect-Fix: `bbfd768744e4b0aded323c741dbfb9194e575698`
-- R1-Build-ID: `ddab664c753ea6cf6b8b81ddfff98405609861e9`
-- getesteter Code-Head: `e4c0d91df1f0ae9a2baf0df9d2d30782772ebe4a`
-- Workflow: `WD-21C.6 Generic Endpoint Connectivity Regression`
-- Run: `34363013788`
-- A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5 und C.6: PASS
-- Result: **SUCCESS / PASS**
+Verbindliche C.7-Grenze:
 
-Reale iPad-/Safari-Evidenz auf `WD-21C.6-R1`:
+- analytische Identität `arcId + startPointId + endPointId + control{x,y}`;
+- Start/Ende sind echte topologische Punkte; Control ist ausschließlich geometrischer Parameter;
+- sichtbare Erstellung deterministisch `Start → Ende → Control`;
+- vor dem dritten gültigen Punkt ausschließlich Preview-State;
+- finale Erstellung atomar in genau einer zentralen Sketch-Transaktion: zwei stabile Endpoint-Punkte + genau ein Arc, damit genau ein History-/Undo-Schritt entsteht;
+- keine geometrische Übernahme bereits vorhandener Punkte beim Zeichnen; Verbindung ausschließlich explizit über C.6;
+- ungültige/kollineare Drei-Punkt-Geometrie ohne persistente Teilreste ablehnen;
+- Viewer-Tessellation ausschließlich abgeleitet und nicht persistent;
+- Arc im Viewer und Objektbaum als genau ein `SKETCH_ELEMENT`;
+- eigene Tree-Gruppe `Bögen (n)`;
+- Inspector für Start X/Y, Ende X/Y und Control X/Y;
+- Endpoint-Editing erhält bestehende `pointId`s; Control-Editing verändert ausschließlich `arc.control`;
+- vorhandene C.6-Connectivity wird konsumiert, nicht erweitert;
+- Delete, Undo/Redo und Save/Load verwenden vorhandene zentrale Grenzen.
 
-- Tab/Header Build-ID: PASS
-- Zeichnen/Polygon: PASS
-- Mehrfachauswahl: PASS
-- Verbinden/Trennen: PASS
-- Verbindung erneut zusammenführen: PASS
-- Undo/Redo: PASS
-- Speichern/Laden: PASS
-- **0 BLOCKER**
+Explizit nicht Bestandteil von C.7: Spline, Arc-Gizmo/Arc-Drag, sichtbares Control-Handle, alternative Radius-/Mittelpunkt-/Winkel-Parametrisierung, Tangentialität/Constraints, Snap/Auto-Merge/Tolerance/geometrisches Rebinding, N-Gon/facettierter Arc, Profile/Pfade, Extrusionsintegration oder C.6-Erweiterungen.
 
-Keine Arc-/Spline-Erstellung, kein Arc-/Spline-Rendering/Inspector/Gizmo, keine Profile/Pfade, kein N-Gon und keine Extrusionsintegration wurden durch C.6-R1 eingeführt.
+Bei späterer Implementierung ist die sichtbare Build-ID `WD-21C.7`; Tab, Header/Brand und Status müssen konsistent sein.
 
-WD-21C.6 ist damit **PASS / FROZEN / 0 BLOCKER**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+WD-21C.7 bleibt bis zu einer separaten Implementierungsfreigabe **NOT IMPLEMENTED**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -117,4 +114,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich den nächsten kleinen WD-21C-Teilblock fachlich definieren. Noch keine Arc-/Spline-Implementierung und keine weitere C.6-Erweiterung im selben Schritt.
+Ausschließlich das WD-21C.7 Definition/Implementation Gate gegen den eingefrorenen C.6-R1-Stand durchführen und daraus den exakt minimalen Implementierungsumfang ableiten. Noch keine C.7-Codeimplementierung und weiterhin keine Spline-Funktion.
