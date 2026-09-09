@@ -1,6 +1,6 @@
 export function installSketchConnectivityActions(store) {
   if (!store || typeof store.getSketchConnectivityCommandState !== 'function') {
-    throw new Error('SketchConnectivityActions require WD-21B.4 connectivity commands.');
+    throw new Error('SketchConnectivityActions require connectivity commands.');
   }
 
   const sketchContext = document.querySelector('.context-set[data-context="sketch"]');
@@ -32,7 +32,7 @@ export function installSketchConnectivityActions(store) {
     disconnectButton.className = 'tool-button';
     disconnectButton.type = 'button';
     disconnectButton.innerHTML = '<span>Trennen</span>';
-    disconnectButton.title = 'Ausgewählte Linie von einem gemeinsam verwendeten Sketch-Punkt trennen';
+    disconnectButton.title = 'Ausgewählten Element-Endpunkt von einem gemeinsam verwendeten Sketch-Punkt trennen';
     sketchContext.appendChild(disconnectButton);
   }
 
@@ -65,7 +65,7 @@ export function installSketchConnectivityActions(store) {
   sync();
 
   return Object.freeze({
-    version: 'WD-21B.5',
+    version: 'WD-21C.6',
     surface: 'sketch-contextbar',
     connectButtonId: connectButton.id,
     disconnectButtonId: disconnectButton.id,
