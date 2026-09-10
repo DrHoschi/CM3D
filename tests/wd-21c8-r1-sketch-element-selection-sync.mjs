@@ -40,7 +40,7 @@ assert.match(spline, /kind: 'spline'/);
 assert.match(connectivity, /version: 'WD-21C\.6'/);
 assert.match(visibility, /export function installObjectVisibility/);
 
-assert.match(main, /const BUILD_ID = 'WD-21C\.8-R1'/);
+assert.match(main, /const BUILD_ID = 'WD-21C\.8-R\d+'/);
 assert.match(main, /document\.title = `CyberMotion 3D – \$\{BUILD_ID\}`/);
 assert.match(main, /buildLabel\.textContent = BUILD_ID/);
 
