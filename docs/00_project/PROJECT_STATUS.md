@@ -1,6 +1,6 @@
 # CM3D – Projektstatus
 
-Stand: 2026-09-09
+Stand: 2026-09-10
 
 ## Aktueller Gesamtstand
 
@@ -67,38 +67,37 @@ Finaler sichtbarer Stand `WD-21C.7`; Completion-Regression Run `34369150959`: SU
 
 ### WD-21C.8 – Spline Creation, Rendering & Editing Integration
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING / NOT FROZEN**
+**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE RECHECK PENDING / NOT FROZEN**
 
 Reconciliation-Basis: eingefrorener C.7-Stand `feaee19c72977a98dc86090a99e57162aa27a0cc`.
 
-Implementierter Minimalumfang:
+Der fachliche C.8-Minimalumfang bleibt unverändert: atomare Spline-Creation, stabile Endpoint-/Control-IDs, geordnete Bézier-/de-Casteljau-Semantik, abgeleitete Tessellation, sichtbares Spline-Werkzeug, Tree-/Viewer-Auswahl, Inspector und Wiederverwendung der eingefrorenen C.6-Connectivity ausschließlich für Start/Ende.
 
-- atomare `addSketchSplineFromPoints(...)`-Creation in einer zentralen `runSketchMutation(...)`-Transaktion mit zwei stabilen Endpoint-Punkten, stabilen Control-IDs und genau einem Spline;
-- `setSketchSplineGeometry(...)` erhält Endpoint-IDs, Control-IDs, Reihenfolge und Control-Anzahl beim numerischen Editing;
-- geordnete Bézier-Semantik `Start → controls[] → Ende` mit deterministischer de-Casteljau-Auswertung;
-- reine abgeleitete Tessellation über `src/application/sketch-spline-geometry.js`, ohne persistente Rendersegmente oder Sketch-Line-Repräsentation;
-- sichtbares Werkzeug `Spline` mit Preview-State und explizitem Abschluss über erneutes Betätigen des aktiven Werkzeugs;
-- mindestens Start + ein Control + Ende erforderlich;
-- Spline als genau ein `SKETCH_ELEMENT` im Viewer und in `Splines (n)` im Objektbaum;
-- Inspector für Start/Ende sowie alle Controls in autoritativer Reihenfolge mit sichtbarer stabiler `controlId`;
-- C.6-Connectivity wird ausschließlich für Start/Ende wiederverwendet;
-- sichtbare Build-ID `WD-21C.8`.
+#### WD-21C.8-R1 – Sketch Element Selection Synchronization Correction
 
-Automatisierte Regression:
+Sichtbarer Korrekturstand: `WD-21C.8-R1`.
 
-- Workflow: `WD-21C.8 Spline Integration Regression`;
-- Run: `34394672958`;
-- getesteter Code-Head: `ebebf456c40bd0fbe242b90319508da2320cb074`;
-- A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5, C.6, C.7 und C.8: PASS;
-- Result: **SUCCESS / PASS**.
+Der R1-Produktscope ist auf drei Dateien begrenzt:
 
-Bestätigt sind atomare Creation mit einem History-Eintrag, stabile Spline-/Endpoint-/Control-IDs, Rollback ungültiger Creation ohne Control, ID-stabiles Editing, Zurückweisung eines Control-ID-Austauschs, C.6-Endpoint-Connectivity bei unveränderten Controls, deterministische de-Casteljau-Auswertung sowie Save/Load-Stabilität.
+- `src/ui/object-tree-scalability.js`: konkretes Reveal/Fokussieren per `sketchId + kind + elementId`;
+- `src/runtime.js`: konkrete Sketch-Element-Auswahl fokussiert das konkrete Runtime-Visual statt pauschal die gesamte Skizze;
+- `src/main.js`: zentrale sichtbare Build-ID `WD-21C.8-R1`.
 
-Die vorherigen roten C.8-Läufe waren Test-/Harness-Probleme: eine zu breite historische C.3-Negativassertion sowie ein Node-Testimport des browserseitigen UI-Moduls mit `three`. Die reine Spline-Geometrie wurde deshalb browserunabhängig getrennt; C.7-Produktcode und C.6/C.7-Fachsemantik blieben unverändert.
+Zusätzlich existieren ausschließlich der neue R1-Regressionstest/Workflow und die test-only Forward-Compatibility des bestehenden C.8-Build-Gates für zulässige `-R1`, `-R2`, …-Korrekturkennungen. Circle-/Arc-/Spline-Fachlogik, Connectivity, Gizmo, Visibility-Regeln, Profile/Pfade und Extrusionsintegration wurden nicht erweitert.
+
+Finale CI-Verifikation des R1-Code-Heads `31c79f5e200cba8ef9fb41cef57655266ff68b82`:
+
+- `WD-21C.8-R1 Sketch Element Selection Sync Regression`, Run `34451696793`, Job `sketch-element-selection-sync-regression`: **SUCCESS**;
+- `WD-21C.8 Spline Integration Regression`, Run `34451696928`, Job `spline-integration-regression`: **SUCCESS**;
+- beide Läufe wurden gegen exakt denselben Code-Head `31c79f5e200cba8ef9fb41cef57655266ff68b82` ausgeführt;
+- der R1-Lauf bestätigt A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5, C.6, C.7, C.8 und C.8-R1 vollständig;
+- der bestehende C.8-Lauf bestätigt A.2, A.3, B.2, B.3 und C.2 bis C.8 vollständig.
+
+Damit gilt: **AUTOMATED REGRESSION PASS / 0 CURRENT CI BLOCKER**. Nachfolgende Commits zur Statussynchronisierung sind ausschließlich Dokumentation und verändern den getesteten Produktcode nicht.
 
 Explizit ausgeschlossen bleiben geschlossene Splines, nachträgliches Hinzufügen/Löschen/Umsortieren von Controls, Control-Handles, Spline-Gizmo/Drag, Tangentialität/Continuity-Constraints, alternative Kurventypen, Snap/Auto-Merge/Tolerance/geometrisches Rebinding, Profile/Pfade, N-Gon und Extrusionsintegration.
 
-WD-21C.8 bleibt bis zum realen Gerätecheck ausdrücklich **NOT FROZEN**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+WD-21C.8-R1 bleibt bis zum realen Geräte-Recheck ausdrücklich **NOT FROZEN**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -108,4 +107,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Gerätecheck auf **`WD-21C.8`**: Tab/Header-Build-ID prüfen, Spline mit Start + mindestens einem Control + Ende erzeugen und explizit abschließen, optional mehrere Controls prüfen, Tree-/Viewer-Auswahl und Inspector editieren, Endpoint-Connect/Disconnect über C.6 regressieren sowie Undo/Redo und Speichern/Laden testen. Kontrollieren, dass keine Control-Handles, kein Spline-Gizmo und keine Profile/Pfade hinzugekommen sind. Noch kein Freeze-Gate und kein nächster C-Teilblock.
+Ausschließlich der reale iPad-/Safari-Geräte-Recheck auf **`WD-21C.8-R1`**. Zuerst Tab/Header-Build-ID prüfen, danach gezielt die korrigierte Synchronisation zwischen konkreter Sketch-Element-Auswahl, Object Tree und Viewer für vorhandene Sketch-Elementtypen regressieren; anschließend die bestehende C.8-Spline-Funktion, Inspector, C.6-Endpoint-Connect/Disconnect, Undo/Redo sowie Speichern/Laden prüfen. Noch kein Freeze-Gate und kein nächster C-Teilblock.
