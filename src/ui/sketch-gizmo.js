@@ -122,6 +122,16 @@ export function installSketchGizmo(store, runtime) {
     return true;
   };
 
+  const syncSelectionCamera = () => {
+    const item = primary();
+    if (!item) return false;
+    const adapter = adapterForSelection();
+    if (adapter) return alignCameraToSketch();
+    runtime.orbit.enableRotate = state.previousEnableRotate;
+    runtime.focusSelection();
+    return true;
+  };
+
   const makeAxis = axis => {
     const group = new THREE.Group();
     const direction = axis === 'x' ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
@@ -348,7 +358,14 @@ export function installSketchGizmo(store, runtime) {
       align = false;
       state.suppressNextSelectionAlign = false;
     }
-    setTimeout(() => rebuildGizmo(align), 0);
+    setTimeout(() => {
+      if (align && primary() && !adapterForSelection()) {
+        dispose();
+        syncSelectionCamera();
+        return;
+      }
+      rebuildGizmo(align);
+    }, 0);
   });
 
   rebuildGizmo();
