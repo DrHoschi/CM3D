@@ -97,7 +97,7 @@ assert.match(integration,/Spline abschließen/); assert.match(integration,/SPLIN
 assert.doesNotMatch(integration,/TransformControls|createExtrudeFromSketch|closedSpline\s*:\s*true/);
 
 const main=fs.readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
-assert.match(main,/const BUILD_ID = 'WD-21C\.8'/);
+assert.match(main,/const BUILD_ID = 'WD-21C\.8(?:-R\d+)?'/);
 assert.match(main,/installSketchSplineCreationContract/); assert.match(main,/installSketchSplineIntegration/);
 
 console.log('WD-21C.8 Spline Creation, Rendering & Editing Integration: PASS');
