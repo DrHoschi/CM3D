@@ -3,7 +3,7 @@
 **Branch:** `feature/wd-21c-sketch-element-type-expansion`  
 **Basis:** WD-21B FROZEN @ `2e8d5b0434e62bf7c7e34b11e54da077853328cc`  
 **RB:** RB-02 – Sketch Topology & Profiles  
-**Stand:** 2026-09-09
+**Stand:** 2026-09-10
 
 ## WD-21C.1 – Existing Sketch Element Type & Creation/Editing Inventory
 
@@ -43,7 +43,7 @@ Finaler sichtbarer Stand: `WD-21C.7`. Completion-Regression Run `34369150959`: S
 
 ## WD-21C.8 – Spline Creation, Rendering & Editing Integration
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING / NOT FROZEN
+**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE RECHECK PENDING / NOT FROZEN
 
 **Reconciliation-Basis:** eingefrorener WD-21C.7-Stand `feaee19c72977a98dc86090a99e57162aa27a0cc`.
 
@@ -77,8 +77,21 @@ Die mathematische Semantik ist eine geordnete Bézier-Kurve `Start → controls[
 - Object Tree erhält `Splines (n)` und genau eine Zeile pro Spline;
 - Inspector zeigt Start X/Y, Ende X/Y und alle Controls mit stabiler `controlId` in autoritativer Reihenfolge;
 - Inspector-Editing verändert ausschließlich Koordinaten und nicht Control-Anzahl/-Reihenfolge/-IDs;
-- eingefrorene C.6-Connectivity wird nur für Spline-Start und -Ende wiederverwendet;
-- sichtbare Build-ID ist `WD-21C.8`; die zentrale `applyBuildIdentity()`-Grenze bleibt die Build-Autorität.
+- eingefrorene C.6-Connectivity wird nur für Spline-Start und -Ende wiederverwendet.
+
+### WD-21C.8-R1 – Sketch Element Selection Synchronization Correction
+
+Der sichtbare Korrekturstand ist `WD-21C.8-R1`.
+
+Der R1-Produktscope bleibt auf die freigegebenen drei Dateien begrenzt:
+
+- `src/ui/object-tree-scalability.js`: Reveal/Fokus kann ein konkretes Sketch-Element über `sketchId + kind + elementId` adressieren;
+- `src/runtime.js`: eine konkrete Sketch-Element-Auswahl fokussiert das konkrete Runtime-Visual statt pauschal die gesamte Skizze;
+- `src/main.js`: zentrale sichtbare Build-ID `WD-21C.8-R1` über die bestehende `applyBuildIdentity()`-Autorität.
+
+Zusätzlich wurden ausschließlich ein neuer R1-Regressionstest/Workflow und die notwendige test-only Forward-Compatibility des bestehenden C.8-Build-Gates für zulässige `-R1`, `-R2`, …-Korrekturkennungen ergänzt.
+
+Nicht verändert wurden Circle-/Arc-/Spline-Fachlogik, C.6-Connectivity, Gizmo-/Drag-Semantik, Visibility-Regeln, Profile/Pfade oder Extrusionsintegration.
 
 ### Explizit ausgeschlossen
 
@@ -96,28 +109,25 @@ Die mathematische Semantik ist eine geordnete Bézier-Kurve `Start → controls[
 
 ### Automatisierte Regression
 
-Workflow: `WD-21C.8 Spline Integration Regression`  
-Run: `34394672958`  
-Getesteter Code-Head: `ebebf456c40bd0fbe242b90319508da2320cb074`  
+Final verifizierter R1-Code-Head: `31c79f5e200cba8ef9fb41cef57655266ff68b82`.
+
+Workflow `WD-21C.8-R1 Sketch Element Selection Sync Regression`:  
+Run: `34451696793`  
+Job: `sketch-element-selection-sync-regression`  
 Result: **SUCCESS / PASS**
 
-Bestätigt:
+Der Lauf bestätigt vollständig WD-21A.2, WD-21A.3, WD-21B.2, WD-21B.3, WD-21C.2, WD-21C.3, WD-21C.4, WD-21C.5, WD-21C.6, WD-21C.7, WD-21C.8 sowie den neuen WD-21C.8-R1-Selection-Synchronization-Test.
 
-- WD-21A.2 Topology: PASS;
-- WD-21A.3 Mutation: PASS;
-- WD-21B.2 Connect: PASS;
-- WD-21B.3 Disconnect: PASS;
-- WD-21C.2 Registry/Persistence: PASS;
-- WD-21C.3 Generic Mutation: PASS;
-- WD-21C.4 Circle Integration: PASS;
-- WD-21C.5 Manipulation: PASS;
-- WD-21C.6 Generic Endpoint Connectivity: PASS;
-- WD-21C.7 Arc Integration: PASS;
-- WD-21C.8 Spline Integration: PASS.
+Bestehender Workflow `WD-21C.8 Spline Integration Regression`:  
+Run: `34451696928`  
+Job: `spline-integration-regression`  
+Result: **SUCCESS / PASS**
 
-Der C.8-Test bestätigt zusätzlich atomare Creation mit genau einem History-Eintrag, stabile Spline-/Endpoint-/Control-IDs, Ablehnung einer Creation ohne Control ohne Teilreste, ID-stabiles Geometry-Editing, Zurückweisung eines Control-ID-Austauschs, C.6-Connect/Disconnect nur über die Endpoint-Grenze bei unveränderten Controls, deterministische de-Casteljau-Auswertung sowie Save/Load-Erhalt der Spline-Identität.
+Auch dieser Lauf wurde gegen denselben Head `31c79f5e200cba8ef9fb41cef57655266ff68b82` ausgeführt und bestätigt A.2, A.3, B.2, B.3 sowie C.2 bis C.8 vollständig.
 
-### Test-Gate-Korrekturen während der Implementierung
+Damit gilt für den aktuellen R1-Head: **AUTOMATED REGRESSION PASS / 0 CURRENT CI BLOCKER**.
+
+### Historische C.8-Test-Gate-Korrekturen
 
 Frühere rote C.8-Läufe waren Test-/Harness-Grenzen und keine freizugebenden Produktregressionen:
 
@@ -125,16 +135,14 @@ Frühere rote C.8-Läufe waren Test-/Harness-Grenzen und keine freizugebenden Pr
 - Run `34394493629` lief A.2 bis C.7 erfolgreich und stoppte erst im neuen C.8-Test, weil der Node-Test direkt das browserseitige UI-Modul mit Bare-Import `three` importierte. Die reine Bézier-/de-Casteljau-Geometrie wurde deshalb in `src/application/sketch-spline-geometry.js` als browserunabhängige pure Funktion getrennt und vom UI konsumiert. Die fachliche Spline-Semantik wurde dadurch nicht erweitert.
 - Der C.7-Build-Gate-Test wurde ausschließlich forward-kompatibel für nachfolgende WD-21C-Builds gemacht; C.7-Produktcode und C.7-Fachsemantik blieben unverändert.
 
-Erst Run `34394672958` auf `ebebf456c40bd0fbe242b90319508da2320cb074` ist das maßgebliche C.8-Automatik-Gate und vollständig SUCCESS.
-
 ### Geräte-Evidenz
 
-Noch nicht durchgeführt. WD-21C.8 bleibt deshalb ausdrücklich **NOT FROZEN**.
+Der R1-Geräte-Recheck wurde noch nicht durchgeführt. WD-21C.8-R1 bleibt deshalb ausdrücklich **NOT FROZEN**.
 
 ## Freigabestatus
 
-WD-21C.4, WD-21C.5, WD-21C.6 und WD-21C.7 sind **PASS / FROZEN / 0 BLOCKER**. WD-21C.8 ist **IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE CHECK PENDING / NOT FROZEN**. WD-21C als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
+WD-21C.4, WD-21C.5, WD-21C.6 und WD-21C.7 sind **PASS / FROZEN / 0 BLOCKER**. WD-21C.8-R1 ist **IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE RECHECK PENDING / NOT FROZEN**. WD-21C als Gesamtblock bleibt ausdrücklich **nicht FROZEN**.
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Gerätecheck auf **`WD-21C.8`**: Tab/Header-Build-ID prüfen, Spline mit mindestens Start + Control + Ende zeichnen und explizit abschließen, optional mehrere Controls testen, Tree-/Viewer-Auswahl und Inspector editieren, Endpoint-Connect/Disconnect über C.6 regressieren, Undo/Redo sowie Speichern/Laden prüfen und kontrollieren, dass keine Control-Handles, kein Spline-Gizmo und keine Profile/Pfade hinzugekommen sind. Noch kein Freeze-Gate und kein nächster C-Teilblock.
+Ausschließlich der reale iPad-/Safari-Geräte-Recheck auf **`WD-21C.8-R1`**. Dabei zuerst Tab/Header-Build-ID prüfen und danach gezielt die korrigierte Synchronisation zwischen konkreter Sketch-Element-Auswahl, Object Tree und Viewer für vorhandene Sketch-Elementtypen regressieren; anschließend die bereits bestehende C.8-Spline-Funktion, Inspector, C.6-Endpoint-Connect/Disconnect, Undo/Redo sowie Speichern/Laden regressieren. Noch kein Freeze-Gate und kein nächster C-Teilblock.
