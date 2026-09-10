@@ -67,37 +67,39 @@ Finaler sichtbarer Stand `WD-21C.7`; Completion-Regression Run `34369150959`: SU
 
 ### WD-21C.8 – Spline Creation, Rendering & Editing Integration
 
-**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE RECHECK PENDING / NOT FROZEN**
+**PASS / FROZEN / 0 BLOCKER**
 
 Reconciliation-Basis: eingefrorener C.7-Stand `feaee19c72977a98dc86090a99e57162aa27a0cc`.
 
-Der fachliche C.8-Minimalumfang bleibt unverändert: atomare Spline-Creation, stabile Endpoint-/Control-IDs, geordnete Bézier-/de-Casteljau-Semantik, abgeleitete Tessellation, sichtbares Spline-Werkzeug, Tree-/Viewer-Auswahl, Inspector und Wiederverwendung der eingefrorenen C.6-Connectivity ausschließlich für Start/Ende.
+Der fachliche C.8-Minimalumfang bleibt: atomare Spline-Creation, stabile Endpoint-/Control-IDs, geordnete Bézier-/de-Casteljau-Semantik, abgeleitete Tessellation, sichtbares Spline-Werkzeug, Tree-/Viewer-Auswahl, Inspector und Wiederverwendung der eingefrorenen C.6-Connectivity ausschließlich für Start/Ende.
 
 #### WD-21C.8-R1 – Sketch Element Selection Synchronization Correction
 
-Sichtbarer Korrekturstand: `WD-21C.8-R1`.
+R1 stellte die generische konkrete Sketch-Element-Synchronisation für Object Tree und Viewer her. Der reale Gerätecheck zeigte danach noch einen verbleibenden Kamera-Ausrichtungsblocker für Tree → Arc/Spline. Die Diagnose bestätigte, dass Arc/Spline nicht an der SelectionRef-/Runtime-Identitätsgrenze verloren gingen, sondern dass die automatische Kameraausrichtung an die Gizmo-Manipulationsfähigkeit gekoppelt war.
 
-Der R1-Produktscope ist auf drei Dateien begrenzt:
+#### WD-21C.8-R2 – Generic Sketch Selection Camera Alignment Decoupling Correction
 
-- `src/ui/object-tree-scalability.js`: konkretes Reveal/Fokussieren per `sketchId + kind + elementId`;
-- `src/runtime.js`: konkrete Sketch-Element-Auswahl fokussiert das konkrete Runtime-Visual statt pauschal die gesamte Skizze;
-- `src/main.js`: zentrale sichtbare Build-ID `WD-21C.8-R1`.
+Finaler sichtbarer Korrekturstand: `WD-21C.8-R2`.
 
-Zusätzlich existieren ausschließlich der neue R1-Regressionstest/Workflow und die test-only Forward-Compatibility des bestehenden C.8-Build-Gates für zulässige `-R1`, `-R2`, …-Korrekturkennungen. Circle-/Arc-/Spline-Fachlogik, Connectivity, Gizmo, Visibility-Regeln, Profile/Pfade und Extrusionsintegration wurden nicht erweitert.
+R2 trennt Selection/Focus von Gizmo-Manipulation. `point`, `line`, `circle` behalten ihr bestehendes Gizmo-Verhalten; `arc` und `spline` werden über die vorhandene `runtime.focusSelection()`-Autorität konkret fokussiert, erhalten aber weiterhin keinen Manipulationsadapter, kein Gizmo und keinen Drag. `manipulationKinds` bleibt `point`, `line`, `circle`.
 
-Finale CI-Verifikation des R1-Code-Heads `31c79f5e200cba8ef9fb41cef57655266ff68b82`:
+Geprüfter Produkt-/Test-Head: `fe20a2b6b149595b2ffe57a3838da655dfe8b24d`.
 
-- `WD-21C.8-R1 Sketch Element Selection Sync Regression`, Run `34451696793`, Job `sketch-element-selection-sync-regression`: **SUCCESS**;
-- `WD-21C.8 Spline Integration Regression`, Run `34451696928`, Job `spline-integration-regression`: **SUCCESS**;
-- beide Läufe wurden gegen exakt denselben Code-Head `31c79f5e200cba8ef9fb41cef57655266ff68b82` ausgeführt;
-- der R1-Lauf bestätigt A.2, A.3, B.2, B.3, C.2, C.3, C.4, C.5, C.6, C.7, C.8 und C.8-R1 vollständig;
-- der bestehende C.8-Lauf bestätigt A.2, A.3, B.2, B.3 und C.2 bis C.8 vollständig.
+Completion-/Regression-Audit:
 
-Damit gilt: **AUTOMATED REGRESSION PASS / 0 CURRENT CI BLOCKER**. Nachfolgende Commits zur Statussynchronisierung sind ausschließlich Dokumentation und verändern den getesteten Produktcode nicht.
+- Diff gegen C.7-Freeze `feaee19c72977a98dc86090a99e57162aa27a0cc`: **28 Commits voraus / 0 zurück**; Gesamtumfang entspricht C.8 plus kontrolliertem R1/R2;
+- Diff gegen dokumentierten C.8-R1-Ausgang `47d98f67afc9d4edb1cbec37d70cda3642de5a1a`: **5 Commits voraus / 0 zurück**;
+- R2-Produktänderung ist auf `src/ui/sketch-gizmo.js` plus zentrale Build-ID in `src/main.js` begrenzt; zusätzlich nur R2-Test/Workflow und R1-Test-Forward-Compatibility;
+- `WD-21C.8-R2 Selection Camera Alignment Regression`, Run `34510128236`: **SUCCESS** und bestätigt A.2, A.3, B.2, B.3, C.2–C.8, R1 und R2;
+- bestehender R1-Workflow auf demselben Head, Run `34510128178`: **SUCCESS**.
 
-Explizit ausgeschlossen bleiben geschlossene Splines, nachträgliches Hinzufügen/Löschen/Umsortieren von Controls, Control-Handles, Spline-Gizmo/Drag, Tangentialität/Continuity-Constraints, alternative Kurventypen, Snap/Auto-Merge/Tolerance/geometrisches Rebinding, Profile/Pfade, N-Gon und Extrusionsintegration.
+Realer iPad-/Safari-Test auf `WD-21C.8-R2`: **PASS**. Bestätigt sind konsistente Tab/Header-Build-ID, Point-/Line-Fokus und Gizmo, Circle-Fokus und Gizmo sowie Arc-/Spline-Fokus aus dem Object Tree ohne Arc-/Spline-Gizmo.
 
-WD-21C.8-R1 bleibt bis zum realen Geräte-Recheck ausdrücklich **NOT FROZEN**. WD-21C als Gesamtblock bleibt **nicht FROZEN**.
+Damit gilt für WD-21C.8-R2: **PASS / FROZEN / 0 BLOCKER**.
+
+Explizit ausgeschlossen und weiterhin später bleiben geschlossene Splines, nachträgliches Hinzufügen/Löschen/Umsortieren von Controls, sichtbare Spline-Control-Handles/Control-Drag, Spline-Gizmo, Tangentialität/Continuity-Constraints, alternative Kurventypen, Snap/Auto-Merge/Tolerance/geometrisches Rebinding, Profile/Pfade, N-Gon und Extrusionsintegration.
+
+WD-21C ist fachlich bis einschließlich C.8 abgeschlossen. Ein nachfolgender WD-Teilblock wird mit diesem Freeze nicht begonnen.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -107,4 +109,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich der reale iPad-/Safari-Geräte-Recheck auf **`WD-21C.8-R1`**. Zuerst Tab/Header-Build-ID prüfen, danach gezielt die korrigierte Synchronisation zwischen konkreter Sketch-Element-Auswahl, Object Tree und Viewer für vorhandene Sketch-Elementtypen regressieren; anschließend die bestehende C.8-Spline-Funktion, Inspector, C.6-Endpoint-Connect/Disconnect, Undo/Redo sowie Speichern/Laden prüfen. Noch kein Freeze-Gate und kein nächster C-Teilblock.
+Kein nächster WD-Teilblock innerhalb dieses Completion-/Freeze-Gates. Ein Folgeschritt muss separat ausdrücklich freigegeben werden.
