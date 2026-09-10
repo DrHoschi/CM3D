@@ -38,38 +38,60 @@ export function installObjectTreeScalability(store, ui) {
     if (changed) saveCollapsed();
   };
 
+  const revealParentChain = startId => {
+    let changed = false;
+    let parentId = startId;
+    while (parentId) {
+      if (collapsed.delete(parentId)) changed = true;
+      parentId = store.getObject(parentId)?.parentId ?? null;
+    }
+    return changed;
+  };
+
+  const scrollObjectRowIntoView = objectId => {
+    queueMicrotask(() => {
+      const row = [...ui.tree.querySelectorAll('.tree-item')]
+        .find(item => item.dataset.objectId === objectId || item.dataset.featureOperationId === objectId);
+      row?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    });
+  };
+
   const revealObject = objectId => {
     const object = store.getObject(objectId);
     if (!object) return false;
     let changed = false;
-
-    const revealParentChain = startId => {
-      let parentId = startId;
-      while (parentId) {
-        if (collapsed.delete(parentId)) changed = true;
-        parentId = store.getObject(parentId)?.parentId ?? null;
-      }
-    };
 
     // Feature operations are rendered below their source sketch in the tree,
     // although they are not data-model children of that sketch.
     if (object.type === 'feature.extrude' && object.data?.sourceSketchId) {
       const sourceSketch = store.getObject(object.data.sourceSketchId);
       if (sourceSketch) {
-        revealParentChain(sourceSketch.objectId);
-        revealParentChain(sourceSketch.parentId);
+        if (revealParentChain(sourceSketch.objectId)) changed = true;
+        if (revealParentChain(sourceSketch.parentId)) changed = true;
       }
     }
 
-    revealParentChain(object.parentId);
+    if (revealParentChain(object.parentId)) changed = true;
 
+    if (changed) {
+      saveCollapsed();
+      ui.renderTree();
+    }
+    scrollObjectRowIntoView(objectId);
+    return changed;
+  };
+
+  const revealSketchTarget = target => {
+    const sketch = target?.sketchId ? store.getObject(target.sketchId) : null;
+    if (sketch?.type !== 'sketch' || !target.kind || !target.elementId) return false;
+    const changed = revealParentChain(sketch.parentId);
     if (changed) {
       saveCollapsed();
       ui.renderTree();
     }
     queueMicrotask(() => {
       const row = [...ui.tree.querySelectorAll('.tree-item')]
-        .find(item => item.dataset.objectId === objectId || item.dataset.featureOperationId === objectId);
+        .find(item => item.dataset.sketchElement === target.elementId && item.dataset.sketchElementKind === target.kind);
       row?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     });
     return changed;
@@ -125,13 +147,18 @@ export function installObjectTreeScalability(store, ui) {
       return;
     }
     if (event.type === 'projectChanged') pruneCollapsed();
-    if (event.type === 'selectionChanged' && store.selection.activeObjectId) revealObject(store.selection.activeObjectId);
+    if (event.type === 'selectionChanged') {
+      const sketchTarget = store.selection.sketchElement;
+      if (sketchTarget) revealSketchTarget(sketchTarget);
+      else if (store.selection.activeObjectId) revealObject(store.selection.activeObjectId);
+    }
   });
 
   return {
     collapsed,
     isCollapsed: objectId => collapsed.has(objectId),
     revealObject,
+    revealSketchTarget,
     expandAll() { collapsed.clear(); saveCollapsed(); ui.renderTree(); }
   };
 }
