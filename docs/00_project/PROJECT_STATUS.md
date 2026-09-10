@@ -99,7 +99,38 @@ Damit gilt für WD-21C.8-R2: **PASS / FROZEN / 0 BLOCKER**.
 
 Explizit ausgeschlossen und weiterhin später bleiben geschlossene Splines, nachträgliches Hinzufügen/Löschen/Umsortieren von Controls, sichtbare Spline-Control-Handles/Control-Drag, Spline-Gizmo, Tangentialität/Continuity-Constraints, alternative Kurventypen, Snap/Auto-Merge/Tolerance/geometrisches Rebinding, Profile/Pfade, N-Gon und Extrusionsintegration.
 
-WD-21C ist fachlich bis einschließlich C.8 abgeschlossen. Ein nachfolgender WD-Teilblock wird mit diesem Freeze nicht begonnen.
+WD-21C ist fachlich bis einschließlich C.8 abgeschlossen.
+
+## WD-21D – Profile & Open Path Derivation
+
+**DEFINED / DOCUMENTATION CONTRACT COMPLETE / NOT IMPLEMENTED**
+
+Definition basis: frozen WD-21C.8-R2 @ `b29efc297ab8183a9e5879798bb6fd9da201cdf2`.
+
+Die Reconciliation bestätigt, dass die bestehende Profilableitung in `src/model/sketch-profile.js` noch line-only und auf genau ein extrudierbares Profil ausgerichtet ist. WD-21D ersetzt diese Grenze nicht sofort in der Extrusion, sondern definiert zuerst eine generische, rein abgeleitete Read-Autorität über Line, Circle, Arc und Spline.
+
+Verbindliche Zerlegung:
+
+- WD-21D.1 – Generic Sketch Curve/Edge Derivation Contract
+- WD-21D.2 – Deterministic Contour & Open Path Graph Derivation
+- WD-21D.3 – Closed Profile Region & Nesting Derivation
+- WD-21D.4 – Mixed Analytic Geometry Validation
+- WD-21D.5 – Generic Profile / Open Path Derivation API
+- WD-21D.6 – Derivation Regression / Compatibility Gate
+
+Verbindliche Grenzen:
+
+- Topologie entsteht ausschließlich über gemeinsame `pointId`; keine Toleranz-/Nähe-/Best-Guess-Verbindung.
+- Line/Arc/Spline werden als endpoint-basierte Kurven, Circle als eigenständige geschlossene analytische Kurve abgeleitet.
+- Mehrere getrennte geschlossene Konturen dürfen mehrere Profile ergeben.
+- Verschachtelte geschlossene Konturen müssen als Außenkontur bzw. Loch ableitbar sein.
+- Offene gültige Ketten werden als Open Paths geführt und nicht als Fehler verworfen.
+- Tessellation bleibt ausschließlich abgeleitete Rechenrepräsentation und wird nicht persistiert.
+- WD-21D fügt noch keine Profile-/Path-Auswahl, keine neuen StableReference PROFILE/PATH-Kinds, keine Extrusionsumstellung und keine Dependency/Recompute-Integration hinzu.
+
+Der vollständige verbindliche Contract ist in `docs/05_implementation/WD-21D_STATUS.md` festgehalten.
+
+Es wurde in diesem Definitionsschritt ausdrücklich kein WD-21D-Entwicklungsbranch angelegt, kein Produktcode verändert und die sichtbare Build-Kennung bleibt `WD-21C.8-R2`.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -109,4 +140,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Kein nächster WD-Teilblock innerhalb dieses Completion-/Freeze-Gates. Ein Folgeschritt muss separat ausdrücklich freigegeben werden.
+Ausschließlich die separate Freigabe und Anlage des WD-21D-Entwicklungsbranches exakt vom eingefrorenen WD-21C.8-R2-Stand `b29efc297ab8183a9e5879798bb6fd9da201cdf2`. Noch keine WD-21D.1-Implementierung im selben Schritt.
