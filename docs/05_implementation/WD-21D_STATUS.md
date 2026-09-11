@@ -118,19 +118,111 @@ D.1 MUST NOT implement connected-component discovery, closed-contour discovery, 
 
 ## WD-21D.2 – Deterministic Contour & Open Path Graph Derivation
 
-**Status:** DEFINED / NOT IMPLEMENTED
+**Status:** DEFINED / RECONCILED / CONTRACT BOUNDED / NOT IMPLEMENTED
 
-Build deterministic connected components from Line/Arc/Spline using only shared authoritative `pointId` endpoints. Circle is treated as a standalone closed contour component.
+### D.2 authority and input boundary
 
-Each derivable component must classify as one of:
+WD-21D.2 consumes exclusively the generic read-only output of D.1 `deriveSketchCurves(...)` as its curve/edge input authority. D.2 MUST NOT create a parallel traversal path by rereading the persistent `lines`, `circles`, `arcs` or `splines` collections directly.
+
+D.2 remains a derived read model. It MUST NOT mutate the source sketch, D.1 curves, element IDs, endpoint IDs, analytic geometry or persistence data.
+
+### Connectivity authority
+
+Endpoint graph membership applies only to Line, Arc and Spline curves. Two such curves belong to the same graph component exactly when their authoritative endpoint references share at least one identical `pointId`.
+
+Coordinate equality, geometric coincidence, tolerance, proximity, rendered overlap, snap assumptions or best-guess matching MUST NOT create graph connectivity.
+
+Circle bypasses the endpoint graph because D.1 correctly exposes it as a closed endpointless curve. Every valid Circle is deterministically emitted as its own one-source-element `CLOSED_CONTOUR` component. No synthetic Circle endpoints may be introduced.
+
+### Deterministic connected components
+
+For Line/Arc/Spline, D.2 builds deterministic connected components from the D.1 endpoint identities. Component discovery MUST be independent of JavaScript object insertion order and persistent collection insertion history.
+
+Seed selection, adjacency ordering and traversal decisions MUST be based on stable source identities and authoritative `pointId` values. The same unchanged topology MUST produce the same component membership and ordering on repeated derivation.
+
+### Component classification
+
+Each component is classified as exactly one of:
 
 - `CLOSED_CONTOUR`
 - `OPEN_PATH`
 - `INVALID_COMPONENT`
 
-Branching components, missing topology targets, and ambiguous/non-orderable components must be diagnostic, not silently repaired. No coordinate tolerance, proximity merge, snap, or geometric best-guess is allowed.
+A non-branching endpoint component is `OPEN_PATH` when exactly two involved topology points have degree 1 and every other involved topology point has degree 2.
 
-No area/hole nesting classification in D.2.
+A non-branching endpoint component is `CLOSED_CONTOUR` when every involved topology point has degree 2 and the complete component can be traversed exactly once as one closed chain.
+
+All other endpoint-degree/traversal structures are `INVALID_COMPONENT`. This includes branching points with degree greater than 2, inconsistent/missing topology targets that survive D.1 diagnostics, and components that cannot be uniquely and completely ordered under the D.2 rules.
+
+### Deterministic traversal and orientation
+
+Every valid `OPEN_PATH` and `CLOSED_CONTOUR` contains its source D.1 curves in deterministic traversal order.
+
+When traversal requires an endpoint curve opposite to its D.1 source orientation, D.2 MUST use the existing D.1 `reverseDerivedCurve(...)` read helper or equivalent D.1-authorized derived reversal. Persistent sketch geometry and source identities remain unchanged.
+
+For `OPEN_PATH`, canonical orientation begins at the lexicographically smaller of the two degree-1 endpoint `pointId` values. Stable source identity is the deterministic tie-break authority if an otherwise equivalent ordering requires one.
+
+For `CLOSED_CONTOUR`, D.2 MUST choose a reproducible canonical start source and traversal direction from stable source identity / topology information. D.2 MUST NOT use signed area, CW/CCW, containment or other profile-region geometry to choose the orientation; those decisions belong to later D.3/D.4.
+
+### Derived output contract
+
+The D.2 read authority returns at minimum:
+
+- `components[]`
+- `diagnostics[]`
+
+Every component retains at minimum:
+
+- `classification`
+- a deterministic `componentKey`
+- ordered `curves[]` preserving source `kind + elementId`
+- `startPointId` and `endPointId` for `OPEN_PATH`
+- sufficient deterministic canonical traversal information for later D.3/D.5 consumers
+
+For a `CLOSED_CONTOUR`, semantic start/end remains closed; its canonical start location is represented by the deterministic ordered curve sequence rather than by inventing new topology endpoints.
+
+No persistent component/profile/path ID is introduced in D.2. `componentKey` is a deterministic derived key only and MUST NOT be treated as the later WD-21E StableReference identity contract.
+
+### Validation boundary against D.3/D.4
+
+D.2 classifies graph structure only. It MUST NOT decide:
+
+- signed area or winding;
+- outer contour vs hole;
+- contour nesting or containment;
+- profile regions;
+- self-intersection;
+- geometric zero-area validity;
+- analytic contour intersection validity;
+- extrusion suitability.
+
+The old line-only `src/model/sketch-profile.js` already combines connected-component/degree logic with area, self-intersection and profile creation. D.2 MUST NOT copy that coupling. Only the generic topology graph/component/order responsibility is brought forward; area/profile/geometric validation remains downstream in D.3/D.4.
+
+### D.2 regression contract
+
+D.2 regression MUST prove at minimum:
+
+- one standalone Line derives as one deterministic `OPEN_PATH`;
+- a connected mixed Line+Arc+Spline chain derives as one deterministic `OPEN_PATH`;
+- a mixed endpoint-element ring derives as one deterministic `CLOSED_CONTOUR`;
+- one Circle derives as one standalone one-element `CLOSED_CONTOUR` without synthetic endpoints;
+- multiple independent components remain separate and deterministically ordered;
+- source curves that require reverse traversal are returned in correct traversal orientation without mutating their D.1/source identity;
+- a branching/T-junction component is `INVALID_COMPONENT` and diagnostic;
+- geometrically coincident endpoints carrying different `pointId` values remain separate components;
+- repeated derivation remains identical when persistent collection insertion order differs but authoritative identities/topology are equal;
+- source sketch data and D.1 derived curves remain unmodified;
+- no area, hole/nesting, profile selection, StableReference, extrusion or dependency/recompute behavior is introduced.
+
+### Explicit D.2 exclusions
+
+D.2 MUST NOT implement profile-region derivation, hole/nesting classification, area/winding normalization, self-intersection validation, geometric contour validity, profile/path StableReference identities, profile/path UI selection/highlight, extrusion conversion, dependency/recompute integration, geometric auto-connect, tolerance/snap/rebinding, or any new sketch drawing/editing capability.
+
+### D.2 implementation boundary
+
+The expected implementation is one pure model-level graph/component derivation authority consuming D.1, plus a dedicated D.2 regression and workflow. Existing `src/model/sketch-profile.js` remains compatibility/legacy behavior during D.2 and MUST NOT be switched to the new graph derivation in the same implementation step unless separately reconciled in a later WD-21D substep.
+
+No visible product capability is introduced merely by defining D.2. The visible application build identity therefore remains the frozen `WD-21D.1` until a separate D.2 implementation is explicitly authorized.
 
 ## WD-21D.3 – Closed Profile Region & Nesting Derivation
 
@@ -180,8 +272,8 @@ Profile/path selection UI, new StableReference PROFILE/PATH target kinds, featur
 
 The WD-21D development branch exists and was created exactly from frozen WD-21C.8-R2 basis `b29efc297ab8183a9e5879798bb6fd9da201cdf2`.
 
-The frozen D.1 visible application build identity is `WD-21D.1`. Central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label.
+The frozen D.1 visible application build identity remains `WD-21D.1`. Central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label. Documentation-only D.2 definition does not change product build identity.
 
 ## Next permissible step
 
-WD-21D.1 is frozen. No WD-21D.2 implementation is started by this freeze. Any D.2 reconciliation/definition or implementation requires a separate explicit authorization.
+WD-21D.2 is now reconciled and contract-bounded but remains NOT IMPLEMENTED. The next permissible step is exclusively the separate authorization of WD-21D.2 implementation against this documented contract. No D.2 implementation, D.3 work, device gate or freeze is included in this definition step.
