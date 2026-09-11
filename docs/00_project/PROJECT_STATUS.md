@@ -1,6 +1,6 @@
 # CM3D – Projektstatus
 
-Stand: 2026-09-10
+Stand: 2026-09-11
 
 ## Aktueller Gesamtstand
 
@@ -109,15 +109,23 @@ Definition-/Branch-Basis: eingefrorener WD-21C.8-R2-Stand `b29efc297ab8183a9e587
 
 ### WD-21D.1 – Generic Sketch Curve/Edge Derivation Contract
 
-**IMPLEMENTED / REGRESSION ADDED / CI VERIFICATION PENDING / NOT FROZEN**
+**PASS / FROZEN / 0 BLOCKER**
+
+Frozen implementation head: `5acd2c65931168c4535fce8e2e1eb0504f088f6d`.
 
 Sichtbare Build-Kennung: `WD-21D.1`.
 
 Implementiert ist ausschließlich die generische read-only Curve/Edge-Derivation für `line`, `circle`, `arc` und `spline`. Source-Element- und Endpoint-Identitäten bleiben autoritativ; Circle erhält keine künstlichen Topologie-Endpunkte. Deterministische Geometriesamples sind nur abgeleitete Hilfsdaten. Eine pure UI-unabhängige Arc-Geometriegrenze wurde ergänzt; die bestehende Spline-Geometrie wird wiederverwendet.
 
+Automatisierte Evidenz auf dem frozen implementation head: `curve-derivation-regression` SUCCESS, normaler Build SUCCESS sowie Deployment/Build-Status SUCCESS. Der Scope-Diff gegen den dokumentierten D.1-Ausgang ist auf D.1-Derivation, pure Arc-Geometrie, zentrale Build-ID, Regression/Workflow, Statusdokumentation und die notwendige Forward-Compatibility des alten C.2-Build-Gates begrenzt. Keine D.2-Komponenten-/Pfadlogik, Profile, Stable Profile/Path References, Extrusionsumstellung oder Recompute-/Dependency-Integration wurden begonnen.
+
+Realer iPad-/Safari-Gerätetest: **1–7 PASS**. Bestätigt sind sichtbare `WD-21D.1`-Kennung, Line/Circle/Arc/Spline Creation und Selection, bestehendes Point/Line/Circle-Gizmo, Arc/Spline ohne Gizmo, Connect/Disconnect-Regressionsverhalten, Undo/Redo, Save/Reload sowie das Ausbleiben vorgezogener Profil-/Pfad-/Extrusionsfunktionen.
+
+NON-BLOCKING / LATER UX UNIFICATION: Die Kamera-Fokuslogik ist funktional, aber noch nicht einheitlich. Point/Line/Circle werden zentriert und behalten weitgehend den vorhandenen Zoom; Arc/Spline verwenden `runtime.focusSelection()` und werden zusätzlich auf ihre Bounds eingepasst. Dies ist kein D.1-Blocker. Eine spätere gemeinsame Selection-Camera-Focus-Regel soll Zentrierung/Auto-Fit mit Min-/Max-Zoom-Clamping vereinheitlichen, damit insbesondere ein einzelner Punkt nicht extrem herangezoomt wird.
+
 Noch nicht Teil von D.1 sind Connected Components, Closed Contours, Open Paths, Profile, Hole/Nesting, Stable Profile/Path References, Auswahl, Extrusionsumbau oder Dependency/Recompute-Integration.
 
-Passende D.1-Regression und GitHub-Workflow sind vorhanden; ein Completion-/Device-/Freeze-Gate ist in diesem Implementierungsschritt ausdrücklich noch nicht freigegeben.
+WD-21D.1 ist damit abgeschlossen und eingefroren. WD-21D.2 wurde durch dieses Freeze nicht begonnen.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -127,4 +135,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revis
 
 ## Nächster zulässiger Schritt
 
-Ausschließlich WD-21D.1 Implementation Verification / Automated Regression gegen den implementierten Branch-Stand. Noch keine D.2-Arbeit, kein Geräte-PASS und kein Freeze-Gate ohne separate Freigabe.
+WD-21D.1 ist PASS / FROZEN / 0 BLOCKER. WD-21D.2 beginnt nicht automatisch. Ein weiterer Schritt erfordert eine separate ausdrückliche Freigabe.
