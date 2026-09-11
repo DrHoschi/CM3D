@@ -68,27 +68,30 @@ Frozen implementation/product head: `4bcf862e7e7a019557a9a03952294a2e54393f6c`.
 
 Core implementation evidence head: `7647ede8d45e77799bb5ce7326dbf1a9a3df29fb`.
 
-Sichtbare Build-Kennung: `WD-21D.2`.
-
-Implementiert ist ausschließlich die pure Graph-/Component-Derivation `src/model/sketch-path-graph-derivation.js` auf Basis der D.1-Ausgabe. Line/Arc/Spline verbinden sich nur über identische autoritative `pointId`. Circle wird als eigenständiger endpointloser `CLOSED_CONTOUR` behandelt. Komponenten werden deterministisch als `OPEN_PATH`, `CLOSED_CONTOUR` oder `INVALID_COMPONENT` klassifiziert und in reproduzierbarer Traversal-Reihenfolge ausgegeben. Reverse Traversal verwendet die D.1-Read-Grenze und mutiert keine persistente Geometrie.
-
-Finaler Scope-Audit gegen den dokumentierten D.2-Vertrag: **10 Commits voraus / 0 zurück**. Der Scope bleibt auf D.2-Graph-Autorität, D.2-Regression/Workflow, zentrale Build-ID, notwendige Forward-Compatibility bestehender Build-Gates und Statusdokumentation begrenzt. Keine D.3-/D.4-/D.5-Funktion, keine StableReferences, keine Profil-/Pfadauswahl, kein Extrusionsumbau und keine Dependency/Recompute-Integration wurden vorgezogen.
-
-Automatisierte Evidenz auf dem finalen Branch-Stand:
-
-- WD-21D.1 Regression Run `34629934724`: **SUCCESS**.
-- WD-21D.2 Regression Run `34629934765`: **SUCCESS**.
-- Frühere Core-Evidenz auf `7647ede8d45e77799bb5ce7326dbf1a9a3df29fb`: D.1 Run `34629766355` SUCCESS und D.2 Run `34629766381` SUCCESS.
-
-Realer iPad-/Safari-Gerätetest auf sichtbarem Build `WD-21D.2`: **1–7 PASS**. Bestätigt sind konsistente Tab-/Header-Build-ID, Line/Circle/Arc/Spline Creation und Sichtbarkeit, Tree-Auswahl und Viewer-Fokus, Point/Line/Circle-Gizmo bei weiterhin keinem Arc-/Spline-Gizmo, Connect/Disconnect-Regressionsverhalten über autoritative Endpunkt-Topologie, Undo/Redo, Save/Reload sowie das Ausbleiben vorgezogener Profil-/Open-Path-Auswahl, Hole/Nesting- oder Extrusionsfunktionen.
-
-Nicht Bestandteil von D.2 sind Area/Winding, Profile, Hole/Nesting, Self-Intersection-/Mixed-Geometry-Validierung, Stable Profile/Path References, Profile/Path Selection, Extrusionsumbau oder Dependency/Recompute-Integration.
-
-WD-21D.2 ist damit abgeschlossen und eingefroren.
+D.2 implementiert ausschließlich die pure Graph-/Component-Derivation auf Basis von D.1. Line/Arc/Spline verbinden sich nur über identische autoritative `pointId`; Circle bleibt eigenständiger endpointloser `CLOSED_CONTOUR`. Komponenten werden deterministisch als `OPEN_PATH`, `CLOSED_CONTOUR` oder `INVALID_COMPONENT` klassifiziert. Reale iPad/Safari-Evidenz: 1–7 PASS.
 
 ### WD-21D.3 – Closed Profile Region & Nesting Derivation
 
-**DEFINED / NOT IMPLEMENTED**
+**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE NOT VERIFIED / NOT FROZEN**
+
+Dokumentierter D.3-Vertrag: `3168608b21dc97cef6e11512ad66eaf5a11b7a8b`.
+
+Core implementation evidence head: `f222c09a31937e0753a1c866bd997e38450f1cb3`.
+
+Sichtbare Build-Kennung: `WD-21D.3`.
+
+Implementiert ist ausschließlich die pure Profile-Region-/Nesting-Derivation `src/model/sketch-profile-region-derivation.js` auf Basis der frozen D.2-Ausgabe. Nur `CLOSED_CONTOUR`-Komponenten können Profile erzeugen; Open Paths und invalid components bleiben ausgeschlossen. Ein Profil enthält einen deterministischen derived `profileKey`, `outerContour`, `holes[]`, Nesting-Tiefe und vollständige Source-Traceability.
+
+Containment wird deterministisch über gerade/ungerade Tiefe klassifiziert: Outer → Hole → Island → Hole usw. Mehrere räumlich getrennte geschlossene Konturen erzeugen mehrere unabhängige Profile. D.1/D.2-Tessellation wird nur als derived Rechenhilfe verwendet; persistente Geometrie wird nicht verändert.
+
+D.3 übernimmt ausdrücklich nicht die finale geometrische Gültigkeitsprüfung. Self-Intersection, degenerierte Geometrie, Boundary Contact und andere Mixed-Analytic-Grenzfälle bleiben D.4. Existing `src/model/sketch-profile.js`, Extrusion, Auswahl, StableReferences und Recompute/Dependency bleiben unverändert.
+
+Automatisierte Evidenz auf `f222c09a31937e0753a1c866bd997e38450f1cb3`:
+
+- D.3 `profile-region-regression`: **SUCCESS**.
+- D.2 `path-graph-derivation-regression`: **SUCCESS**.
+- D.1 `curve-derivation-regression`: **SUCCESS**.
+- Normaler Build war beim Schreiben dieses Implementierungsstatus noch in Ausführung; finale Build-/Deploy-Evidenz gehört in das separate Completion / Regression / Device Verification Gate.
 
 ### WD-21D.4 – Mixed Analytic Geometry Validation
 
@@ -110,4 +113,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts tragen `-R1`, `-R2`, … und
 
 ## Nächster zulässiger Schritt
 
-WD-21D.2 ist **PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER**. WD-21D.3 beginnt nicht automatisch. Der nächste zulässige Schritt ist ausschließlich die separate **WD-21D.3 Reconciliation/Definition – Closed Profile Region & Nesting Derivation** gegen den eingefrorenen D.2-Stand. Noch keine D.3-Implementierung im selben Schritt.
+WD-21D.3 ist implementiert und seine dedizierte Regression ist grün, aber noch nicht geräteverifiziert oder eingefroren. Der nächste zulässige Schritt ist ausschließlich **WD-21D.3 – Completion / Regression / Device Verification Gate** gegen den finalen Branch-Stand. Erst danach darf separat über PASS/FROZEN entschieden werden. WD-21D.4 beginnt noch nicht.
