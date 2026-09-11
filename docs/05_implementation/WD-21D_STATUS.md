@@ -1,10 +1,10 @@
 # WD-21D – Profile & Open Path Derivation
 
-**Status:** ACTIVE / WD-21D.1 IMPLEMENTED / NOT FROZEN  
+**Status:** ACTIVE / WD-21D.1 PASS / FROZEN / 0 BLOCKER  
 **Definition basis:** frozen WD-21C.8-R2 @ `b29efc297ab8183a9e5879798bb6fd9da201cdf2`  
 **Branch:** `feature/wd-21d-profile-open-path-derivation`  
 **RB:** RB-02 – Sketch Topology & Profiles  
-**Stand:** 2026-09-10
+**Stand:** 2026-09-11
 
 ## Reconciliation result
 
@@ -22,7 +22,9 @@ Analytic sketch identity remains authoritative. Any tessellation used for geomet
 
 ## WD-21D.1 – Generic Sketch Curve/Edge Derivation Contract
 
-**Status:** IMPLEMENTED / REGRESSION ADDED / CI VERIFICATION PENDING / NOT FROZEN
+**Status:** PASS / FROZEN / 0 BLOCKER
+
+**Frozen implementation head:** `5acd2c65931168c4535fce8e2e1eb0504f088f6d`
 
 ### D.1 authority
 
@@ -63,30 +65,43 @@ They MUST NOT:
 - alter endpoint IDs;
 - change analytic Arc/Circle/Spline semantics.
 
-Existing pure Spline geometry in `src/application/sketch-spline-geometry.js` is reusable. The existing Arc render-point calculation currently lives inside the UI integration and therefore MUST NOT become a model dependency. If D.1 implementation needs shared Arc evaluation, the same already-frozen three-point Arc mathematics may be extracted to a pure UI-independent geometry helper without changing Arc semantics.
+Existing pure Spline geometry in `src/application/sketch-spline-geometry.js` is reusable. The frozen three-point Arc mathematics is shared through pure UI-independent `src/application/sketch-arc-geometry.js` without changing Arc semantics.
 
 ### Determinism
 
 For an unchanged sketch, repeated D.1 derivation MUST return the same source membership and deterministic ordering. Ordering MUST be based on stable source identity/registry traversal rules, never object insertion accidents or geometric best-guess.
 
-### Minimal expected implementation scope
-
-The preferred implementation boundary is a new pure model/application derivation module, for example `src/model/sketch-curve-derivation.js`, consuming the existing `SketchElementRegistry` and topology helpers.
-
-Potential supporting scope is limited to extracting/reusing pure Arc geometry mathematics if required. `src/model/sketch-topology.js` should remain unchanged unless implementation proves a missing generic read primitive is strictly required. `src/model/sketch-profile.js` remains legacy/compatibility logic in D.1 and is not yet replaced.
-
 ### Implemented scope
 
 - `src/model/sketch-curve-derivation.js` is the central D.1 read authority via `deriveSketchCurves(...)` and `reverseDerivedCurve(...)`.
-- `src/application/sketch-arc-geometry.js` contains the pure UI-independent three-point Arc sampling helper with the frozen Arc semantics.
+- `src/application/sketch-arc-geometry.js` contains the pure UI-independent three-point Arc sampling helper with frozen Arc semantics.
 - Existing `src/application/sketch-spline-geometry.js` is reused unchanged.
-- `src/main.js` changes only the central visible build identity to `WD-21D.1`; the existing `applyBuildIdentity()` remains authoritative for `document.title` and visible brand/build label.
+- `src/main.js` changes only the central visible build identity to `WD-21D.1`; existing `applyBuildIdentity()` remains authoritative for `document.title` and visible brand/build label.
 - `tests/wd-21d1-generic-sketch-curve-derivation.mjs` implements the D.1 regression contract.
 - `.github/workflows/wd-21d1-generic-sketch-curve-derivation.yml` provides the automated D.1 regression workflow.
+- `tests/wd-21c2-generic-element-registry-persistence.mjs` received only forward-compatible build-ID acceptance for the new D-series build.
+
+### Completion / regression / device evidence
+
+Automated verification on frozen implementation head `5acd2c65931168c4535fce8e2e1eb0504f088f6d` is PASS:
+
+- `curve-derivation-regression`: SUCCESS;
+- normal `build`: SUCCESS;
+- deployment/report build status: SUCCESS;
+- scope diff against documented D.1 definition head `24782accfcc8280715ede4d9ad9952e495070f9e` is limited to the expected D.1 implementation, build identity, regression/workflow, status documentation, and the old C.2 build-ID forward-compatibility update;
+- no D.2 component/path logic, profile derivation, selection/reference work, extrusion conversion or recompute/dependency integration is present.
+
+Real iPad/Safari device gate on visible build `WD-21D.1`: **1–7 PASS**. Verified were visible build identity, Line/Circle/Arc/Spline creation and selection, existing Point/Line/Circle gizmo behavior, Arc/Spline no-gizmo behavior, Connect/Disconnect regression for endpoint elements, Undo/Redo, Save/Reload persistence, and absence of any premature profile/path or extrusion capability.
+
+### Non-blocking observation – later camera focus UX unification
+
+Device testing exposed an existing UX inconsistency that is explicitly **NON-BLOCKING / LATER UX UNIFICATION**: Point/Line/Circle selection centers the selected target while largely preserving current zoom, whereas Arc/Spline selection uses `runtime.focusSelection()` and additionally fits/zooms to the selected element bounds.
+
+Both behaviors are functional and correct for D.1. This is not a topology/derivation defect and does not reopen C.8-R2 or D.1. A later dedicated Selection Camera Focus contract should unify centering/fit behavior with sensible min/max zoom clamping; in particular, point selections must not be allowed to zoom to an unusably extreme scale.
 
 ### D.1 regression contract
 
-The D.1 regression MUST prove at minimum:
+The D.1 regression proves at minimum:
 
 - Line maps deterministically to one generic open edge with exact source and endpoint IDs;
 - Circle maps deterministically to one closed endpointless curve and receives no synthetic point IDs;
@@ -99,21 +114,7 @@ The D.1 regression MUST prove at minimum:
 
 ### Explicit D.1 exclusions
 
-D.1 MUST NOT implement:
-
-- connected-component discovery;
-- closed-contour discovery;
-- open-path classification;
-- branching analysis;
-- profile regions or area derivation;
-- hole/nesting classification;
-- profile/path IDs or StableReference kinds;
-- profile/path UI selection/highlight;
-- extrusion/profile-source changes;
-- recompute/dependency integration;
-- new sketch drawing tools;
-- Spline control handles/gizmos;
-- constraints, snap, auto-merge, tolerance or geometric rebinding.
+D.1 MUST NOT implement connected-component discovery, closed-contour discovery, open-path classification, branching analysis, profile regions/area derivation, hole/nesting classification, profile/path IDs or StableReference kinds, profile/path UI selection/highlight, extrusion/profile-source changes, recompute/dependency integration, new sketch drawing tools, Spline control handles/gizmos, constraints, snap, auto-merge, tolerance or geometric rebinding.
 
 ## WD-21D.2 – Deterministic Contour & Open Path Graph Derivation
 
@@ -153,29 +154,15 @@ No profile selection UI and no StableReference PROFILE/PATH kinds in D.3.
 
 Generalize profile/path geometric validation beyond line-only geometry.
 
-The derivation must diagnose at least:
+The derivation must diagnose at least invalid/missing source geometry, zero/degenerate geometry, invalid branching/open components where a closed region is required, self-intersection, invalid regions, and ambiguous nesting/intersection cases.
 
-- invalid/missing source element geometry;
-- zero/degenerate derived geometry;
-- invalid branching/open components where a closed region is required;
-- self-intersection of closed candidate contours;
-- invalid/non-usable closed regions;
-- ambiguous nesting/intersection cases that cannot safely form deterministic profile regions.
-
-Deterministic derived tessellation may be used for geometric intersection/containment calculations, but it is never persisted and never replaces the original Line/Circle/Arc/Spline identity.
+Deterministic derived tessellation may be used for geometric intersection/containment calculations, but it is never persisted and never replaces original Line/Circle/Arc/Spline identity.
 
 ## WD-21D.5 – Generic Profile / Open Path Derivation API
 
 **Status:** DEFINED / NOT IMPLEMENTED
 
-Provide one central read authority for a sketch that returns deterministic derived data equivalent to:
-
-- `profiles[]`
-- `openPaths[]`
-- `invalidComponents[]`
-- `diagnostics[]`
-
-Every returned profile/path must retain an ordered deterministic description of its source sketch elements sufficient for later WD-21E stable profile/path identity and selection work.
+Provide one central read authority for a sketch returning deterministic data equivalent to `profiles[]`, `openPaths[]`, `invalidComponents[]`, and `diagnostics[]`, retaining ordered source sketch elements sufficient for later WD-21E identity and selection work.
 
 The existing `getSingleExtrudableProfile(...)` path may remain as a compatibility adapter during WD-21D. WD-21D must not yet switch extrusion to arbitrary selected profiles or paths.
 
@@ -183,42 +170,18 @@ The existing `getSingleExtrudableProfile(...)` path may remain as a compatibilit
 
 **Status:** DEFINED / NOT IMPLEMENTED
 
-Regression coverage must prove at minimum:
-
-- existing pure-line closed profile behavior remains valid;
-- one Circle derives as one closed profile region;
-- a closed mixed Line+Arc contour derives correctly;
-- a closed mixed Line+Spline contour derives correctly;
-- multiple independent closed contours produce multiple profiles;
-- nested outer contour + inner contour produces one profile region with a hole;
-- open Line/Arc/Spline chains derive as open paths;
-- branching, missing, degenerate and self-intersecting cases remain diagnostic;
-- no geometric coincidence creates topology without shared `pointId`;
-- existing WD-21C sketch persistence/load compatibility remains intact.
-
-Only after D.1–D.5 are implemented and the full regression is PASS / 0 BLOCKER may WD-21D be considered for freeze.
+Full D regression later covers pure-line profiles, Circle, mixed Line+Arc, mixed Line+Spline, multiple profiles, holes, open paths, invalid/branching/self-intersecting cases, topology identity rules and persistence/load compatibility. Only after D.1–D.5 are implemented and full regression is PASS / 0 BLOCKER may WD-21D be considered for freeze.
 
 ## Explicitly excluded from WD-21D
 
-- profile/path selection UI;
-- new StableReference PROFILE/PATH target kinds;
-- feature references to concrete profiles/paths;
-- extrusion conversion to selected profile/path sources;
-- extrusion holes/multi-profile runtime implementation;
-- dependency/recompute integration for profile/path references;
-- new sketch drawing tools;
-- Spline control handles, Control add/delete/reorder, Spline gizmo/drag;
-- constraints, snap/auto-merge/tolerance/geometric rebinding;
-- N-Gon/faceted-circle identity changes.
+Profile/path selection UI, new StableReference PROFILE/PATH target kinds, feature references to concrete profiles/paths, extrusion conversion to selected profile/path sources, extrusion holes/multi-profile runtime implementation, dependency/recompute integration for profile/path references, new sketch drawing tools, Spline control editing/gizmo, constraints, snap/auto-merge/tolerance/geometric rebinding and N-Gon/faceted-circle identity changes remain excluded.
 
 ## Build / branch rule
 
 The WD-21D development branch exists and was created exactly from frozen WD-21C.8-R2 basis `b29efc297ab8183a9e5879798bb6fd9da201cdf2`.
 
-The visible application build identity for the D.1 implementation is `WD-21D.1`. The central `applyBuildIdentity()` continues to apply the same value to `document.title` and the visible brand/build label.
-
-No PASS/FROZEN status is claimed in this implementation step. Automated verification, device evidence and freeze remain separate gates.
+The frozen D.1 visible application build identity is `WD-21D.1`. Central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label.
 
 ## Next permissible step
 
-Exclusively WD-21D.1 Implementation Verification / Automated Regression against the implemented branch state. No D.2 work, no device PASS and no freeze gate in the same step without separate authorization.
+WD-21D.1 is frozen. No WD-21D.2 implementation is started by this freeze. Any D.2 reconciliation/definition or implementation requires a separate explicit authorization.
