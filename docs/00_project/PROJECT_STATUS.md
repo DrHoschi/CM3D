@@ -12,13 +12,13 @@ Repository `DrHoschi/CM3D` ist die zentrale Projektbasis.
 
 **RB-01 – PASS / FROZEN**
 
-Freigegebener `main`-Stand nach Abschlussdokumentation: `1edae185c6207db9d754c94d00d23cf10218c56c`
+Freigegebener `main`-Stand nach Abschlussdokumentation: `1edae185c6207db9d754c94d00d23cf10218c56c`.
 
 ## RB-02 – Sketch Topology & Profiles
 
 RB-02 ist der aktuell aktive V2-Roadmapblock.
 
-Geplante WD-Zerlegung:
+Verbindliche WD-Zerlegung:
 
 - WD-21A – Sketch Topology Contract & Element Foundation
 - WD-21B – Sketch Connectivity & Editing Integration
@@ -38,101 +38,68 @@ Geplante WD-Zerlegung:
 
 ## WD-21C – Sketch Element Type Expansion
 
-Aktiver Branch: `feature/wd-21c-sketch-element-type-expansion`
-
-### WD-21C.1
-**PASS / INVENTORY & CONTRACT COMPLETE / 0 ELEMENT IMPLEMENTATION**
-
-### WD-21C.2
-**PASS / DEVICE VERIFIED / 0 BLOCKER**
-
-### WD-21C.3
-**PASS / DEVICE VERIFIED / 0 BLOCKER**
-
-### WD-21C.4 – Circle Creation, Rendering & Editing Integration
 **PASS / FROZEN / 0 BLOCKER**
 
-### WD-21C.5 – Generic Sketch Element Manipulation Contract
-**PASS / FROZEN / 0 BLOCKER**
+WD-21C ist fachlich bis einschließlich C.8-R2 abgeschlossen. Finaler sichtbarer C-Stand war `WD-21C.8-R2`. Point/Line/Circle behalten bestehende Gizmo-Manipulation; Arc/Spline bleiben konkrete auswählbare Sketch-Elemente ohne Manipulationsgizmo. Die C.6-Connectivity gilt generisch für Line/Arc/Spline-Endpunkte ausschließlich über identische `pointId`. Circle besitzt keine Topologie-Endpunkte.
 
-### WD-21C.6 – Generic Endpoint Element Connectivity Contract
-**PASS / FROZEN / 0 BLOCKER**
-
-Finaler sichtbarer Korrekturstand `WD-21C.6-R1`; Completion-Regression Run `34363013788`: SUCCESS; reale iPad-/Safari-Evidenz: PASS.
-
-### WD-21C.7 – Arc Creation, Rendering & Editing Integration
-**PASS / FROZEN / 0 BLOCKER**
-
-Finaler sichtbarer Stand `WD-21C.7`; Completion-Regression Run `34369150959`: SUCCESS; reale iPad-/Safari-Evidenz: PASS / 0 BLOCKER.
-
-### WD-21C.8 – Spline Creation, Rendering & Editing Integration
-
-**PASS / FROZEN / 0 BLOCKER**
-
-Reconciliation-Basis: eingefrorener C.7-Stand `feaee19c72977a98dc86090a99e57162aa27a0cc`.
-
-Der fachliche C.8-Minimalumfang bleibt: atomare Spline-Creation, stabile Endpoint-/Control-IDs, geordnete Bézier-/de-Casteljau-Semantik, abgeleitete Tessellation, sichtbares Spline-Werkzeug, Tree-/Viewer-Auswahl, Inspector und Wiederverwendung der eingefrorenen C.6-Connectivity ausschließlich für Start/Ende.
-
-#### WD-21C.8-R1 – Sketch Element Selection Synchronization Correction
-
-R1 stellte die generische konkrete Sketch-Element-Synchronisation für Object Tree und Viewer her. Der reale Gerätecheck zeigte danach noch einen verbleibenden Kamera-Ausrichtungsblocker für Tree → Arc/Spline. Die Diagnose bestätigte, dass Arc/Spline nicht an der SelectionRef-/Runtime-Identitätsgrenze verloren gingen, sondern dass die automatische Kameraausrichtung an die Gizmo-Manipulationsfähigkeit gekoppelt war.
-
-#### WD-21C.8-R2 – Generic Sketch Selection Camera Alignment Decoupling Correction
-
-Finaler sichtbarer Korrekturstand: `WD-21C.8-R2`.
-
-R2 trennt Selection/Focus von Gizmo-Manipulation. `point`, `line`, `circle` behalten ihr bestehendes Gizmo-Verhalten; `arc` und `spline` werden über die vorhandene `runtime.focusSelection()`-Autorität konkret fokussiert, erhalten aber weiterhin keinen Manipulationsadapter, kein Gizmo und keinen Drag. `manipulationKinds` bleibt `point`, `line`, `circle`.
-
-Geprüfter Produkt-/Test-Head: `fe20a2b6b149595b2ffe57a3838da655dfe8b24d`.
-
-Completion-/Regression-Audit:
-
-- Diff gegen C.7-Freeze `feaee19c72977a98dc86090a99e57162aa27a0cc`: **28 Commits voraus / 0 zurück**; Gesamtumfang entspricht C.8 plus kontrolliertem R1/R2;
-- Diff gegen dokumentierten C.8-R1-Ausgang `47d98f67afc9d4edb1cbec37d70cda3642de5a1a`: **5 Commits voraus / 0 zurück**;
-- R2-Produktänderung ist auf `src/ui/sketch-gizmo.js` plus zentrale Build-ID in `src/main.js` begrenzt; zusätzlich nur R2-Test/Workflow und R1-Test-Forward-Compatibility;
-- `WD-21C.8-R2 Selection Camera Alignment Regression`, Run `34510128236`: **SUCCESS** und bestätigt A.2, A.3, B.2, B.3, C.2–C.8, R1 und R2;
-- bestehender R1-Workflow auf demselben Head, Run `34510128178`: **SUCCESS**.
-
-Realer iPad-/Safari-Test auf `WD-21C.8-R2`: **PASS**. Bestätigt sind konsistente Tab/Header-Build-ID, Point-/Line-Fokus und Gizmo, Circle-Fokus und Gizmo sowie Arc-/Spline-Fokus aus dem Object Tree ohne Arc-/Spline-Gizmo.
-
-Damit gilt für WD-21C.8-R2: **PASS / FROZEN / 0 BLOCKER**.
-
-Explizit ausgeschlossen und weiterhin später bleiben geschlossene Splines, nachträgliches Hinzufügen/Löschen/Umsortieren von Controls, sichtbare Spline-Control-Handles/Control-Drag, Spline-Gizmo, Tangentialität/Continuity-Constraints, alternative Kurventypen, Snap/Auto-Merge/Tolerance/geometrisches Rebinding, Profile/Pfade, N-Gon und Extrusionsintegration.
-
-WD-21C ist fachlich bis einschließlich C.8 abgeschlossen. Ein nachfolgender WD-Teilblock wird mit diesem Freeze nicht begonnen.
+Frozen WD-21C documentation basis: `b29efc297ab8183a9e5879798bb6fd9da201cdf2`.
 
 ## WD-21D – Profile & Open Path Derivation
 
 Aktiver Entwicklungsbranch: `feature/wd-21d-profile-open-path-derivation`.
 
-Definition-/Branch-Basis: eingefrorener WD-21C.8-R2-Stand `b29efc297ab8183a9e5879798bb6fd9da201cdf2`.
-
-### WD-21D.1 – Generic Sketch Curve/Edge Derivation Contract
+### WD-21D.1 – Generic Sketch Curve/Edge Derivation
 
 **PASS / FROZEN / 0 BLOCKER**
 
 Frozen implementation head: `5acd2c65931168c4535fce8e2e1eb0504f088f6d`.
 
-Sichtbare Build-Kennung: `WD-21D.1`.
+D.1 stellt die zentrale read-only Curve/Edge-Derivation für Line/Circle/Arc/Spline bereit. Source- und Endpoint-Identitäten bleiben autoritativ; Circle bleibt geschlossen und endpointlos. Arc/Spline-Tessellation ist nur abgeleitet. Automatisierte Regression und realer iPad/Safari-Test 1–7 sind PASS.
 
-Implementiert ist ausschließlich die generische read-only Curve/Edge-Derivation für `line`, `circle`, `arc` und `spline`. Source-Element- und Endpoint-Identitäten bleiben autoritativ; Circle erhält keine künstlichen Topologie-Endpunkte. Deterministische Geometriesamples sind nur abgeleitete Hilfsdaten. Eine pure UI-unabhängige Arc-Geometriegrenze wurde ergänzt; die bestehende Spline-Geometrie wird wiederverwendet.
+NON-BLOCKING / LATER UX UNIFICATION bleibt die unterschiedliche Kamera-Fokuswirkung zwischen Point/Line/Circle und Arc/Spline. Eine spätere gemeinsame Selection-Camera-Focus-Regel soll Zentrierung/Auto-Fit mit Min-/Max-Zoom-Clamping vereinheitlichen.
 
-Automatisierte Evidenz auf dem frozen implementation head: `curve-derivation-regression` SUCCESS, normaler Build SUCCESS sowie Deployment/Build-Status SUCCESS. Der Scope-Diff gegen den dokumentierten D.1-Ausgang ist auf D.1-Derivation, pure Arc-Geometrie, zentrale Build-ID, Regression/Workflow, Statusdokumentation und die notwendige Forward-Compatibility des alten C.2-Build-Gates begrenzt. Keine D.2-Komponenten-/Pfadlogik, Profile, Stable Profile/Path References, Extrusionsumstellung oder Recompute-/Dependency-Integration wurden begonnen.
+### WD-21D.2 – Deterministic Contour & Open Path Graph Derivation
 
-Realer iPad-/Safari-Gerätetest: **1–7 PASS**. Bestätigt sind sichtbare `WD-21D.1`-Kennung, Line/Circle/Arc/Spline Creation und Selection, bestehendes Point/Line/Circle-Gizmo, Arc/Spline ohne Gizmo, Connect/Disconnect-Regressionsverhalten, Undo/Redo, Save/Reload sowie das Ausbleiben vorgezogener Profil-/Pfad-/Extrusionsfunktionen.
+**IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE NOT VERIFIED / NOT FROZEN**
 
-NON-BLOCKING / LATER UX UNIFICATION: Die Kamera-Fokuslogik ist funktional, aber noch nicht einheitlich. Point/Line/Circle werden zentriert und behalten weitgehend den vorhandenen Zoom; Arc/Spline verwenden `runtime.focusSelection()` und werden zusätzlich auf ihre Bounds eingepasst. Dies ist kein D.1-Blocker. Eine spätere gemeinsame Selection-Camera-Focus-Regel soll Zentrierung/Auto-Fit mit Min-/Max-Zoom-Clamping vereinheitlichen, damit insbesondere ein einzelner Punkt nicht extrem herangezoomt wird.
+Dokumentierter D.2-Vertrag: `1f7715f80160aa205c306a1129b4a19d2f4852a7`.
 
-Noch nicht Teil von D.1 sind Connected Components, Closed Contours, Open Paths, Profile, Hole/Nesting, Stable Profile/Path References, Auswahl, Extrusionsumbau oder Dependency/Recompute-Integration.
+Getesteter Implementierungs-Head: `7647ede8d45e77799bb5ce7326dbf1a9a3df29fb`.
 
-WD-21D.1 ist damit abgeschlossen und eingefroren. WD-21D.2 wurde durch dieses Freeze nicht begonnen.
+Sichtbare Build-Kennung: `WD-21D.2`.
+
+Implementiert ist ausschließlich die pure Graph-/Component-Derivation `src/model/sketch-path-graph-derivation.js` auf Basis der D.1-Ausgabe. Line/Arc/Spline verbinden sich nur über identische autoritative `pointId`. Circle wird als eigenständiger endpointloser `CLOSED_CONTOUR` behandelt. Komponenten werden deterministisch als `OPEN_PATH`, `CLOSED_CONTOUR` oder `INVALID_COMPONENT` klassifiziert und in reproduzierbarer Traversal-Reihenfolge ausgegeben. Reverse Traversal verwendet die D.1-Read-Grenze und mutiert keine persistente Geometrie.
+
+Automatisierte Evidenz auf `7647ede8d45e77799bb5ce7326dbf1a9a3df29fb`:
+
+- WD-21D.1 Regression Run `34629766355`: **SUCCESS**.
+- WD-21D.2 Regression Run `34629766381`: **SUCCESS**.
+- D.2 prüft standalone Line, gemischte Line+Arc+Spline-Pfade, geschlossene gemischte Kontur, Circle, mehrere/isolierte Komponenten, Reverse Traversal, Branching/T-Junction, unterschiedliche `pointId` bei gleichen Koordinaten, Insertion-Order-Determinismus und Nichtmutation.
+
+Nicht Bestandteil von D.2 sind Area/Winding, Profile, Hole/Nesting, Self-Intersection-/Mixed-Geometry-Validierung, Stable Profile/Path References, Profile/Path Selection, Extrusionsumbau oder Dependency/Recompute-Integration.
+
+### WD-21D.3 – Closed Profile Region & Nesting Derivation
+
+**DEFINED / NOT IMPLEMENTED**
+
+### WD-21D.4 – Mixed Analytic Geometry Validation
+
+**DEFINED / NOT IMPLEMENTED**
+
+### WD-21D.5 – Generic Profile / Open Path Derivation API
+
+**DEFINED / NOT IMPLEMENTED**
+
+### WD-21D.6 – Derivation Regression / Compatibility Gate
+
+**DEFINED / NOT IMPLEMENTED**
 
 ## Verbindliche Build-Kennungsregel
 
-Bei jedem WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtbare Build-/Brand-Kennung und WD-/Projektstatusdokumentation konsistent sein. Eine widersprüchliche sichtbare Kennung ist ein **BLOCKER** und verhindert PASS/FROZEN.
+Bei jedem Implementierungs-WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtbare Build-/Brand-Kennung und WD-/Projektstatusdokumentation konsistent sein. Eine widersprüchliche sichtbare Kennung ist ein BLOCKER und verhindert PASS/FROZEN.
 
-Korrekturläufe innerhalb desselben WD-Teilschritts dürfen eine sichtbare Revisionskennung `-R1`, `-R2`, … tragen. Diese Kennung muss ebenfalls in Browser-Tab und Header konsistent sichtbar sein und wird von den Build-Gates akzeptiert.
+Korrekturläufe innerhalb desselben WD-Teilschritts tragen `-R1`, `-R2`, … und müssen in Browser-Tab, sichtbarer Kennung und Build-Gates konsistent sein.
 
 ## Nächster zulässiger Schritt
 
-WD-21D.1 ist PASS / FROZEN / 0 BLOCKER. WD-21D.2 beginnt nicht automatisch. Ein weiterer Schritt erfordert eine separate ausdrückliche Freigabe.
+WD-21D.2 ist implementiert und automatisiert grün, aber noch nicht geräteverifiziert oder eingefroren. Der nächste zulässige Schritt ist ausschließlich **WD-21D.2 – Completion / Regression / Device Verification Gate** gegen den exakten Implementierungsstand. Erst danach darf separat über PASS/FROZEN entschieden werden. WD-21D.3 beginnt noch nicht.
