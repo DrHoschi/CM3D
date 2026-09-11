@@ -1,6 +1,6 @@
 # WD-21D – Profile & Open Path Derivation
 
-**Status:** ACTIVE / WD-21D.1 PASS / FROZEN / WD-21D.2 IMPLEMENTED / REGRESSION PASS / NOT FROZEN  
+**Status:** ACTIVE / WD-21D.1 PASS / FROZEN / WD-21D.2 PASS / FROZEN / 0 BLOCKER  
 **Definition basis:** frozen WD-21C.8-R2 @ `b29efc297ab8183a9e5879798bb6fd9da201cdf2`  
 **Branch:** `feature/wd-21d-profile-open-path-derivation`  
 **RB:** RB-02 – Sketch Topology & Profiles  
@@ -19,10 +19,11 @@ D.1 is the single generic read-only curve authority for Line/Circle/Arc/Spline t
 
 ## WD-21D.2 – Deterministic Contour & Open Path Graph Derivation
 
-**Status:** IMPLEMENTED / AUTOMATED REGRESSION PASS / DEVICE NOT VERIFIED / NOT FROZEN
+**Status:** PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER
 
 **Documented contract head:** `1f7715f80160aa205c306a1129b4a19d2f4852a7`  
-**Current tested implementation head:** `7647ede8d45e77799bb5ce7326dbf1a9a3df29fb`  
+**Frozen implementation/product head:** `4bcf862e7e7a019557a9a03952294a2e54393f6c`  
+**Core implementation evidence head:** `7647ede8d45e77799bb5ce7326dbf1a9a3df29fb`  
 **Visible build identity:** `WD-21D.2`
 
 ### D.2 authority and input boundary
@@ -52,17 +53,21 @@ The central D.2 authority is `src/model/sketch-path-graph-derivation.js` via `de
 - `src/model/sketch-path-graph-derivation.js` — pure D.2 graph/component authority consuming D.1.
 - `tests/wd-21d2-deterministic-path-graph-derivation.mjs` — D.2 regression.
 - `.github/workflows/wd-21d2-deterministic-path-graph-derivation.yml` — D.2 automated gate including A.2, C.2 and D.1 regressions.
-- `src/main.js` — central visible build identity only, now `WD-21D.2`; `applyBuildIdentity()` remains the single authority for browser title and visible brand/build label.
+- `src/main.js` — central visible build identity only, `WD-21D.2`; `applyBuildIdentity()` remains the single authority for browser title and visible brand/build label.
 - Existing D.1 and C.2 build-ID assertions received only the forward-compatibility required to accept D.2.
 - Existing `src/model/sketch-profile.js`, extrusion, selection, StableReference and recompute/dependency code remain unchanged.
 
-### Automated evidence
+### Completion / regression / device evidence
 
-On implementation head `7647ede8d45e77799bb5ce7326dbf1a9a3df29fb`:
+Final scope audit from documented D.2 contract head `1f7715f80160aa205c306a1129b4a19d2f4852a7` to final tested branch head `4bcf862e7e7a019557a9a03952294a2e54393f6c`: **10 commits ahead / 0 behind**. The changed scope is limited to the D.2 graph authority, dedicated D.2 regression/workflow, central `WD-21D.2` build identity, forward-compatible build assertions, and D.2 status documentation. No D.3 profile-region/hole logic, D.4 geometry validation, D.5 public profile/path API, StableReference, selection, extrusion conversion or recompute/dependency integration was introduced.
 
-- `WD-21D.1 Generic Sketch Curve Derivation Regression`, run `34629766355`: SUCCESS.
-- `WD-21D.2 Deterministic Path Graph Derivation Regression`, run `34629766381`: SUCCESS.
-- D.2 regression covers standalone Line open path, mixed Line+Arc+Spline open path, mixed closed ring, standalone Circle contour, branching/T-junction invalidation, coordinate-coincident but topologically distinct endpoints, deterministic insertion-order independence, reverse traversal and non-mutation.
+Automated regression on the final branch line is PASS:
+
+- `WD-21D.1 Generic Sketch Curve Derivation Regression`, final-head run `34629934724`: SUCCESS.
+- `WD-21D.2 Deterministic Path Graph Derivation Regression`, final-head run `34629934765`: SUCCESS.
+- Earlier core implementation evidence on `7647ede8d45e77799bb5ce7326dbf1a9a3df29fb`: D.1 run `34629766355` SUCCESS and D.2 run `34629766381` SUCCESS.
+
+Real iPad/Safari device gate on visible build `WD-21D.2`: **1–7 PASS**. Verified were consistent browser-tab/header build identity, creation and visibility of Line/Circle/Arc/Spline, Object-Tree selection and viewer focus, existing Point/Line/Circle gizmo behavior with Arc/Spline remaining no-gizmo, Connect/Disconnect regression using authoritative endpoint topology, Undo/Redo, Save/Reload persistence, and the absence of premature profile/open-path selection, hole/nesting or extrusion capabilities.
 
 ### Validation boundary
 
@@ -102,8 +107,8 @@ Profile/path selection UI, StableReference PROFILE/PATH target kinds, concrete f
 
 ## Build / branch rule
 
-The active branch is `feature/wd-21d-profile-open-path-derivation`. The visible implementation build identity is now `WD-21D.2`; central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label. A correction inside D.2 must use `WD-21D.2-R1`, `-R2`, etc.
+The active branch is `feature/wd-21d-profile-open-path-derivation`. The frozen D.2 visible implementation build identity is `WD-21D.2`; central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label. A later correction that explicitly reopens D.2 would require a separate authorization and visible `WD-21D.2-R1`, `-R2`, etc.
 
 ## Next permissible step
 
-WD-21D.2 is implemented with automated regression PASS but is not frozen and has no device PASS. The next permissible step is exclusively WD-21D.2 Completion / Regression / Device Verification Gate against the exact implementation head. No D.3 work and no automatic freeze is authorized in this implementation step.
+WD-21D.2 is PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER. WD-21D.3 does not begin automatically. The next permissible step is exclusively a separate WD-21D.3 reconciliation/definition against this frozen D.2 stand; no D.3 implementation is authorized by the D.2 freeze.
