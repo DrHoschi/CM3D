@@ -26,62 +26,110 @@ D.1 is the single generic read-only curve authority for Line/Circle/Arc/Spline t
 **Core implementation evidence head:** `7647ede8d45e77799bb5ce7326dbf1a9a3df29fb`  
 **Visible build identity:** `WD-21D.2`
 
-### D.2 authority and input boundary
+D.2 is the pure graph/component authority in `src/model/sketch-path-graph-derivation.js`. It consumes exclusively D.1, connects Line/Arc/Spline only through identical authoritative `pointId`, treats Circle as a standalone endpointless `CLOSED_CONTOUR`, and deterministically classifies components as `OPEN_PATH`, `CLOSED_CONTOUR`, or `INVALID_COMPONENT`. Its `componentKey` is derived only and is not a WD-21E StableReference identity. D.2 does not perform area, winding, nesting, self-intersection, profile-region, selection, extrusion, or recompute work.
 
-WD-21D.2 consumes exclusively D.1 `deriveSketchCurves(...)`. It does not reread persistent Line/Circle/Arc/Spline collections as a parallel graph authority. The implementation is a pure derived model and does not mutate sketch data or D.1 curves.
-
-### Connectivity authority
-
-Line/Arc/Spline graph connectivity exists only through identical authoritative `pointId` endpoint references. Coordinate equality, geometric coincidence, tolerance, proximity, snap assumptions or best-guess matching never create connectivity. Circle bypasses the endpoint graph and is emitted as its own one-element `CLOSED_CONTOUR` without synthetic endpoints.
-
-### Component classification
-
-Every D.2 component is exactly one of `CLOSED_CONTOUR`, `OPEN_PATH`, or `INVALID_COMPONENT`.
-
-A non-branching endpoint component with exactly two degree-1 points and all remaining points degree 2 is `OPEN_PATH`. A completely traversable component with every involved point degree 2 is `CLOSED_CONTOUR`. Branching, invalid degree structures, or non-orderable components become `INVALID_COMPONENT` plus diagnostics; they are never silently repaired.
-
-### Deterministic traversal
-
-Component discovery, component keys and traversal are based on stable source identity and authoritative point IDs, independent of collection insertion order. Open paths start canonically at the lexicographically smaller degree-1 `pointId`. Closed contours choose a reproducible source/topology-based traversal without area/winding logic. Reverse traversal uses D.1 `reverseDerivedCurve(...)` and never rewrites persistent geometry.
-
-### Derived output
-
-The central D.2 authority is `src/model/sketch-path-graph-derivation.js` via `deriveSketchPathGraph(sketch)`. It returns frozen `components[]` and `diagnostics[]`. Components contain deterministic `componentKey`, ordered `curves[]`, classification, and open-path start/end point IDs. `componentKey` is derived only and is explicitly not a WD-21E StableReference identity.
-
-### Implemented scope
-
-- `src/model/sketch-path-graph-derivation.js` — pure D.2 graph/component authority consuming D.1.
-- `tests/wd-21d2-deterministic-path-graph-derivation.mjs` — D.2 regression.
-- `.github/workflows/wd-21d2-deterministic-path-graph-derivation.yml` — D.2 automated gate including A.2, C.2 and D.1 regressions.
-- `src/main.js` — central visible build identity only, `WD-21D.2`; `applyBuildIdentity()` remains the single authority for browser title and visible brand/build label.
-- Existing D.1 and C.2 build-ID assertions received only the forward-compatibility required to accept D.2.
-- Existing `src/model/sketch-profile.js`, extrusion, selection, StableReference and recompute/dependency code remain unchanged.
-
-### Completion / regression / device evidence
-
-Final scope audit from documented D.2 contract head `1f7715f80160aa205c306a1129b4a19d2f4852a7` to final tested branch head `4bcf862e7e7a019557a9a03952294a2e54393f6c`: **10 commits ahead / 0 behind**. The changed scope is limited to the D.2 graph authority, dedicated D.2 regression/workflow, central `WD-21D.2` build identity, forward-compatible build assertions, and D.2 status documentation. No D.3 profile-region/hole logic, D.4 geometry validation, D.5 public profile/path API, StableReference, selection, extrusion conversion or recompute/dependency integration was introduced.
-
-Automated regression on the final branch line is PASS:
-
-- `WD-21D.1 Generic Sketch Curve Derivation Regression`, final-head run `34629934724`: SUCCESS.
-- `WD-21D.2 Deterministic Path Graph Derivation Regression`, final-head run `34629934765`: SUCCESS.
-- Earlier core implementation evidence on `7647ede8d45e77799bb5ce7326dbf1a9a3df29fb`: D.1 run `34629766355` SUCCESS and D.2 run `34629766381` SUCCESS.
-
-Real iPad/Safari device gate on visible build `WD-21D.2`: **1–7 PASS**. Verified were consistent browser-tab/header build identity, creation and visibility of Line/Circle/Arc/Spline, Object-Tree selection and viewer focus, existing Point/Line/Circle gizmo behavior with Arc/Spline remaining no-gizmo, Connect/Disconnect regression using authoritative endpoint topology, Undo/Redo, Save/Reload persistence, and the absence of premature profile/open-path selection, hole/nesting or extrusion capabilities.
-
-### Validation boundary
-
-D.2 classifies graph structure only. It does not decide signed area/winding, outer vs hole, nesting/containment, profile regions, self-intersection, geometric zero-area validity, analytic contour intersection validity or extrusion suitability. The old line-only `src/model/sketch-profile.js` remains compatibility behavior and is not switched to D.2 in this step.
-
-### Explicit D.2 exclusions
-
-No D.3 profile-region or hole/nesting work, no area/winding normalization, no D.4 mixed-geometry validation, no StableReference profile/path identity, no profile/path selection/highlight UI, no extrusion conversion, no dependency/recompute integration, no tolerance/snap/rebinding, and no new sketch drawing/editing capability.
+Final D.2 scope audit and automated regression are PASS, and the real iPad/Safari device gate on visible build `WD-21D.2` is 1–7 PASS. D.2 is frozen with 0 blocker.
 
 ## WD-21D.3 – Closed Profile Region & Nesting Derivation
 
-**Status:** DEFINED / NOT IMPLEMENTED
+**Status:** DEFINED / RECONCILED / CONTRACT BOUNDED / NOT IMPLEMENTED
 
-Later D.3 classifies valid closed contours into deterministic profile regions, including multiple independent outers and nested holes. No D.3 implementation has begun.
+### D.3 authority and input boundary
+
+WD-21D.3 consumes exclusively the frozen D.2 graph/component derivation as its contour authority. Only components with `classification === CLOSED_CONTOUR` are candidates for profile-region derivation.
+
+`OPEN_PATH` and `INVALID_COMPONENT` MUST NOT produce profile regions. D.3 MUST NOT reread persistent Line/Circle/Arc/Spline collections as a parallel contour authority and MUST NOT mutate sketch data, D.1 curves, D.2 components, topology IDs, or analytic geometry.
+
+### Profile-region contract
+
+A D.3 profile region represents one filled planar region and contains at minimum:
+
+- deterministic derived `profileKey`;
+- one `outerContour` traceable to its D.2 `componentKey` and ordered source curves;
+- deterministic `holes[]`, each traceable to its D.2 contour/component identity;
+- sufficient derived containment/nesting metadata to reproduce classification;
+- complete source traceability back through D.2/D.1 to `kind + elementId`.
+
+`profileKey` is a deterministic derived key only. It MUST NOT be treated as a persistent profile identity or as the later WD-21E StableReference contract.
+
+### Independent contours
+
+One standalone, non-nested closed contour derives exactly one profile region with that contour as `outerContour` and `holes: []`.
+
+Multiple spatially separate closed contours derive multiple independent profile regions. Their output ordering MUST be deterministic and independent of collection insertion order.
+
+### Containment and nesting
+
+D.3 derives a deterministic containment hierarchy between closed contours.
+
+A closed contour directly contained by an outer contour at the next nesting level is classified by containment depth/parity:
+
+- depth 0: outer boundary of a profile region;
+- depth 1: hole of its containing depth-0 region;
+- depth 2: island / new outer boundary and therefore a new profile region;
+- depth 3: hole of that depth-2 profile region;
+- subsequent levels continue by the same even/odd parity rule.
+
+Therefore an `outer → hole → island → hole` arrangement is represented without flattening or loss of topology. Each odd-depth contour belongs as a hole to its nearest even-depth ancestor profile region. Each even-depth contour creates one profile region.
+
+### Determinism and ordering
+
+Containment parent selection, nesting depth, profile ordering, and `holes[]` ordering MUST be deterministic for unchanged geometry and identities.
+
+Stable D.2 `componentKey` / source identity is the ordering and tie-break authority where equivalent derived ordering requires one. JavaScript object insertion order MUST NOT affect the result.
+
+### Geometry-evaluation boundary
+
+D.3 may use deterministic D.1/D.2-derived curve tessellation as a read-only computational representation for containment and planar region classification. Such samples MUST NOT become persisted topology, replace analytic Line/Circle/Arc/Spline identity, or create new sketch points/elements.
+
+Winding/signed area may be calculated only as derived metadata or as a deterministic computational aid. D.3 MAY expose a normalized derived orientation view when required by the profile-region representation, but MUST NOT reverse or rewrite persistent sketch curves.
+
+### Boundary against D.4
+
+D.3 owns deterministic region/nesting classification for closed contours that are sufficiently classifiable under the frozen D.2 topology and D.3 containment rules.
+
+D.3 does NOT own the final mixed-analytic geometry validity contract. In particular, D.3 MUST NOT silently repair or declare extrudable:
+
+- self-intersecting contours;
+- degenerate/zero-area contours;
+- ambiguous touching/intersecting contours;
+- analytically invalid Arc/Spline/Circle geometry;
+- ambiguous containment caused by contour intersections or boundary contact.
+
+Where such a case prevents deterministic nesting, D.3 may emit/propagate a diagnostic or leave the contour unclassified for downstream D.4, but MUST NOT geometrically guess, snap, merge, trim, rebind, or repair it. D.4 remains authoritative for mixed analytic geometric validity.
+
+### Compatibility boundary
+
+Existing line-only `src/model/sketch-profile.js` remains compatibility behavior during D.3. Its current coupling of graph traversal, signed area, self-intersection and single-profile extrusion suitability MUST NOT become the new D.3 authority and MUST NOT be switched to D.3 in the same implementation step.
+
+D.3 creates only the new generic derived profile-region layer over frozen D.2. Existing extrusion behavior remains unchanged.
+
+### D.3 regression contract
+
+D.3 regression MUST prove at minimum:
+
+- one standalone closed line contour derives one profile region with no holes;
+- one standalone Circle derives one profile region with no holes;
+- two spatially separate closed contours derive two independent profile regions;
+- one outer contour containing one inner contour derives one region with one hole;
+- `outer → hole → island` derives two profile regions with correct parity/ownership;
+- `outer → hole → island → hole` preserves the full nesting parity and hole ownership;
+- multiple independent outer regions may each own deterministic holes;
+- mixed Line+Arc and mixed Line+Spline closed contours can participate through the D.1/D.2 derived geometry without losing source identity;
+- profile and hole ordering is deterministic when persistent collection insertion order differs but source identities/geometry are equal;
+- source sketch data, D.1 curves and D.2 components remain unmodified;
+- open paths and invalid D.2 components never become profile regions;
+- no StableReference, profile/path UI selection, extrusion conversion, dependency/recompute integration, snap/tolerance/rebinding, or persistent profile identity is introduced.
+
+### Explicit D.3 exclusions
+
+D.3 MUST NOT implement the D.4 final self-intersection/degeneracy/mixed-analytic validity authority, the D.5 combined profile/open-path API, Stable Profile/Path References, profile/path viewer selection or highlighting, extrusion conversion to selected profiles/paths, extrusion hole/multi-profile runtime behavior, dependency/recompute integration, geometric auto-connect, tolerance/snap/rebinding, or any new sketch drawing/editing capability.
+
+### D.3 implementation boundary
+
+The expected implementation is one pure model-level profile-region/nesting derivation authority consuming frozen D.2, plus dedicated D.3 regression and workflow. No existing extrusion or legacy profile consumer is migrated in D.3.
+
+No visible product capability is introduced merely by this documentation-only definition step. The visible application build identity therefore remains frozen `WD-21D.2` until a separate D.3 implementation is explicitly authorized.
 
 ## WD-21D.4 – Mixed Analytic Geometry Validation
 
@@ -93,7 +141,7 @@ Later D.4 owns mixed analytic geometric validity including self-intersection, de
 
 **Status:** DEFINED / NOT IMPLEMENTED
 
-Later D.5 owns the central profiles/openPaths/invalidComponents/diagnostics API. Existing `getSingleExtrudableProfile(...)` remains compatibility behavior during D.2.
+Later D.5 owns the central profiles/openPaths/invalidComponents/diagnostics API. Existing `getSingleExtrudableProfile(...)` remains compatibility behavior during D.3.
 
 ## WD-21D.6 – Derivation Regression / Compatibility Gate
 
@@ -107,8 +155,8 @@ Profile/path selection UI, StableReference PROFILE/PATH target kinds, concrete f
 
 ## Build / branch rule
 
-The active branch is `feature/wd-21d-profile-open-path-derivation`. The frozen D.2 visible implementation build identity is `WD-21D.2`; central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label. A later correction that explicitly reopens D.2 would require a separate authorization and visible `WD-21D.2-R1`, `-R2`, etc.
+The active branch is `feature/wd-21d-profile-open-path-derivation`. The frozen D.2 visible implementation build identity remains `WD-21D.2`. Documentation-only D.3 definition MUST NOT change `src/main.js`, `document.title`, or the visible brand/build label. A future D.3 implementation requires separate authorization and a consistent visible `WD-21D.3` build identity.
 
 ## Next permissible step
 
-WD-21D.2 is PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER. WD-21D.3 does not begin automatically. The next permissible step is exclusively a separate WD-21D.3 reconciliation/definition against this frozen D.2 stand; no D.3 implementation is authorized by the D.2 freeze.
+WD-21D.3 is now reconciled and contract-bounded but remains NOT IMPLEMENTED. The next permissible step is exclusively the separate authorization of WD-21D.3 implementation against this documented contract. No D.3 implementation, D.4 work, device gate or freeze is included in this definition step.
