@@ -74,7 +74,7 @@ assert.match(source,/deriveSketchCurves/);
 assert.match(source,/reverseDerivedCurve/);
 assert.doesNotMatch(source,/deriveClosedSketchProfiles|getSingleExtrudableProfile|createExtrudeFromSketch|StableReference|signedArea|winding|hole|nest/i);
 const main=fs.readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
-assert.match(main,/const BUILD_ID = 'WD-21D\.[23](?:-R\d+)?'/);
+assert.match(main,/const BUILD_ID = 'WD-21D\.[234](?:-R\d+)?'/);
 assert.match(main,/document\.title = `CyberMotion 3D – \$\{BUILD_ID\}`/);
 assert.match(main,/buildLabel\.textContent = BUILD_ID/);
 
