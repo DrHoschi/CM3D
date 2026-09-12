@@ -1,6 +1,6 @@
 # WD-21D – Profile & Open Path Derivation
 
-**Status:** ACTIVE / WD-21D.1 PASS / FROZEN / WD-21D.2 PASS / FROZEN / WD-21D.3 PASS / FROZEN / WD-21D.4-R1 IMPLEMENTED / NOT FROZEN  
+**Status:** ACTIVE / WD-21D.1 PASS / FROZEN / WD-21D.2 PASS / FROZEN / WD-21D.3 PASS / FROZEN / WD-21D.4-R2 IMPLEMENTED / NOT FROZEN  
 **Definition basis:** frozen WD-21C.8-R2 @ `b29efc297ab8183a9e5879798bb6fd9da201cdf2`  
 **Branch:** `feature/wd-21d-profile-open-path-derivation`  
 **RB:** RB-02 – Sketch Topology & Profiles  
@@ -99,10 +99,10 @@ WD-21D.3 satisfies documented scope, final automated regression, build/deploy, v
 
 ## WD-21D.4 – Mixed Analytic Geometry Validation
 
-**Status:** IMPLEMENTED / R1 REGRESSION RE-RUN PENDING / DEVICE NOT VERIFIED / NOT FROZEN
+**Status:** IMPLEMENTED / R2 REGRESSION RE-RUN PENDING / DEVICE NOT VERIFIED / NOT FROZEN
 
 **Documented contract head:** `9d2503998610fba0bd6bdf79d98a97dba702e393`  
-**Visible build identity:** `WD-21D.4-R1`
+**Visible build identity:** `WD-21D.4-R2`
 
 ### D.4 authority and input boundary
 
@@ -219,11 +219,11 @@ The implementation exposes `VALID`, `INVALID`, `AMBIGUOUS`, and `UNRESOLVED`. Pr
 
 `tests/wd-21d4-mixed-analytic-geometry-validation.mjs` covers the mandatory contract cases, mixed curve source traceability, insertion-order determinism and non-mutation. `.github/workflows/wd-21d4-mixed-analytic-geometry-validation.yml` runs A.2, C.2 and D.1–D.4 regressions. Existing C.2/D.2/D.3 build-ID assertions are widened only to accept the authorized D.4 identity.
 
-The initial D.4 regression failed only because the intended pure-touch fixture used a rectangle edge collinear with the outer boundary, which correctly produced `OVERLAP → INVALID`. R1 changes that fixture to a triangle touching at exactly one boundary point. `src/model/sketch-geometry-validation.js` is unchanged by R1.
+The initial D.4 regression failed only because the intended pure-touch Hole fixture used a rectangle edge collinear with the outer boundary, which correctly produced `OVERLAP → INVALID`. R1 replaced that fixture with a triangle touching at exactly one boundary point. The R1 regression then exposed the same fixture defect in the independent-contour touch case: the two rectangles shared a complete collinear boundary segment, again correctly producing `INVALID`. R2 replaces the independent-contour fixture with an outside triangle touching the rectangle at exactly one point. `src/model/sketch-geometry-validation.js` remains unchanged by both R1 and R2.
 
 No extrusion integration, StableReference, profile/path selection, dependency/recompute, healing, trim/split, snap/merge or D.5 combined API was introduced.
 
-The central `BUILD_ID` is now `WD-21D.4-R1`; existing `applyBuildIdentity()` applies it to `document.title` and the visible brand/build label. R1 automated regression, device verification and freeze remain separate gates.
+The central `BUILD_ID` is now `WD-21D.4-R2`; existing `applyBuildIdentity()` applies it to `document.title` and the visible brand/build label. R2 automated regression, device verification and freeze remain separate gates.
 
 ## WD-21D.5 – Generic Profile / Open Path Derivation API
 
@@ -243,8 +243,8 @@ Profile/path selection UI, StableReference PROFILE/PATH target kinds, concrete f
 
 ## Build / branch rule
 
-The active branch is `feature/wd-21d-profile-open-path-derivation`. The active visible implementation build identity is `WD-21D.4-R1`; central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label. Any further correction inside D.4 uses `WD-21D.4-R2`, etc.
+The active branch is `feature/wd-21d-profile-open-path-derivation`. The active visible implementation build identity is `WD-21D.4-R2`; central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label. Any further correction inside D.4 uses `WD-21D.4-R3`, etc.
 
 ## Next permissible step
 
-WD-21D.4-R1 is IMPLEMENTED but not PASS/FROZEN. The next permissible step is exclusively **WD-21D.4-R1 Completion / Automated Regression Gate** against the final R1 implementation branch head. No D.5 work, device PASS or freeze is authorized in this implementation step.
+WD-21D.4-R2 is IMPLEMENTED but not PASS/FROZEN. The next permissible step is exclusively **WD-21D.4-R2 Completion / Automated Regression Gate** against the final R2 implementation branch head. No D.5 work, device PASS or freeze is authorized in this implementation step.
