@@ -81,19 +81,26 @@ D.3 implementiert ausschließlich die pure Profile-Region-/Nesting-Derivation `s
 
 Containment folgt deterministisch der Tiefenparität `Outer → Hole → Island → Hole`. Mehrere räumlich getrennte geschlossene Konturen ergeben unabhängige Profile. D.1/D.2-Tessellation bleibt reine derived Rechenhilfe; persistente Geometrie wird nicht verändert.
 
-Finaler Scope-Audit gegen den D.3-Vertragsstand: **8 Commits voraus / 0 zurück**. Der Scope ist auf D.3-Modellautorität, D.3-Regression/Workflow, zentrale Build-ID, notwendige Forward-Compatibility bestehender Build-Gates und Statusdokumentation begrenzt. Keine D.4-/D.5-Funktion, keine Stable Profile/Path References, keine Profil-/Pfadauswahl, kein Extrusionsumbau und keine Dependency/Recompute-Integration wurden vorgezogen.
-
-Finale automatisierte Evidenz auf `9257b63f7e8a24f55d4d0a0181f96ff2daf3e04f`: normaler Build SUCCESS, Pages Deploy SUCCESS, Build-Status SUCCESS, D.3 Regression SUCCESS, D.2 Regression SUCCESS und D.1 Regression SUCCESS.
-
-Realer iPad/Safari-Gerätetest auf sichtbarem Build `WD-21D.3`: **1–7 PASS**. Bestätigt sind konsistente Tab-/Header-Build-ID, Line/Circle/Arc/Spline Creation und Sichtbarkeit, Tree-Auswahl und Viewer-Fokus, Point/Line/Circle-Gizmo bei weiterhin keinem Arc-/Spline-Gizmo, Connect/Disconnect-Regressionsverhalten über autoritative Endpunkt-Topologie, Undo/Redo, Save/Reload sowie das Ausbleiben vorgezogener Profil-Auswahl-, Hole/Nesting-UI- oder Extrusionsfunktionen.
-
-D.3 übernimmt ausdrücklich nicht die finale geometrische Gültigkeitsprüfung. Self-Intersection, degenerierte Geometrie, Boundary Contact und andere Mixed-Analytic-Grenzfälle bleiben D.4. Existing `src/model/sketch-profile.js`, Extrusion, Auswahl, StableReferences und Recompute/Dependency bleiben unverändert.
+Finaler Scope-Audit gegen den D.3-Vertragsstand: **8 Commits voraus / 0 zurück**. Finale automatisierte Evidenz auf `9257b63f7e8a24f55d4d0a0181f96ff2daf3e04f`: normaler Build SUCCESS, Pages Deploy SUCCESS, Build-Status SUCCESS, D.3 Regression SUCCESS, D.2 Regression SUCCESS und D.1 Regression SUCCESS. Realer iPad/Safari-Gerätetest auf sichtbarem Build `WD-21D.3`: **1–7 PASS**.
 
 WD-21D.3 ist damit abgeschlossen und eingefroren.
 
 ### WD-21D.4 – Mixed Analytic Geometry Validation
 
-**DEFINED / NOT IMPLEMENTED**
+**IMPLEMENTED / AUTOMATED REGRESSION PENDING / DEVICE NOT VERIFIED / NOT FROZEN**
+
+Dokumentierter D.4-Vertrag: `9d2503998610fba0bd6bdf79d98a97dba702e393`.
+Sichtbare Build-Kennung: `WD-21D.4`.
+
+D.4 implementiert ausschließlich eine neue pure Read-/Validation-Schicht in `src/model/sketch-geometry-validation.js` über der frozen D.1→D.2→D.3-Kette. `validateSketchProfileGeometry(sketch)` klassifiziert derived geometry als `VALID`, `INVALID`, `AMBIGUOUS` oder `UNRESOLVED` und liefert deterministische Contour-/Profile-Region-Validierungen sowie Diagnostics mit Source-Traceability.
+
+Implementiert sind Zero-Area/Degeneracy, Self-Intersection mit Ausschluss legaler benachbarter gemeinsamer Konturendpunkte, Inter-Contour Crossing/Overlap und Boundary Contact sowie gemischte Line/Circle/Arc/Spline-Prüfung auf Basis der read-only D.1-Tessellation. Proven crossings/overlaps und Self-Intersection sind invalid; reine Boundary Contacts bleiben ambiguous statt stillschweigend validiert zu werden.
+
+D.3-Diagnosen werden als Upstream-Evidenz erhalten. Persistente Geometrie, Topologie, D.1/D.2/D.3-Ausgaben und Source IDs werden nicht verändert. `src/model/sketch-profile.js`, Extrusion, StableReferences, Auswahl und Dependency/Recompute bleiben unverändert.
+
+Dedizierte Regression: `tests/wd-21d4-mixed-analytic-geometry-validation.mjs`. Dedizierter Workflow: `.github/workflows/wd-21d4-mixed-analytic-geometry-validation.yml`, der A.2, C.2 und D.1–D.4 gemeinsam regressiert. Bestehende Build-Gates wurden nur für die autorisierte sichtbare Kennung `WD-21D.4` erweitert.
+
+D.4 ist in diesem Implementierungsschritt noch nicht PASS und nicht FROZEN. Automatisierte Evidenz auf dem finalen Implementierungsstand sowie ein späteres Geräte-Gate bleiben separat.
 
 ### WD-21D.5 – Generic Profile / Open Path Derivation API
 
@@ -111,4 +118,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts tragen `-R1`, `-R2`, … und
 
 ## Nächster zulässiger Schritt
 
-WD-21D.3 ist **PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER**. WD-21D.4 beginnt nicht automatisch. Der nächste zulässige Schritt ist ausschließlich die separate **WD-21D.4 Reconciliation/Definition – Mixed Analytic Geometry Validation** gegen den eingefrorenen D.3-Stand. Noch keine D.4-Implementierung im selben Schritt.
+WD-21D.4 ist implementiert, aber noch nicht PASS/FROZEN. Der nächste zulässige Schritt ist ausschließlich **WD-21D.4 Completion / Automated Regression Gate** gegen den finalen Implementierungsstand. Noch kein D.5, kein Geräte-PASS und kein Freeze.
