@@ -121,7 +121,10 @@ const crossingIndependentResult = validateSketchProfileGeometry(crossingIndepend
 assert.equal(crossingIndependentResult.status, V.INVALID);
 assert.ok(crossingIndependentResult.diagnostics.some(d => d.code === 'D4_INTER_CONTOUR_INTERSECTION'));
 
-const touchingIndependent = sketch(mergeData(rectangle('left',0,0,4,4), rectangle('right',4,1,7,3)));
+const touchingIndependent = sketch(mergeData(
+  rectangle('left',0,0,4,4),
+  triangle('right',{x:4,y:2},{x:6,y:1},{x:6,y:3})
+));
 const touchingIndependentResult = validateSketchProfileGeometry(touchingIndependent);
 assert.equal(touchingIndependentResult.status, V.AMBIGUOUS);
 assert.ok(touchingIndependentResult.diagnostics.some(d => d.code === 'D4_INTER_CONTOUR_BOUNDARY_CONTACT'));
