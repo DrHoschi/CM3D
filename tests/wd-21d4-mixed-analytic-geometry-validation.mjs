@@ -21,6 +21,19 @@ const rectangle = (prefix, x0, y0, x1, y1) => ({
   }
 });
 
+const triangle = (prefix, a, b, c) => ({
+  points: {
+    [`${prefix}:p1`]: point(`${prefix}:p1`, a.x, a.y),
+    [`${prefix}:p2`]: point(`${prefix}:p2`, b.x, b.y),
+    [`${prefix}:p3`]: point(`${prefix}:p3`, c.x, c.y)
+  },
+  lines: {
+    [`${prefix}:l1`]: { lineId:`${prefix}:l1`, startPointId:`${prefix}:p1`, endPointId:`${prefix}:p2` },
+    [`${prefix}:l2`]: { lineId:`${prefix}:l2`, startPointId:`${prefix}:p2`, endPointId:`${prefix}:p3` },
+    [`${prefix}:l3`]: { lineId:`${prefix}:l3`, startPointId:`${prefix}:p3`, endPointId:`${prefix}:p1` }
+  }
+});
+
 const mergeData = (...parts) => parts.reduce((result, part) => {
   for (const key of ['points','lines','circles','arcs','splines']) Object.assign(result[key], part[key] ?? {});
   return result;
@@ -90,7 +103,10 @@ assert.ok(zeroAreaResult.diagnostics.some(d => d.code === 'D4_ZERO_AREA_OR_DEGEN
 const outerHole = sketch(mergeData(rectangle('outer',0,0,10,10), rectangle('hole',2,2,4,4)));
 assert.equal(validateSketchProfileGeometry(outerHole).status, V.VALID);
 
-const touchingHole = sketch(mergeData(rectangle('outer',0,0,10,10), rectangle('hole',0,2,3,5)));
+const touchingHole = sketch(mergeData(
+  rectangle('outer',0,0,10,10),
+  triangle('hole',{x:0,y:3},{x:2,y:2},{x:2,y:4})
+));
 const touchingHoleResult = validateSketchProfileGeometry(touchingHole);
 assert.equal(touchingHoleResult.status, V.AMBIGUOUS);
 assert.ok(touchingHoleResult.diagnostics.some(d => d.code === 'D4_INTER_CONTOUR_BOUNDARY_CONTACT'));
