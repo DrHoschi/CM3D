@@ -98,23 +98,27 @@ WD-21D.3 ist damit abgeschlossen und eingefroren.
 
 ### WD-21D.4 – Mixed Analytic Geometry Validation
 
-**IMPLEMENTED / R2 REGRESSION RE-RUN PENDING / DEVICE NOT VERIFIED / NOT FROZEN**
+**PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER**
 
 Dokumentierter D.4-Vertrag: `9d2503998610fba0bd6bdf79d98a97dba702e393`.
-
+Frozen implementation/product head: `f0370e81c13779fedddef7962f3dc894ba44609f`.
 Sichtbare Build-Kennung: `WD-21D.4-R2`.
 
 D.4 implementiert ausschließlich die pure Read-/Validation-Schicht `src/model/sketch-geometry-validation.js` über der frozen D.1→D.2→D.3-Kette. `validateSketchProfileGeometry(sketch)` klassifiziert derived geometry deterministisch als `VALID`, `INVALID`, `AMBIGUOUS` oder `UNRESOLVED` und liefert Contour-/Profile-Region-Validierungen, Diagnostics und Upstream-Diagnostics mit Source-Traceability.
 
 Implementiert sind Zero-Area/Degeneracy, Self-Intersection mit Ausschluss legaler benachbarter gemeinsamer Konturendpunkte, Inter-Contour Crossing/Overlap und Boundary Contact sowie gemischte Line/Circle/Arc/Spline-Prüfung auf Basis der read-only D.1-Tessellation. Proven crossings/overlaps und Self-Intersection sind invalid; reine Boundary Contacts bleiben ambiguous statt stillschweigend validiert zu werden.
 
-D.3-Diagnosen bleiben als Upstream-Evidenz erhalten. Persistente Geometrie, Topologie, D.1/D.2/D.3-Ausgaben und Source IDs werden nicht verändert. `src/model/sketch-profile.js`, Extrusion, StableReferences, Auswahl und Dependency/Recompute bleiben unverändert.
+Der finale Scope-Audit gegen den D.4-Vertrag ergibt **20 Commits voraus / 0 zurück** und bleibt auf die erwarteten neun Dateien begrenzt: D.4-Validation, D.4-Regression/Workflow, zentrale Build-ID, notwendige Build-Gate-Forward-Compatibility und Statusdokumentation. Keine D.5-Funktion, Stable Profile/Path Reference, Profil-/Pfadauswahl, Extrusionsumstellung oder Dependency/Recompute-Integration wurde vorgezogen.
 
-Dedizierte Regression: `tests/wd-21d4-mixed-analytic-geometry-validation.mjs`. Dedizierter Workflow: `.github/workflows/wd-21d4-mixed-analytic-geometry-validation.yml`, der A.2, C.2 und D.1–D.4 gemeinsam regressiert. Bestehende C.2/D.2/D.3 Build-Gates wurden nur für die autorisierte D.4-Kennung erweitert.
+Auf exakt `f0370e81c13779fedddef7962f3dc894ba44609f` sind normaler Build, Pages Deploy, Build-Status sowie D.1-, D.2-, D.3- und D.4-Regressionschecks vollständig SUCCESS.
 
-Der erste D.4-Regressionslauf zeigte einen fehlerhaften Hole-Touch-Test-Fixture: ein Segment lag tatsächlich auf der Outer-Boundary und wurde korrekt `INVALID`; R1 ersetzte ihn durch einen echten Einpunkt-Kontakt. Der R1-Lauf zeigte anschließend denselben Fixture-Fehler beim separaten Independent-Touch-Fall: zwei Rechtecke teilten ein ganzes Boundary-Segment. R2 ersetzt auch diesen Fall durch einen echten Einpunkt-Kontakt mit einem außerhalb liegenden Dreieck. Die D.4-Produktvalidierungslogik blieb in R1 und R2 unverändert.
+Realer iPad/Safari-Test auf sichtbarem Build `WD-21D.4-R2`: **1–7 PASS**. Bestätigt sind Build-ID-Konsistenz, Line/Circle/Arc/Spline Creation und Darstellung, Auswahl/Fokus/Gizmo-Regressionsverhalten, Endpoint-only Connectivity, Undo/Redo, Save/Reload sowie das Ausbleiben vorgezogener D.5-/Profil-/Hole-/Nesting-/Extrusionsfunktionen.
 
-D.4 ist weiterhin nicht PASS und nicht FROZEN. R2-Automation und ein späteres Geräte-Gate bleiben separat.
+Eine zusätzliche Circle Geometry / Viewer Consistency Reconciliation bestätigte, dass Inspector, Viewer-Tessellation und Circle-Gizmo denselben autoritativen `circle.center` und `circle.radius` verwenden. Der visuelle Eindruck eines zu großen Kreises entstand durch das Sketch-Grid `GridHelper(10,20)` mit 0,5-m-Minor-Abstand; Radius 1 m ergibt deshalb korrekt vier Minor-Zellen Durchmesser. **Kein Geometrie-Blocker.**
+
+Als NON-BLOCKING / LATER SKETCH-GRID UX ist vermerkt, dass Rasterabstand bzw. Major-/Minor-Darstellung der Skizze später einstellbar oder sichtbar ausgewiesen werden soll, um Maßstabsverwechslungen zu vermeiden. Das normale Weltraster mit zoomabhängiger Darstellung wurde dabei nicht als fehlerhaft festgestellt.
+
+WD-21D.4-R2 ist damit **PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER**.
 
 ### WD-21D.5 – Generic Profile / Open Path Derivation API
 
@@ -132,4 +136,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts tragen `-R1`, `-R2`, … und
 
 ## Nächster zulässiger Schritt
 
-WD-21D.4-R2 ist implementiert, aber noch nicht PASS/FROZEN. Der nächste zulässige Schritt ist ausschließlich **WD-21D.4-R2 Completion / Automated Regression Gate** gegen den finalen R2-Implementierungsstand. Noch kein D.5, kein Geräte-PASS und kein Freeze.
+WD-21D.4-R2 ist **PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER**. WD-21D.5 beginnt nicht automatisch. Der nächste zulässige Schritt ist ausschließlich die separate **WD-21D.5 Reconciliation/Definition – Generic Profile / Open Path Derivation API** gegen den eingefrorenen D.4-R2-Stand. Noch keine D.5-Implementierung im selben Schritt.
