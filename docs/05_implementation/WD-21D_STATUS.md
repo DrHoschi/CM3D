@@ -1,6 +1,6 @@
 # WD-21D – Profile & Open Path Derivation
 
-**Status:** ACTIVE / WD-21D.1 PASS / FROZEN / WD-21D.2 PASS / FROZEN / WD-21D.3 PASS / FROZEN / WD-21D.4-R2 IMPLEMENTED / NOT FROZEN  
+**Status:** ACTIVE / WD-21D.1 PASS / FROZEN / WD-21D.2 PASS / FROZEN / WD-21D.3 PASS / FROZEN / WD-21D.4-R2 PASS / FROZEN / 0 BLOCKER  
 **Definition basis:** frozen WD-21C.8-R2 @ `b29efc297ab8183a9e5879798bb6fd9da201cdf2`  
 **Branch:** `feature/wd-21d-profile-open-path-derivation`  
 **RB:** RB-02 – Sketch Topology & Profiles  
@@ -99,9 +99,10 @@ WD-21D.3 satisfies documented scope, final automated regression, build/deploy, v
 
 ## WD-21D.4 – Mixed Analytic Geometry Validation
 
-**Status:** IMPLEMENTED / R2 REGRESSION RE-RUN PENDING / DEVICE NOT VERIFIED / NOT FROZEN
+**Status:** PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER
 
 **Documented contract head:** `9d2503998610fba0bd6bdf79d98a97dba702e393`  
+**Frozen implementation/product head:** `f0370e81c13779fedddef7962f3dc894ba44609f`  
 **Visible build identity:** `WD-21D.4-R2`
 
 ### D.4 authority and input boundary
@@ -223,7 +224,47 @@ The initial D.4 regression failed only because the intended pure-touch Hole fixt
 
 No extrusion integration, StableReference, profile/path selection, dependency/recompute, healing, trim/split, snap/merge or D.5 combined API was introduced.
 
-The central `BUILD_ID` is now `WD-21D.4-R2`; existing `applyBuildIdentity()` applies it to `document.title` and the visible brand/build label. R2 automated regression, device verification and freeze remain separate gates.
+### Final scope audit
+
+The frozen D.4-R2 implementation/product head `f0370e81c13779fedddef7962f3dc894ba44609f` was audited against documented D.4 contract head `9d2503998610fba0bd6bdf79d98a97dba702e393`: **20 commits ahead / 0 behind**.
+
+Changed scope remains limited to the expected nine files: new pure D.4 validation authority, dedicated D.4 regression/workflow, central visible build identity, minimum forward compatibility in existing C.2/D.2/D.3 build assertions, and D.4 status documentation. No D.5 API, Stable Profile/Path Reference, profile/path selection, extrusion conversion, dependency/recompute integration, healing, trim/split, snap/merge or topology rebinding was introduced.
+
+### Final automated evidence
+
+On exact frozen implementation/product head `f0370e81c13779fedddef7962f3dc894ba44609f`, all seven final checks completed successfully:
+
+- normal `build`: SUCCESS;
+- GitHub Pages `deploy`: SUCCESS;
+- `report-build-status`: SUCCESS;
+- D.1 `curve-derivation-regression`: SUCCESS;
+- D.2 `path-graph-derivation-regression`: SUCCESS;
+- D.3 `profile-region-regression`: SUCCESS;
+- D.4 `mixed-analytic-validation-regression`: SUCCESS.
+
+### Real iPad/Safari device evidence
+
+Real-device regression on visible build `WD-21D.4-R2`: **1–7 PASS**.
+
+Verified were consistent browser-tab/application-header build identity, continued creation/display of Line/Circle/Arc/Spline, Object-Tree selection and viewer focus, existing Point/Line/Circle gizmo behavior with Arc/Spline no-gizmo, authoritative endpoint-only Connect/Disconnect behavior, Undo/Redo, Save/Reload persistence, and absence of premature profile/hole/nesting UI, D.5 UI or new extrusion capability.
+
+### Circle geometry / viewer consistency reconciliation
+
+The device review raised a non-D.4 observation that a Circle with Inspector radius `1 m` appeared visually wider than expected against the sketch grid. Reconciliation confirmed **no Circle geometry inconsistency**:
+
+- Inspector values are read directly from authoritative `circle.center.x`, `circle.center.y` and `circle.radius`;
+- Circle viewport tessellation uses the same center/radius values;
+- the Circle manipulation gizmo anchor is exactly the same authoritative `circle.center`;
+- Circle gizmo movement preserves `circle.radius`;
+- the visual discrepancy comes from the sketch-local grid using `GridHelper(10,20)`, i.e. `0.5 m` minor spacing, so a radius of `1 m` correctly produces a diameter spanning four minor grid cells.
+
+The normal world grid is dynamically updated with camera/zoom behavior and was not identified as incorrect. A future UX improvement should allow the sketch grid spacing/scale or major/minor presentation to be configured or made explicit so the visual scale cannot be mistaken again. This is recorded as **NON-BLOCKING / LATER SKETCH-GRID UX**, not as D.4 scope and not as a geometry defect.
+
+### Freeze result
+
+WD-21D.4-R2 satisfies the documented contract, final scope audit, all automated build/deploy/regression gates, real iPad/Safari 1–7 regression and Circle geometry/viewer reconciliation with **0 blocker**.
+
+**WD-21D.4-R2 is PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER.**
 
 ## WD-21D.5 – Generic Profile / Open Path Derivation API
 
@@ -243,8 +284,8 @@ Profile/path selection UI, StableReference PROFILE/PATH target kinds, concrete f
 
 ## Build / branch rule
 
-The active branch is `feature/wd-21d-profile-open-path-derivation`. The active visible implementation build identity is `WD-21D.4-R2`; central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label. Any further correction inside D.4 uses `WD-21D.4-R3`, etc.
+The active branch is `feature/wd-21d-profile-open-path-derivation`. The frozen visible D.4 implementation build identity is `WD-21D.4-R2`; central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label. Any later work must not silently reuse D.4-R2 as a mutable implementation identity.
 
 ## Next permissible step
 
-WD-21D.4-R2 is IMPLEMENTED but not PASS/FROZEN. The next permissible step is exclusively **WD-21D.4-R2 Completion / Automated Regression Gate** against the final R2 implementation branch head. No D.5 work, device PASS or freeze is authorized in this implementation step.
+WD-21D.4-R2 is PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER. WD-21D.5 does not begin automatically. The next permissible step is exclusively the separate **WD-21D.5 Reconciliation/Definition – Generic Profile / Open Path Derivation API** against the frozen D.4-R2 product head. No D.5 implementation in the same step.
