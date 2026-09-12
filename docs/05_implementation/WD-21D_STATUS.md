@@ -108,43 +108,120 @@ WD-21D.3 satisfies documented scope, final automated regression, build/deploy, v
 
 WD-21D.4 is a pure read/validation layer over the frozen D.1 → D.2 → D.3 derivation chain. It validates derived analytic geometry only and MUST NOT mutate persistent sketch geometry, D.1 curves, D.2 components, D.3 profile regions, topology IDs, source element IDs, or project state.
 
-D.4 validates Line, Circle, Arc and Spline geometry, including mixed curve-type combinations within closed contours and geometric relationships between closed contours/profile-region boundaries. D.1 remains curve authority, D.2 remains connectivity/component authority, and D.3 remains profile-region/nesting authority.
+D.4 validates Line, Circle, Arc and Spline geometry, including mixed curve-type combinations within closed contours and geometric relationships between closed contours/profile-region boundaries.
+
+D.4 MUST NOT reread persistent element collections as a competing topology/profile authority. D.1 remains curve authority, D.2 remains connectivity/component authority, and D.3 remains profile-region/nesting authority.
 
 ### Validation status contract
 
-The implemented validation states are `VALID`, `INVALID`, `AMBIGUOUS`, and `UNRESOLVED`. Proven invalidity takes precedence over ambiguity/unresolved evidence. An ambiguous or unresolved case is never silently accepted as valid and is never automatically repaired.
+D.4 classifies validation results using at least the semantic states:
 
-### Implemented validation authority
+- `VALID` — the checked derived geometry satisfies the D.4 validity rules;
+- `INVALID` — a deterministic geometric invalidity is proven;
+- `AMBIGUOUS` / `UNRESOLVED` — available derived geometry is insufficient for a trustworthy deterministic validity decision.
 
-`src/model/sketch-geometry-validation.js` introduces `validateSketchProfileGeometry(sketch)` and `SketchGeometryValidity` as the pure D.4 read model.
+An ambiguous case MUST NOT be silently accepted as valid and MUST NOT be automatically repaired.
 
-The implementation consumes D.3 through `deriveSketchProfileRegions(sketch)`, gathers outer/hole/unclassified D.3 contours deterministically by `componentKey`, validates zero-area/degenerate contour geometry, detects non-adjacent intra-contour intersection/contact, validates inter-contour crossing/overlap/boundary contact, preserves legal adjacent contour junctions, and retains sorted `kind + elementId` source traceability.
+### Mandatory invalidity classes
 
-Mixed Line/Circle/Arc/Spline combinations are checked from D.1-derived tessellation carried through D.2/D.3. Crossing/overlap between distinct contours is `INVALID`; pure boundary contact is `AMBIGUOUS`; self-intersection and proven zero-area/degenerate geometry are `INVALID`. Existing D.3 ambiguity/unclassified diagnostics remain upstream evidence and are not silently erased.
+D.4 owns deterministic detection/reporting of at least:
 
-The frozen output contains deterministic `contourValidations[]`, `profileRegionValidations[]`, `diagnostics[]`, and `upstreamDiagnostics[]`. D.2 `componentKey` and D.3 `profileKey` remain derived-only keys and are not promoted into StableReference identity.
+- degenerate or zero-area closed contours;
+- self-intersection within one closed contour;
+- forbidden intersection or boundary contact between an outer contour and a hole contour;
+- intersection or boundary contact between otherwise independent closed contours when that makes profile-region validity ambiguous/invalid;
+- derived analytic curve segments that are geometrically degenerate despite valid stored topology;
+- ambiguous containment where a contour lies on, touches, or crosses another contour boundary.
+
+D.4 MUST distinguish legal shared authoritative topology junctions inside one D.2 contour from true self-intersections. Adjacent Line/Arc/Spline curves meeting at their shared authoritative endpoint are not self-intersections merely because their endpoint coordinates are equal.
+
+### Mixed analytic intersection boundary
+
+The validation contract applies across curve-type combinations, including at minimum Line↔Line, Line↔Arc, Line↔Spline, Arc↔Arc, Arc↔Spline, Spline↔Spline, and Circle↔other closed/derived curve geometry where those combinations participate in contour/profile validity.
+
+Non-adjacent geometric crossings inside the same contour are self-intersection candidates. Crossings/touching between different closed contours are inter-contour validity candidates.
+
+D.4 MUST NOT create topology connectivity from geometric intersections. Geometry intersection and topology identity remain separate concepts.
 
 ### Numerical / tessellation boundary
 
-D.4 uses deterministic D.1 tessellation only as read-only numerical evidence. Samples do not create persistent points/elements, replace analytic source identity, alter topology IDs/connectivity, or introduce tolerance-based rebinding. `AMBIGUOUS`/`UNRESOLVED` remain explicit outcomes where derived evidence cannot justify certainty.
+D.4 may use the deterministic D.1 tessellation carried through D.2/D.3 as a read-only numerical representation for intersection, degeneracy and contact checks.
 
-### D.4 regression implementation
+Tessellation samples MUST NOT:
 
-`tests/wd-21d4-mixed-analytic-geometry-validation.mjs` covers valid closed Line and Circle cases, valid mixed Line+Arc and Line+Spline, bow-tie/self-intersection, zero-area/degeneracy, valid outer+hole, touching/crossing contour cases, crossing/touching independent contours, mixed Circle↔Line source traceability, legal adjacent endpoint negative control, insertion-order independence, non-mutation and D.4 exclusion/build-identity checks.
+- create new persistent points or elements;
+- replace analytic Line/Circle/Arc/Spline source identity;
+- alter point IDs or connectivity;
+- become a tolerance-based rebinding mechanism.
 
-`.github/workflows/wd-21d4-mixed-analytic-geometry-validation.yml` runs A.2, C.2 and D.1–D.4 regressions on this branch. Existing C.2, D.2 and D.3 build-ID assertions are widened only as required for the authorized `WD-21D.4` build.
+Where the fixed derived tessellation cannot support a trustworthy decision, D.4 MUST return `AMBIGUOUS` / `UNRESOLVED` rather than inventing certainty. A later more precise analytic intersection implementation may strengthen internal evidence without changing this public D.4 validity contract.
+
+### Diagnostics and source traceability
+
+D.4 validation diagnostics MUST be deterministic and traceable to the existing derived/source identities. Diagnostics should identify the relevant available keys, including as applicable:
+
+- D.2 `componentKey`;
+- D.3 `profileKey`;
+- outer/hole contour component keys;
+- source curve `kind + elementId` pairs involved in the validity finding.
+
+Diagnostic ordering MUST be deterministic and independent of JavaScript collection insertion order.
+
+D.2 `componentKey` and D.3 `profileKey` remain derived keys only and MUST NOT be promoted into persistent StableReference identity in D.4.
+
+### D.3 diagnostic reconciliation boundary
+
+Existing D.3 signals such as `D3_UNCLASSIFIED_GEOMETRY` and `AMBIGUOUS_BOUNDARY_CONTACT` are input evidence for D.4, not final D.4 validity authority. D.4 may preserve/propagate those diagnostics while adding its own deterministic validation result.
+
+D.4 MUST NOT silently erase an upstream ambiguity merely because downstream sampling appears approximately valid.
 
 ### Compatibility boundary
 
-Existing line-only `src/model/sketch-profile.js` remains compatibility behavior. Its line-specific validity logic is not promoted into D.4 and existing extrusion/legacy profile consumers remain unchanged.
+Existing line-only `src/model/sketch-profile.js` remains compatibility behavior. Its current line-specific `ZERO_AREA` and `SELF_INTERSECTION` checks MUST NOT become the generic D.4 authority and MUST NOT be migrated into extrusion behavior in this step.
 
-D.4 does not implement geometric auto-healing, Trim/Split, Snap/Merge, tolerance-based topology rebinding, automatic intersection-point creation, new sketch editor functionality, D.5 combined profile/open-path API, Stable Profile/Path References, profile/path viewer selection/highlighting, extrusion conversion, extrusion hole/multi-profile runtime behavior, or dependency/recompute integration.
+D.4 creates only the new generic mixed-analytic validation read model. Existing extrusion and legacy profile consumers remain unchanged.
 
-### Build identity and current gate state
+### D.4 regression contract
 
-The central `BUILD_ID` in `src/main.js` is `WD-21D.4`; existing `applyBuildIdentity()` applies the same value to `document.title` and visible brand/build label. Corrections inside D.4 require `WD-21D.4-R1`, `-R2`, etc.
+D.4 regression MUST prove at minimum:
 
-D.4 implementation and dedicated regression/workflow are present, but no PASS/FROZEN claim is made in this implementation step. Automated CI evidence on the final implementation head and later real-device verification remain separate gates.
+- a simple valid closed Line contour validates as valid;
+- a valid standalone Circle validates as valid;
+- valid mixed Line+Arc and Line+Spline closed contours validate without losing source identity;
+- a bow-tie/self-crossing closed contour is detected as invalid self-intersection;
+- zero-area/degenerate closed contour is invalid or unresolved according to deterministic evidence, never silently valid;
+- valid outer+hole geometry with no contact remains valid;
+- a hole touching the outer boundary is invalid/ambiguous with deterministic diagnostics;
+- a hole crossing the outer boundary is invalid;
+- two otherwise independent closed contours that cross are reported invalid/ambiguous as appropriate;
+- two otherwise independent closed contours that only touch are not silently accepted;
+- adjacent contour curves sharing one authoritative topology endpoint are not falsely reported as self-intersection;
+- mixed curve-type intersection checks preserve `kind + elementId` traceability;
+- output and diagnostic ordering are insertion-order independent;
+- sketch data and D.1/D.2/D.3 derived data remain unmodified;
+- no StableReference, profile/path selection UI, extrusion conversion, dependency/recompute integration, snap/tolerance/rebinding, trimming, splitting or healing is introduced.
+
+### Explicit D.4 exclusions
+
+D.4 MUST NOT implement geometric auto-healing, Trim/Split, Snap/Merge, tolerance-based topology rebinding, automatic intersection-point creation, new sketch editor functionality, D.5 combined profile/open-path API, Stable Profile/Path References, profile/path viewer selection/highlighting, extrusion conversion, extrusion hole/multi-profile runtime behavior, or dependency/recompute integration.
+
+### D.4 implementation boundary
+
+The expected implementation is one pure model-level mixed analytic validation authority consuming the frozen D.1/D.2/D.3 chain, plus dedicated D.4 regression and workflow. The exact combined public `profiles/openPaths/invalidComponents/diagnostics` API remains owned by D.5 and MUST NOT be preempted by D.4.
+
+The preceding contract was documented before implementation. The separately authorized implementation retains these boundaries and changes the visible product identity to `WD-21D.4`.
+
+### D.4 implementation state
+
+`src/model/sketch-geometry-validation.js` now implements the pure D.4 read model through `validateSketchProfileGeometry(sketch)` and `SketchGeometryValidity`. It consumes `deriveSketchProfileRegions(sketch)`, gathers D.3 outer/hole/unclassified contours deterministically, validates zero-area/degenerate geometry, intra-contour self-intersection, inter-contour crossing/overlap/contact, and preserves sorted `kind + elementId` traceability.
+
+The implementation exposes `VALID`, `INVALID`, `AMBIGUOUS`, and `UNRESOLVED`. Proven crossing/overlap, self-intersection and proven zero-area/degeneracy are invalid; pure inter-contour boundary touch remains ambiguous. Existing D.3 ambiguity/unclassified diagnostics are retained as upstream evidence.
+
+`tests/wd-21d4-mixed-analytic-geometry-validation.mjs` covers the mandatory contract cases, mixed curve source traceability, insertion-order determinism and non-mutation. `.github/workflows/wd-21d4-mixed-analytic-geometry-validation.yml` runs A.2, C.2 and D.1–D.4 regressions. Existing C.2/D.2/D.3 build-ID assertions are widened only to accept the authorized D.4 identity.
+
+No extrusion integration, StableReference, profile/path selection, dependency/recompute, healing, trim/split, snap/merge or D.5 combined API was introduced.
+
+The central `BUILD_ID` is now `WD-21D.4`; existing `applyBuildIdentity()` applies it to `document.title` and the visible brand/build label. Automated regression on the final implementation head, device verification and freeze remain separate gates.
 
 ## WD-21D.5 – Generic Profile / Open Path Derivation API
 
@@ -164,8 +241,8 @@ Profile/path selection UI, StableReference PROFILE/PATH target kinds, concrete f
 
 ## Build / branch rule
 
-The active branch is `feature/wd-21d-profile-open-path-derivation`. The active visible implementation build identity is `WD-21D.4`; central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label. Corrections inside D.4 use `WD-21D.4-R1`, `-R2`, etc.
+The active branch is `feature/wd-21d-profile-open-path-derivation`. The active visible implementation build identity is `WD-21D.4`; central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label. Corrections inside this implementation step use `WD-21D.4-R1`, `-R2`, etc.
 
 ## Next permissible step
 
-WD-21D.4 implementation is present but is NOT PASS and NOT FROZEN in this step. The next permissible step is exclusively **WD-21D.4 Completion / Automated Regression Gate** against the final implementation branch head. No D.5 work, device PASS or freeze is authorized in this implementation step.
+WD-21D.4 is IMPLEMENTED but not PASS/FROZEN. The next permissible step is exclusively **WD-21D.4 Completion / Automated Regression Gate** against the final implementation branch head. No D.5 work, device PASS or freeze is authorized in this implementation step.
