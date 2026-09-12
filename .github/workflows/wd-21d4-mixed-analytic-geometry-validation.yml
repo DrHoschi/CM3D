@@ -1,0 +1,28 @@
+name: WD-21D.4 Mixed Analytic Geometry Validation Regression
+
+on:
+  push:
+    branches:
+      - feature/wd-21d-profile-open-path-derivation
+  workflow_dispatch:
+
+jobs:
+  mixed-analytic-validation-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run WD-21A.2 topology regression
+        run: node tests/wd-21a2-sketch-topology-contract.mjs
+      - name: Run WD-21C.2 element registry persistence regression
+        run: node tests/wd-21c2-generic-element-registry-persistence.mjs
+      - name: Run WD-21D.1 generic curve derivation regression
+        run: node tests/wd-21d1-generic-sketch-curve-derivation.mjs
+      - name: Run WD-21D.2 graph derivation regression
+        run: node tests/wd-21d2-deterministic-path-graph-derivation.mjs
+      - name: Run WD-21D.3 profile region nesting regression
+        run: node tests/wd-21d3-profile-region-nesting-derivation.mjs
+      - name: Run WD-21D.4 mixed analytic validation regression
+        run: node tests/wd-21d4-mixed-analytic-geometry-validation.mjs
