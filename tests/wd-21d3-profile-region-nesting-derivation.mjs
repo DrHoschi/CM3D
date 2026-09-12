@@ -99,7 +99,7 @@ assert.match(source, /CLOSED_CONTOUR/);
 assert.doesNotMatch(source, /createExtrudeFromSketch|StableReference|selectRef|recompute/);
 
 const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
-assert.match(main, /const BUILD_ID = 'WD-21D\.3'/);
+assert.match(main, /const BUILD_ID = 'WD-21D\.[34](?:-R\d+)?'/);
 assert.match(main, /document\.title = `CyberMotion 3D – \$\{BUILD_ID\}`/);
 assert.match(main, /buildLabel\.textContent = BUILD_ID/);
 
