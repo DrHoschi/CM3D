@@ -98,11 +98,11 @@ WD-21D.3 ist damit abgeschlossen und eingefroren.
 
 ### WD-21D.4 – Mixed Analytic Geometry Validation
 
-**IMPLEMENTED / AUTOMATED REGRESSION PENDING / DEVICE NOT VERIFIED / NOT FROZEN**
+**IMPLEMENTED / R1 REGRESSION RE-RUN PENDING / DEVICE NOT VERIFIED / NOT FROZEN**
 
 Dokumentierter D.4-Vertrag: `9d2503998610fba0bd6bdf79d98a97dba702e393`.
 
-Sichtbare Build-Kennung: `WD-21D.4`.
+Sichtbare Build-Kennung: `WD-21D.4-R1`.
 
 D.4 implementiert ausschließlich die pure Read-/Validation-Schicht `src/model/sketch-geometry-validation.js` über der frozen D.1→D.2→D.3-Kette. `validateSketchProfileGeometry(sketch)` klassifiziert derived geometry deterministisch als `VALID`, `INVALID`, `AMBIGUOUS` oder `UNRESOLVED` und liefert Contour-/Profile-Region-Validierungen, Diagnostics und Upstream-Diagnostics mit Source-Traceability.
 
@@ -110,9 +110,11 @@ Implementiert sind Zero-Area/Degeneracy, Self-Intersection mit Ausschluss legale
 
 D.3-Diagnosen bleiben als Upstream-Evidenz erhalten. Persistente Geometrie, Topologie, D.1/D.2/D.3-Ausgaben und Source IDs werden nicht verändert. `src/model/sketch-profile.js`, Extrusion, StableReferences, Auswahl und Dependency/Recompute bleiben unverändert.
 
-Dedizierte Regression: `tests/wd-21d4-mixed-analytic-geometry-validation.mjs`. Dedizierter Workflow: `.github/workflows/wd-21d4-mixed-analytic-geometry-validation.yml`, der A.2, C.2 und D.1–D.4 gemeinsam regressiert. Bestehende C.2/D.2/D.3 Build-Gates wurden nur für die autorisierte sichtbare Kennung `WD-21D.4` erweitert.
+Dedizierte Regression: `tests/wd-21d4-mixed-analytic-geometry-validation.mjs`. Dedizierter Workflow: `.github/workflows/wd-21d4-mixed-analytic-geometry-validation.yml`, der A.2, C.2 und D.1–D.4 gemeinsam regressiert. Bestehende C.2/D.2/D.3 Build-Gates wurden nur für die autorisierte D.4-Kennung erweitert.
 
-D.4 ist in diesem Implementierungsschritt noch nicht PASS und nicht FROZEN. Automatisierte Evidenz auf dem finalen Implementierungsstand sowie ein späteres Geräte-Gate bleiben separat.
+Der erste D.4-Regressionslauf zeigte ausschließlich einen fehlerhaften Test-Fixture: der als reiner Boundary-Touch gedachte Hole-Fall überlappte tatsächlich ein Outer-Segment und wurde damit korrekt `INVALID`. R1 ersetzt diesen Fixture durch einen echten Einpunkt-Kontakt; die D.4-Produktvalidierungslogik blieb dabei unverändert.
+
+D.4 ist weiterhin nicht PASS und nicht FROZEN. R1-Automation und ein späteres Geräte-Gate bleiben separat.
 
 ### WD-21D.5 – Generic Profile / Open Path Derivation API
 
@@ -130,4 +132,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts tragen `-R1`, `-R2`, … und
 
 ## Nächster zulässiger Schritt
 
-WD-21D.4 ist implementiert, aber noch nicht PASS/FROZEN. Der nächste zulässige Schritt ist ausschließlich **WD-21D.4 Completion / Automated Regression Gate** gegen den finalen Implementierungsstand. Noch kein D.5, kein Geräte-PASS und kein Freeze.
+WD-21D.4-R1 ist implementiert, aber noch nicht PASS/FROZEN. Der nächste zulässige Schritt ist ausschließlich **WD-21D.4-R1 Completion / Automated Regression Gate** gegen den finalen R1-Implementierungsstand. Noch kein D.5, kein Geräte-PASS und kein Freeze.
