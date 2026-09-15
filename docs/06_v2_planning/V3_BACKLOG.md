@@ -1,6 +1,6 @@
 # CM3D – V3 Backlog
 
-**Stand:** 2026-08-30  
+**Stand:** 2026-09-15  
 **Status:** OPEN BACKLOG  
 **Gültig während:** CM3D V2 Planung und Entwicklung
 
@@ -41,4 +41,19 @@ Sobald die V2-Scope-Entscheidung getroffen wurde, werden abgelehnte V2-Kandidate
 
 ## Aktuelle Einträge
 
-Noch keine formal nach V3 verschobenen Funktionen.
+### 2026-09-15 – Game Asset Editing / Materials / Optimization
+
+**Status:** V3-KANDIDAT / IDEE / NICHT FÜR AKTUELLE IMPLEMENTIERUNG AUTORISIERT
+
+CyberMotion soll langfristig die eigentliche 3D-Bearbeitungsautorität für importierte Game Assets sein. Kandidaten:
+
+- GLB/glTF-Modelle und ihre Mesh-/Node-/Untergruppen gezielt bearbeiten;
+- Materialien und Texturen zuweisen, austauschen und nachkorrigieren;
+- UV-/Materialbezug später kontrollierbar machen;
+- Pivot/Origin, Maße und Transformationsdaten feinjustieren;
+- Mesh-Simplification / Decimation zur massiven Polygonreduktion bei möglichst erhaltener sichtbarer Hülle/Silhouette;
+- LOD-Stufen und optional vereinfachte Collision-Geometrie vorbereiten;
+- Original und optimierte Fassung technisch/visuell vergleichbar halten;
+- saubere Übergabe zwischen DevForge-Inspektion/Optimierung und CyberMotion-Bearbeitung vorsehen.
+
+Abgrenzung: DevForge kann später als Prüf-, Analyse- und Game-Asset-Aufbereitungswerkzeug dienen; CyberMotion bleibt für eigentliche Geometrie-, Material-/Textur- und Modellkorrekturen zuständig. Keine dieser Ideen darf laufende V2-Blöcke erweitern oder blockieren. Vor einer Umsetzung ist ein separater Scope-/Capability-Reconciliation-Block erforderlich.
