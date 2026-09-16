@@ -1,10 +1,10 @@
 # WD-21D – Profile & Open Path Derivation
 
-**Status:** ACTIVE / WD-21D.1 PASS / FROZEN / WD-21D.2 PASS / FROZEN / WD-21D.3 PASS / FROZEN / WD-21D.4-R2 PASS / FROZEN / 0 BLOCKER  
+**Status:** ACTIVE / WD-21D.1 PASS / FROZEN / WD-21D.2 PASS / FROZEN / WD-21D.3 PASS / FROZEN / WD-21D.4-R2 PASS / FROZEN / WD-21D.5 PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER  
 **Definition basis:** frozen WD-21C.8-R2 @ `b29efc297ab8183a9e5879798bb6fd9da201cdf2`  
 **Branch:** `feature/wd-21d-profile-open-path-derivation`  
 **RB:** RB-02 – Sketch Topology & Profiles  
-**Stand:** 2026-09-13
+**Stand:** 2026-09-16
 
 ## WD-21D authority boundary
 
@@ -91,9 +91,11 @@ The device review raised a non-D.4 observation that a Circle with Inspector radi
 
 ## WD-21D.5 – Generic Profile / Open Path Derivation API
 
-**Status:** RECONCILED / DEFINED / CONTRACT BOUNDED / NOT IMPLEMENTED
+**Status:** PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER
 
-**Definition basis:** frozen WD-21D.4-R2 product head `f0370e81c13779fedddef7962f3dc894ba44609f`
+**Definition basis:** frozen WD-21D.4-R2 product head `f0370e81c13779fedddef7962f3dc894ba44609f`  
+**Frozen implementation/product head:** `8868781d34f668c268fd8c92b84c887a96cabded`  
+**Visible build identity:** `WD-21D.5`
 
 ### D.5 authority and input boundary
 
@@ -101,77 +103,41 @@ WD-21D.5 is exclusively the common public read API over the already frozen D.2/D
 
 D.5 consumes the existing D.2 path/component derivation, D.3 profile-region/nesting derivation and D.4 mixed-analytic validation. D.1 remains the underlying generic curve authority through those frozen layers.
 
-The central D.5 API MUST expose, at minimum, deterministic read-only collections for:
-
-- `profiles[]`;
-- `openPaths[]`;
-- `invalidComponents[]`;
-- `unclassifiedContours[]`;
-- `diagnostics[]`;
-- a combined profile-geometry/validation status derived from the existing D.4 authority.
-
-The expected implementation boundary is one pure model-level orchestration/read-model module, provisionally `src/model/sketch-profile-path-derivation.js`, with one central function provisionally named `deriveSketchProfilesAndPaths(sketch)`. Exact naming may be confirmed at the D.5 Definition/Implementation Gate without changing the contract.
+The central implementation is `src/model/sketch-profile-path-derivation.js` through `deriveSketchProfilesAndPaths(sketch)`. It exposes deterministic read-only `profiles[]`, `openPaths[]`, `invalidComponents[]`, `unclassifiedContours[]`, `diagnostics[]` and the inherited D.4 profile-geometry validation `status`.
 
 ### Profile contract
 
-`profiles[]` MUST be sourced from D.3 `profileRegions[]`. Each profile preserves the existing derived `profileKey`, `outerContour`, `holes[]`, nesting metadata and source traceability through D.2/D.1 to source `kind + elementId`. D.5 associates the corresponding D.4 validation state with the profile.
+`profiles[]` are sourced from D.3 `profileRegions[]`. Each profile preserves the existing derived `profileKey`, `outerContour`, `holes[]`, nesting metadata and source traceability through D.2/D.1 to source `kind + elementId`; D.5 associates the corresponding D.4 validation state with the profile.
 
-Profiles classified by D.4 as `INVALID`, `AMBIGUOUS` or `UNRESOLVED` MUST remain present and explicitly classified. D.5 MUST NOT silently discard them or promote them to valid. Acceptance/rejection for a later modeling feature belongs to that later consumer, not to D.5.
-
-D.3 `profileKey` remains derived only. D.5 MUST NOT promote it to a persistent profile identity or StableReference target.
+Profiles classified by D.4 as `INVALID`, `AMBIGUOUS` or `UNRESOLVED` remain present and explicitly classified. D.5 does not silently discard them or promote them to valid. D.3 `profileKey` remains derived only and is not promoted to a persistent profile identity or StableReference target.
 
 ### Open path contract
 
-`openPaths[]` MUST be sourced exclusively from D.2 components classified as `OPEN_PATH`. Each open path preserves its D.2 `componentKey`, deterministic ordered `curves[]`, `startPointId`, `endPointId`, and D.1 source identity/traceability.
+`openPaths[]` are sourced exclusively from D.2 components classified as `OPEN_PATH`. Each open path preserves its D.2 `componentKey`, deterministic ordered `curves[]`, `startPointId`, `endPointId`, and D.1 source identity/traceability. D.5 does not generate a persistent `pathId`, StableReference key, geometric endpoint merge, snap/tolerance match or alternate path ordering.
 
-D.5 MUST NOT generate a new persistent `pathId`, StableReference key, geometric endpoint merge, snap/tolerance match or alternate path ordering. D.2 `componentKey` remains derived only.
+### Invalid, unclassified, diagnostics and validation aggregation
 
-### Invalid and unclassified contract
+`invalidComponents[]` expose D.2 `INVALID_COMPONENT` results; D.3 `unclassifiedContours[]` remain separately observable. D.5 aggregates D.3 diagnostics with D.4-owned validation diagnostics deterministically without re-adding D.4 `upstreamDiagnostics[]` and therefore without duplicating the inherited D.1–D.3 diagnostic chain. D.4 remains the sole authority for `VALID`, `INVALID`, `AMBIGUOUS`, and `UNRESOLVED` profile-geometry validity.
 
-`invalidComponents[]` MUST expose D.2 `INVALID_COMPONENT` results and their available deterministic diagnostic/source traceability rather than hiding them.
+### Determinism / immutability / compatibility boundary
 
-D.3 `unclassifiedContours[]` MUST remain separately observable. They MUST NOT be silently relabeled as valid profiles, normal open paths, or ordinary D.2 invalid components.
+D.5 output is deterministic, insertion-order independent and deep-frozen consistently with the D.1–D.4 derived model chain. Calling D.5 does not mutate the input sketch, persistent project data, D.1 curves, D.2 components, D.3 profile regions, D.4 validation results, topology IDs, source element IDs, or collection ordering.
 
-### Diagnostics and validation aggregation
+Existing line-only `src/model/sketch-profile.js` and `getSingleExtrudableProfile(...)` remain unchanged compatibility behavior. D.5 does not replace, redirect, migrate, or alter the existing extrusion product path.
 
-D.5 MUST preserve relevant diagnostics from the frozen D.1→D.4 derivation chain and expose them in deterministic ordering. It may associate/group existing diagnostics with the combined read model but MUST NOT reinterpret them into a competing geometry-validity authority.
+### Final implementation scope audit
 
-D.4 remains the authority for `VALID`, `INVALID`, `AMBIGUOUS`, and `UNRESOLVED` profile-geometry validity. D.5 MUST NOT erase upstream ambiguity because another derived view appears approximately valid.
+The final D.5 implementation/product head is exactly `8868781d34f668c268fd8c92b84c887a96cabded`. Immediately before this documentation/freeze write, the active branch compared **identical** to that product head: **0 commits ahead / 0 behind**. The implementation scope remains exactly the authorized **8 files**: two product files (`src/model/sketch-profile-path-derivation.js` and `src/main.js` for build identity), one dedicated D.5 regression, one dedicated D.5 workflow, and four minimal forward-compatible build-ID assertion updates in the existing C.2/D.2/D.3/D.4 regression tests.
 
-### Determinism / immutability contract
+No extrusion conversion, Stable Profile/Path References, persistent profile/path IDs, SelectionRef extension, viewer hit-testing/highlighting, Object-Tree/Inspector profile/path UI, dependency/recompute integration, geometric auto-connect, snap/merge/tolerance rebinding, Trim/Split/healing, new sketch drawing tool, Spline control editing or D.6 implementation was introduced.
 
-D.5 output MUST be deterministic and independent of JavaScript collection insertion order. Returned data MUST be read-only/deep-frozen consistently with the D.1–D.4 derived model chain.
+### Final automated and device evidence
 
-Calling the D.5 API MUST NOT mutate the input sketch, persistent project data, D.1 curves, D.2 components, D.3 profile regions, D.4 validation results, topology IDs, source element IDs, or collection ordering.
+On exact product head `8868781d34f668c268fd8c92b84c887a96cabded`, D.1, D.2, D.3, D.4 and D.5 regressions completed SUCCESS and GitHub Pages build/deployment completed SUCCESS.
 
-### Compatibility boundary
+Real-device verification was completed on 2026-09-16 with iPad/Safari against visible build `WD-21D.5`: **test points 1–7 PASS**. Device evidence confirmed the visible build identity, unchanged Line/Circle/Arc/Spline sketch behavior, existing selection/gizmo behavior, authoritative endpoint connectivity, Undo/Redo plus save/reload compatibility, unchanged legacy extrusion behavior, and absence of new profile/open-path UI, StableReference PATH/PROFILE behavior, highlighting or D.6 capability. The supplied screenshots additionally show `WD-21D.5` in the app/browser and the unchanged legacy rejection of an open/branched contour for extrusion.
 
-Existing line-only `src/model/sketch-profile.js` and `getSingleExtrudableProfile(...)` remain unchanged compatibility behavior. D.5 MUST NOT replace, redirect, migrate, or alter the existing extrusion product path in this block.
-
-D.5 therefore establishes the generic combined profile/path read authority needed by later consumers, but does not itself make current extrusion consume mixed Line/Circle/Arc/Spline profiles, holes, multiple profiles or open paths.
-
-### D.5 regression contract
-
-Dedicated D.5 regression MUST prove at minimum:
-
-- an open Line path derives one `openPaths[]` entry and no profile;
-- a mixed Line+Arc+Spline open component remains one deterministically ordered open path with source identity;
-- a standalone Circle derives a profile and no open path;
-- multiple separate closed contours remain multiple profiles where D.3 classifies them as such;
-- outer+hole remains one profile with its hole;
-- outer+hole+island preserves D.3 parity/nesting and the resulting separate profile region(s);
-- a D.2 branching/invalid component remains visible in `invalidComponents[]`;
-- D.4 self-intersection/invalid geometry remains discoverable and explicitly `INVALID`, not discarded;
-- D.4 boundary-touch ambiguity remains discoverable and explicitly `AMBIGUOUS`/`UNRESOLVED` as supplied by D.4;
-- D.3 unclassified geometry remains in `unclassifiedContours[]`;
-- output/diagnostic ordering is insertion-order independent;
-- complete sketch and D.1–D.4 non-mutation is preserved.
-
-### Explicit D.5 exclusions
-
-D.5 MUST NOT implement Stable Profile/Path References, persistent profile/path IDs, SelectionRef extensions, viewer hit-testing/highlighting/focus for profiles or paths, Object-Tree/Inspector profile/path UI, extrusion conversion, hole/multi-profile extrusion runtime, open-path modeling features, dependency/recompute integration, geometric auto-connect, snap/merge/tolerance rebinding, Trim/Split/healing, new sketch drawing tools, Spline control editing, or any new visible modeling capability.
-
-No visible build identity change is authorized by this documentation step. The frozen product identity remains `WD-21D.4-R2` until a separate D.5 implementation is explicitly authorized.
+**WD-21D.5 is PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER.**
 
 ## WD-21D.6 – Derivation Regression / Compatibility Gate
 
@@ -185,8 +151,8 @@ Profile/path selection UI, StableReference PROFILE/PATH target kinds, concrete f
 
 ## Build / branch rule
 
-The active branch is `feature/wd-21d-profile-open-path-derivation`. The frozen visible D.4 implementation build identity remains `WD-21D.4-R2`; central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label. This D.5 documentation step MUST NOT change that identity.
+The active branch is `feature/wd-21d-profile-open-path-derivation`. The frozen visible D.5 implementation build identity is `WD-21D.5`; central `applyBuildIdentity()` applies the same value to `document.title` and the visible brand/build label. This final D.5 documentation/freeze step does not change product code or the build identity.
 
 ## Next permissible step
 
-WD-21D.5 is **RECONCILED / DEFINED / CONTRACT BOUNDED / NOT IMPLEMENTED**. The next permissible step is exclusively the separate **WD-21D.5 Definition/Implementation Gate** against this documented contract: determine the exact minimal model file/API shape, reuse of D.2/D.3/D.4 calls, diagnostic aggregation boundary and dedicated D.5 regression/workflow scope. No D.5 implementation, build-ID change, D.6 work, extrusion integration, StableReference work or visible profile/path UI in that gate.
+WD-21D.5 is **PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER**. WD-21D.6 remains **DEFINED / NOT IMPLEMENTED** and does not begin automatically. Any WD-21D.6 work requires a separate explicit authorization against this frozen D.5 state.
