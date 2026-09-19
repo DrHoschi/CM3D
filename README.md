@@ -1,6 +1,6 @@
 # CM3D – CyberMotion 3D Web Designer 
 
-CM3D ist das zentrale GitHub-Repository für die Entwicklung und Dokumentation des CyberMotion-3D/Web-Designer-Projekts.
+CM3D is das zentrale GitHub-Repository für die Entwicklung und Dokumentation des CyberMotion-3D/Web-Designer-Projekts.
 
 ## Ziel
 
