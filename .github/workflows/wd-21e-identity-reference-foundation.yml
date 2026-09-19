@@ -1,0 +1,60 @@
+name: WD-21E Identity Reference Foundation
+
+on:
+  push:
+    branches:
+      - feature/wd-21d-profile-open-path-derivation
+  workflow_dispatch:
+
+jobs:
+  identity-reference-foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run WD-20A project schema regression
+        run: node tests/wd-20a-project-schema.mjs
+      - name: Run WD-20C stable reference regression
+        run: node tests/wd-20c-stable-reference.mjs
+      - name: Run WD-21A.2 topology regression
+        run: node tests/wd-21a2-sketch-topology-contract.mjs
+      - name: Run WD-21A.3 mutation regression
+        run: node tests/wd-21a3-sketch-mutation-contract.mjs
+      - name: Run WD-21B.2 connect regression
+        run: node tests/wd-21b2-endpoint-connect-contract.mjs
+      - name: Run WD-21B.3 disconnect regression
+        run: node tests/wd-21b3-endpoint-disconnect-contract.mjs
+      - name: Run WD-21C.2 registry persistence regression
+        run: node tests/wd-21c2-generic-element-registry-persistence.mjs
+      - name: Run WD-21C.3 generic mutation regression
+        run: node tests/wd-21c3-generic-element-mutation-contract.mjs
+      - name: Run WD-21C.4 circle integration regression
+        run: node tests/wd-21c4-circle-integration.mjs
+      - name: Run WD-21C.5 manipulation contract regression
+        run: node tests/wd-21c5-generic-sketch-manipulation-contract.mjs
+      - name: Run WD-21C.6 endpoint connectivity regression
+        run: node tests/wd-21c6-generic-endpoint-connectivity.mjs
+      - name: Run WD-21C.7 arc integration regression
+        run: node tests/wd-21c7-arc-integration.mjs
+      - name: Run WD-21C.8 spline integration regression
+        run: node tests/wd-21c8-spline-integration.mjs
+      - name: Run WD-21C.8-R1 selection synchronization regression
+        run: node tests/wd-21c8-r1-sketch-element-selection-sync.mjs
+      - name: Run WD-21C.8-R2 selection camera alignment regression
+        run: node tests/wd-21c8-r2-selection-camera-alignment-decoupling.mjs
+      - name: Run WD-21D.1 generic curve derivation regression
+        run: node tests/wd-21d1-generic-sketch-curve-derivation.mjs
+      - name: Run WD-21D.2 graph derivation regression
+        run: node tests/wd-21d2-deterministic-path-graph-derivation.mjs
+      - name: Run WD-21D.3 profile region nesting regression
+        run: node tests/wd-21d3-profile-region-nesting-derivation.mjs
+      - name: Run WD-21D.4 mixed analytic validation regression
+        run: node tests/wd-21d4-mixed-analytic-geometry-validation.mjs
+      - name: Run WD-21D.5 generic profile open path API regression
+        run: node tests/wd-21d5-generic-profile-open-path-derivation-api.mjs
+      - name: Run WD-21D.6 derivation compatibility gate
+        run: node tests/wd-21d6-derivation-regression-compatibility-gate.mjs
+      - name: Run WD-21E profile path reference contract
+        run: node tests/wd-21e-profile-path-reference.mjs
