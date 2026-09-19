@@ -1,11 +1,14 @@
 import { getSketchElement, getSketchPoint } from '../model/sketch-topology.js';
+import { recognizeProfileIdentity, recognizePathIdentity } from '../model/sketch-profile-path-identity.js';
 
 export const ReferenceTargetKind = Object.freeze({
   OBJECT: 'OBJECT',
   SKETCH: 'SKETCH',
   SKETCH_ELEMENT: 'SKETCH_ELEMENT',
   SKETCH_POINT: 'SKETCH_POINT',
-  FEATURE: 'FEATURE'
+  FEATURE: 'FEATURE',
+  PROFILE: 'PROFILE',
+  PATH: 'PATH'
 });
 
 export const ReferenceState = Object.freeze({
@@ -77,6 +80,25 @@ export function resolveStableReference(store, reference) {
     return createReferenceResolution(reference, ReferenceState.INVALID, [
       { code: 'OWNER_KIND_MISMATCH', message: `Referenz-Eigentümer ${reference.ownerId} ist keine Skizze.` }
     ]);
+  }
+
+  if (reference.targetKind === ReferenceTargetKind.PROFILE || reference.targetKind === ReferenceTargetKind.PATH) {
+    const collection = reference.targetKind === ReferenceTargetKind.PROFILE
+      ? owner.data?.profileIdentities
+      : owner.data?.pathIdentities;
+    const identity = collection?.[reference.targetId] ?? null;
+    if (!identity) {
+      return createReferenceResolution(reference, ReferenceState.MISSING, [
+        { code: 'IDENTITY_MISSING', message: `Persistente Identität fehlt: ${reference.targetId}` }
+      ]);
+    }
+    const recognition = reference.targetKind === ReferenceTargetKind.PROFILE
+      ? recognizeProfileIdentity(owner, identity)
+      : recognizePathIdentity(owner, identity);
+    return createReferenceResolution(reference, recognition.state, recognition.diagnostics.map(diagnostic => ({
+      code: diagnostic.code,
+      message: diagnostic.code
+    })));
   }
 
   const target = reference.targetKind === ReferenceTargetKind.SKETCH_POINT
