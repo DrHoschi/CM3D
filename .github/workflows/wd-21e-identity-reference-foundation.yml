@@ -1,0 +1,22 @@
+name: WD-21E Identity Reference Foundation
+
+on:
+  push:
+    branches:
+      - feature/wd-21d-profile-open-path-derivation
+  workflow_dispatch:
+
+jobs:
+  identity-reference-foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run WD-20A project schema regression
+        run: node tests/wd-20a-project-schema.mjs
+      - name: Run WD-20C stable reference regression
+        run: node tests/wd-20c-stable-reference.mjs
+      - name: Run WD-21E profile path reference contract
+        run: node tests/wd-21e-profile-path-reference.mjs
