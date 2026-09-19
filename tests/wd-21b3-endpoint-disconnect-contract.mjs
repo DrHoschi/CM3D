@@ -21,7 +21,7 @@ const sketch = { objectId:'sketch_disconnect', type:'sketch', data:{ plane:'loca
 }, lines:{
   ln_left:{lineId:'ln_left',startPointId:'pt_left',endPointId:'pt_shared'},
   ln_right:{lineId:'ln_right',startPointId:'pt_shared',endPointId:'pt_right'}
-} } };
+}, profileIdentities:{}, pathIdentities:{} } };
 
 const { store } = makeStore(sketch);
 const result = store.disconnectSketchLineFromPoint(sketch.objectId, 'pt_shared', 'ln_left');
@@ -45,7 +45,7 @@ assert.ok(store.getObject(sketch.objectId).data.points[result.newPointId]);
 
 const rejectSketch = { objectId:'sketch_reject', type:'sketch', data:{ plane:'localXY', points:{
   pt_a:{pointId:'pt_a',x:0,y:0}, pt_b:{pointId:'pt_b',x:1,y:0}, pt_c:{pointId:'pt_c',x:2,y:0}
-}, lines:{ ln_only:{lineId:'ln_only',startPointId:'pt_a',endPointId:'pt_b'} } } };
+}, lines:{ ln_only:{lineId:'ln_only',startPointId:'pt_a',endPointId:'pt_b'} }, profileIdentities:{}, pathIdentities:{} } };
 const { store: rejectStore } = makeStore(rejectSketch);
 const rejectBefore = rejectStore.snapshot();
 assert.equal(rejectStore.disconnectSketchLineFromPoint('sketch_reject', 'pt_a', 'ln_only'), false);
