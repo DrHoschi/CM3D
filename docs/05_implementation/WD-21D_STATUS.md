@@ -1,10 +1,10 @@
 # WD-21D – Profile & Open Path Derivation
 
-**Status:** ACTIVE / WD-21D.1 PASS / FROZEN / WD-21D.2 PASS / FROZEN / WD-21D.3 PASS / FROZEN / WD-21D.4-R2 PASS / FROZEN / WD-21D.5 PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER  
+**Status:** PASS / FROZEN / WD-21D.1–D.6 COMPLETE / D.1–D.5 DEVICE VERIFIED / FULL A.2→D.6 REGRESSION PASS / 0 BLOCKER  
 **Definition basis:** frozen WD-21C.8-R2 @ `b29efc297ab8183a9e5879798bb6fd9da201cdf2`  
 **Branch:** `feature/wd-21d-profile-open-path-derivation`  
 **RB:** RB-02 – Sketch Topology & Profiles  
-**Stand:** 2026-09-16
+**Stand:** 2026-09-19
 
 ## WD-21D authority boundary
 
@@ -70,79 +70,23 @@ D.5 is PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER.
 
 ## WD-21D.6 – Derivation Regression / Compatibility Gate
 
-**Status:** RECONCILED / DEFINED / CONTRACT BOUNDED / REGRESSION-ONLY / NOT IMPLEMENTED
+**Status:** PASS / FROZEN / REGRESSION VERIFIED / 0 BLOCKER
 
-**Definition basis:** frozen WD-21D.5 product head `8868781d34f668c268fd8c92b84c887a96cabded`
+**Definition basis:** frozen WD-21D.5 product head `8868781d34f668c268fd8c92b84c887a96cabded`  
+**D.6 implementation head:** `cd114a516d5cbf4f92687d53da908814a7667b8c`  
+**Final regression/evidence head:** `0024b3181a39797436547e569d9d97d1c84719ca`  
+**Verified workflow run:** `35429732760` — SUCCESS  
+**Visible product identity:** `WD-21D.5` (unchanged)
 
-### D.6 purpose and authority boundary
+D.6 remained a regression/compatibility-only gate. Its dedicated test and workflow were introduced without product-code changes. During execution, historical WD-21C regression tests exposed build-identity assertions that accepted only their original C-era build labels. These were corrected narrowly for forward compatibility through the D.6 R-series; the corrections changed test assertions only and did not change sketch behavior, derivation behavior, product source code, or the visible product build identity.
 
-WD-21D.6 is exclusively the final integration/regression/compatibility gate for the already implemented D.1 → D.2 → D.3 → D.4 → D.5 derivation chain. D.6 MUST NOT create a new model authority, geometry derivation, validation rule, persistent identity, mutation path or visible modeling capability.
+The final exact-head workflow on `0024b3181a39797436547e569d9d97d1c84719ca` completed SUCCESS across the complete authorized chain:
 
-D.6 verifies that the complete WD-21D derivation chain works together and remains compatible with the frozen sketch foundation and legacy line-only behavior. A D.6 failure may expose a regression requiring a separately authorized correction, but D.6 itself MUST NOT silently repair product code.
+`A.2 → A.3 → B.2 → B.3 → C.2 → C.3 → C.4 → C.5 → C.6 → C.7 → C.8 → C.8-R1 → C.8-R2 → D.1 → D.2 → D.3 → D.4 → D.5 → D.6`.
 
-### Required regression matrix
+This proves the frozen sketch foundation/legacy contracts and the complete D.1–D.5 derivation stack remain jointly regression-compatible. The D.6 negative-scope gate also remains authoritative: no persistent PROFILE/PATH identities, SelectionRef extension, profile/path viewer UI, extrusion conversion, recompute integration, auto-connect/healing, new drawing tools, or other excluded modeling capability was introduced.
 
-The dedicated D.6 integration regression MUST prove, at minimum:
-
-- frozen sketch foundation/topology behavior remains compatible with WD-21D;
-- existing generic element registry/persistence and relevant WD-21C sketch contracts remain green;
-- D.1 generic Line/Circle/Arc/Spline curve derivation remains green;
-- D.2 deterministic component/path graph derivation remains green;
-- D.3 profile-region/nesting derivation remains green;
-- D.4 mixed analytic geometry validation remains green;
-- D.5 combined profile/open-path read API remains green;
-- legacy line-only open and closed sketch cases remain regressionsafe;
-- standalone Circle remains correctly represented through the derivation chain;
-- mixed Line+Arc and Line+Spline / Line+Arc+Spline geometry remains deterministic;
-- multiple independent profiles remain separate;
-- outer+hole and deeper nesting preserve the frozen D.3 parity contract;
-- open paths remain open-path results and do not become profiles;
-- branching components remain invalid components;
-- self-intersecting geometry remains explicitly invalid;
-- degenerate/unclassified geometry remains unclassified/invalid as defined by frozen authorities;
-- boundary-contact ambiguity remains ambiguous/unresolved as supplied by D.4;
-- collection insertion order does not change the derived result;
-- persistent sketch data and frozen D.1–D.5 derived models are not mutated by the integration read path.
-
-### Legacy / compatibility contract
-
-D.6 MUST verify compatibility with existing V1/WD-21C sketch structures and the existing line-only modeling path. It MUST NOT migrate existing saved sketches into persistent profile/path objects and MUST NOT redirect `src/model/sketch-profile.js` or `getSingleExtrudableProfile(...)` to D.5.
-
-The existing extrusion behavior remains compatibility authority for this block. D.6 MUST prove that WD-21D has not implicitly enabled mixed-analytic, hole, multi-profile or open-path extrusion.
-
-### Negative scope gate
-
-D.6 MUST verify the absence of WD-21D-excluded capabilities. In particular D.6 MUST NOT introduce or authorize:
-
-- StableReference `PROFILE` / `PATH` target kinds or persistent profile/path IDs;
-- SelectionRef extensions for profiles/paths;
-- profile/path viewer hit-testing, highlighting or focus;
-- Object-Tree/Inspector profile/path UI;
-- extrusion conversion or hole/multi-profile/open-path extrusion runtime;
-- dependency/recompute integration changes;
-- geometric auto-connect, snap/merge/tolerance rebinding;
-- Trim/Split/healing;
-- new sketch drawing tools or Spline control editing/gizmos;
-- constraints or N-Gon/faceted-circle identity changes.
-
-### Exact later implementation file scope
-
-A later D.6 implementation is limited to exactly these two new regression-infrastructure files:
-
-1. `tests/wd-21d6-derivation-regression-compatibility-gate.mjs`
-2. `.github/workflows/wd-21d6-derivation-regression-compatibility-gate.yml`
-
-No `src/**` product file is authorized for modification by the D.6 implementation. Existing D.1–D.5 tests SHOULD be invoked/reused rather than duplicated or rewritten. Existing test files and workflows remain frozen unless a separately identified compatibility defect requires its own explicit correction authorization.
-
-The D.6 workflow MUST execute the required foundation/WD-21C compatibility regressions followed by D.1 → D.2 → D.3 → D.4 → D.5 and finally the dedicated D.6 integration/negative-scope regression. Exact invoked existing test filenames are to be verified at the separate D.6 Implementation Scope/Authorization Gate before implementation; this does not expand the two-new-file D.6 implementation boundary.
-
-### Build identity boundary
-
-D.6 is a regression/compatibility gate and introduces no visible product capability. Therefore no `src/main.js` change and no visible `WD-21D.6` build identity change are authorized. The frozen visible product identity remains `WD-21D.5` unless a later separately authorized product change requires otherwise.
-
-### Documentation / freeze boundary
-
-This Definition Documentation Gate modifies only `docs/05_implementation/WD-21D_STATUS.md`. D.6 implementation, automated execution/evidence and final WD-21D integration/freeze remain separate later steps. Final documentation after successful D.6 execution may update status/evidence documents only under a separate freeze authorization.
+D.6 is PASS / FROZEN / REGRESSION VERIFIED / 0 BLOCKER. WD-21D as a whole is PASS / FROZEN.
 
 ## Explicitly excluded from WD-21D
 
@@ -154,4 +98,4 @@ The active branch is `feature/wd-21d-profile-open-path-derivation`. The frozen v
 
 ## Next permissible step
 
-WD-21D.6 is **RECONCILED / DEFINED / CONTRACT BOUNDED / REGRESSION-ONLY / NOT IMPLEMENTED**. The next permissible step is exclusively a separate **WD-21D.6 Implementation Scope / Authorization Gate** against this documented contract: verify the exact existing foundation/WD-21C/D.1–D.5 tests to invoke and confirm the two-new-file regression/workflow scope. No D.6 implementation, product-code change, build-ID change or WD-21D final freeze is authorized in that gate.
+WD-21D is **PASS / FROZEN / 0 BLOCKER**. No further WD-21D implementation is authorized. The next step must be determined separately from the current roadmap against this frozen WD-21D baseline; this freeze does not itself authorize WD-21E or any other product block.
