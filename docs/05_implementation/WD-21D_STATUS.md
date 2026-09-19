@@ -99,3 +99,15 @@ The active branch is `feature/wd-21d-profile-open-path-derivation`. The frozen v
 ## Next permissible step
 
 WD-21D is **PASS / FROZEN / 0 BLOCKER**. No further WD-21D implementation is authorized. The next step must be determined separately from the current roadmap against this frozen WD-21D baseline; this freeze does not itself authorize WD-21E or any other product block.
+
+## Post-freeze Roadmap Reconciliation – RB-02 continuation
+
+**Status:** RECONCILED / NEXT CANDIDATE IDENTIFIED / WD-21E NOT STARTED
+
+After WD-21D PASS / FROZEN, the binding V2 roadmap was reconciled against the frozen implementation. RB-02 – Sketch Topology & Profiles is not yet complete. Its gate additionally requires stable/addressable profiles and open paths that remain uniquely referencable after editing or become controlled INVALID/UNRESOLVED, including the roadmap's ProfileId/PathId and later profile/path selection/highlighting requirements.
+
+WD-21D intentionally stopped before that boundary: its profile/path keys are derived only, while persistent PROFILE/PATH StableReference target kinds, SelectionRef extensions and profile/path viewer/UI selection remained explicitly excluded.
+
+Therefore RB-03 – Construction References & Precision MUST NOT start yet. The next candidate block is **WD-21E – Stable Profile / Open Path Reference Reconciliation**. WD-21E is currently only a next-candidate reconciliation block: NOT STARTED / NOT DEFINED / NOT IMPLEMENTATION AUTHORIZED.
+
+The first WD-21E step must be reconciliation-only against frozen D.1–D.6 and the existing RB-01 reference infrastructure. It must determine ProfileId/PathId semantics, R1-compliant recognition after sketch edits, RESOLVED/UNRESOLVED/MISSING/INVALID behavior, handling of holes and multiple profiles, reuse of StableReference/SelectionRef infrastructure, and the boundary to later Viewer/Object Tree/Inspector profile/path selection. No implementation is authorized by this roadmap handoff.
