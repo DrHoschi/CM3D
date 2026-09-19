@@ -16,7 +16,9 @@ const sketch = {
     lines: {
       ln_a: { lineId:'ln_a', startPointId:'pt_shared', endPointId:'pt_a' },
       ln_b: { lineId:'ln_b', startPointId:'pt_shared', endPointId:'pt_b' }
-    }
+    },
+    profileIdentities: {},
+    pathIdentities: {}
   }
 };
 
