@@ -23,7 +23,7 @@ const sketch = { objectId:'sketch_connect', type:'sketch', data:{ plane:'localXY
 }, lines:{
   ln_left:{lineId:'ln_left',startPointId:'pt_left',endPointId:'pt_source'},
   ln_right:{lineId:'ln_right',startPointId:'pt_source',endPointId:'pt_right'}
-} } };
+}, profileIdentities:{}, pathIdentities:{} } };
 
 const { store } = makeStore(sketch);
 const survivorRef = createStableReference(ReferenceTargetKind.SKETCH_POINT, sketch.objectId, 'pt_survivor');
@@ -52,7 +52,7 @@ assert.equal(store.getObject(sketch.objectId).data.lines.ln_left.endPointId, 'pt
 
 const directPairSketch = { objectId:'sketch_pair', type:'sketch', data:{ plane:'localXY', points:{
   pt_left: { pointId: 'pt_left', x: 0, y: 0 }, pt_right: { pointId: 'pt_right', x: 1, y: 0 }
-}, lines: { ln_pair: { lineId: 'ln_pair', startPointId: 'pt_left', endPointId: 'pt_right' } } } };
+}, lines: { ln_pair: { lineId: 'ln_pair', startPointId: 'pt_left', endPointId: 'pt_right' } }, profileIdentities:{}, pathIdentities:{} } };
 const { store: pairStore } = makeStore(directPairSketch);
 const pairBefore = pairStore.snapshot();
 assert.equal(pairStore.connectSketchPoints('sketch_pair', 'pt_left', 'pt_right'), false);
