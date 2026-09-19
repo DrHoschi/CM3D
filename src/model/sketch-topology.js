@@ -74,6 +74,52 @@ function validateElementMap(sketch, kind, errors) {
   }
 }
 
+
+function isPlainMap(value) {
+  return !!value && !Array.isArray(value) && typeof value === 'object';
+}
+
+function isCanonicalIdList(value) {
+  return Array.isArray(value)
+    && value.length > 0
+    && value.every(id => typeof id === 'string' && id.length > 0)
+    && new Set(value).size === value.length
+    && value.every((id, index) => index === 0 || value[index - 1].localeCompare(id) < 0);
+}
+
+function validateProfileIdentityMap(sketch, errors) {
+  const identities = sketch.data?.profileIdentities;
+  if (!isPlainMap(identities)) {
+    errors.push(`Skizzen-Collection profileIdentities fehlt oder ist ungültig für ${sketch.objectId}.`);
+    return;
+  }
+  for (const [key, identity] of Object.entries(identities)) {
+    if (key !== identity?.profileId) errors.push(`profileId-Schlüssel stimmt nicht mit ID überein: ${key}`);
+    if (!isCanonicalIdList(identity?.source?.outerElementIds)) errors.push(`Ungültige outerElementIds für Profilidentität ${key}.`);
+    const holes = identity?.source?.holeElementIdSets;
+    if (!Array.isArray(holes) || holes.some(ids => !isCanonicalIdList(ids))) {
+      errors.push(`Ungültige holeElementIdSets für Profilidentität ${key}.`);
+    } else {
+      const signatures = holes.map(ids => ids.join('|'));
+      if (new Set(signatures).size !== signatures.length || signatures.some((sig, index) => index > 0 && signatures[index - 1].localeCompare(sig) >= 0)) {
+        errors.push(`holeElementIdSets sind nicht kanonisch für Profilidentität ${key}.`);
+      }
+    }
+  }
+}
+
+function validatePathIdentityMap(sketch, errors) {
+  const identities = sketch.data?.pathIdentities;
+  if (!isPlainMap(identities)) {
+    errors.push(`Skizzen-Collection pathIdentities fehlt oder ist ungültig für ${sketch.objectId}.`);
+    return;
+  }
+  for (const [key, identity] of Object.entries(identities)) {
+    if (key !== identity?.pathId) errors.push(`pathId-Schlüssel stimmt nicht mit ID überein: ${key}`);
+    if (!isCanonicalIdList(identity?.source?.elementIds)) errors.push(`Ungültige elementIds für Pfadidentität ${key}.`);
+  }
+}
+
 function validateEndpointElement(sketch, element, label, errors) {
   if (!getSketchPoint(sketch, element.startPointId) || !getSketchPoint(sketch, element.endPointId)) {
     errors.push(`${label} referenziert fehlende Punkte in ${sketch.objectId}.`);
@@ -90,6 +136,8 @@ export function validateSketchTopology(sketch) {
   }
 
   for (const kind of Object.values(SketchElementKind)) validateElementMap(sketch, kind, errors);
+  validateProfileIdentityMap(sketch, errors);
+  validatePathIdentityMap(sketch, errors);
 
   for (const [pointKey, point] of Object.entries(sketch.data?.points ?? {})) {
     if (pointKey !== point.pointId) errors.push(`Punktschlüssel stimmt nicht mit pointId überein: ${pointKey}`);
