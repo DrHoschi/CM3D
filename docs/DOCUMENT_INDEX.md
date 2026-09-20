@@ -1,6 +1,6 @@
 # CM3D – Dokumentenindex
 
-Stand: 2026-08-30
+Stand: 2026-09-20
 
 ## Aktuelle fachliche Quellen
 
@@ -29,6 +29,7 @@ Historische Quellen werden nicht still überschrieben oder rückwirkend umgedeut
 | UI / Hauptfenster | `docs/02_ui-ux/hauptfenster_v0.2.md` | normalisierte UI-V0.2-Arbeitsstruktur im Repository | WORKING DESIGN / V0.2 |
 | V1 Abschluss | `docs/05_implementation/V1_ABSCHLUSSRESTCHECK_2026-08-30.md` | formaler V1-Pflichtkern-Restcheck | PASS |
 | WD-19 | `docs/05_implementation/WD-19_STATUS.md` | letzter regulärer V1-Bedien-/Skalierbarkeitsblock | PASS / FROZEN |
+| WD-21E | `docs/05_implementation/WD-21E_STATUS.md` | Completion-/Evidence-/Freeze-Nachweis für Stable Profile/Path Reference Foundation | PASS / FROZEN |
 | V2 Masterplan | `docs/06_v2_planning/V2_MASTER_PLAN.md` | freigegebener V2-Gesamtumfang | APPROVED / Scope PASS |
 | V2 Funktionskatalog | `docs/06_v2_planning/V2_FUNCTION_CATALOG.md` | V2-Funktionsstruktur | BINDING |
 | V2 Architektur | `docs/06_v2_planning/V2_ARCHITECTURE_DEPENDENCIES.md` | R1/R2/R3/R3a, Abhängigkeiten und Architektur | BINDING |
