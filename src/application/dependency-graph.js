@@ -1,4 +1,4 @@
-import { ReferenceState, resolveStableReference } from './stable-reference.js';
+import { ReferenceTargetKind, ReferenceState, resolveStableReference } from './stable-reference.js';
 
 export const DependencyNodeState = Object.freeze({
   READY: 'READY',
@@ -138,7 +138,7 @@ export function validateDependencyEdge(graph, sourceObjectId, dependentObjectId)
   return { allowed: true, code: null, message: null };
 }
 
-export function buildDependencyGraph(store) {
+export function buildDependencyGraph(store, declaredDependencies = []) {
   const nodes = new Map();
   const outgoing = new Map();
   const incoming = new Map();
@@ -175,6 +175,23 @@ export function buildDependencyGraph(store) {
       node.upstreamState = edge.state;
       node.diagnostics.push({
         code: `UPSTREAM_${resolution.state}`,
+        message: `Abhängige Berechnung ist blockiert, weil die Quellreferenz ${edge.state} ist.`
+      });
+      node.diagnostics.push(...edge.diagnostics.map(cloneDiagnostic));
+    }
+  }
+
+  for (const dependency of declaredDependencies ?? []) {
+    const dependentObjectId = dependency?.dependentObjectId;
+    const node = nodes.get(dependentObjectId);
+    const edge = createDependencyEdge(store, dependentObjectId, dependency?.reference, dependency?.kind);
+    if (!node || !edge) continue;
+    addEdge(outgoing, incoming, edge);
+    if (edge.state !== ReferenceState.RESOLVED) {
+      node.state = DependencyNodeState.BLOCKED;
+      node.upstreamState = edge.state;
+      node.diagnostics.push({
+        code: `UPSTREAM_${edge.state}`,
         message: `Abhängige Berechnung ist blockiert, weil die Quellreferenz ${edge.state} ist.`
       });
       node.diagnostics.push(...edge.diagnostics.map(cloneDiagnostic));
@@ -224,8 +241,8 @@ export function buildDependencyGraph(store) {
   };
 }
 
-export function visitDependents(store, sourceObjectId, visitor) {
-  const graph = buildDependencyGraph(store);
+export function visitDependents(store, sourceObjectId, visitor, declaredDependencies = []) {
+  const graph = buildDependencyGraph(store, declaredDependencies);
   const changed = [];
   for (const edge of graph.dependentsOf(sourceObjectId)) {
     if (edge.state !== ReferenceState.RESOLVED) continue;
@@ -238,8 +255,8 @@ export function visitDependents(store, sourceObjectId, visitor) {
   return changed;
 }
 
-export function enforceBlockedDependencyState(store) {
-  const graph = buildDependencyGraph(store);
+export function enforceBlockedDependencyState(store, declaredDependencies = []) {
+  const graph = buildDependencyGraph(store, declaredDependencies);
   const blocked = [];
   for (const [objectId, node] of graph.nodes) {
     if (node.state !== DependencyNodeState.BLOCKED) continue;
