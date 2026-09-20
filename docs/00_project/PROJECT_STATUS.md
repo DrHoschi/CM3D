@@ -144,7 +144,9 @@ Während der Completion-Regressions wurden ausschließlich historische Test-Fixt
 
 ## WD-21F – Profile/Path Dependency & Recompute Integration
 
-**DEFINED / NOT IMPLEMENTED**
+**PASS / FROZEN / 0 BLOCKER**
+
+Freeze-Baseline: `490a6430de8b6c88e4897a52f7bff27d6d436ac7`.
 
 Definition basis: WD-21E Freeze-Baseline `2c0940d6f58eac99aa89664d252b433488745207`.
 
@@ -156,6 +158,10 @@ Scope von WD-21F: generische Dependency-Edge-Erzeugung für PROFILE/PATH, Root-C
 
 Ausdrücklich ausgeschlossen: neue UI, neue Profil-/Pfad-Selektion, neue Geometrieableitung oder Sketch-Mutationen, Sweep/Loft/Revolve/Thin Extrude, Multi-Profil-Extrude sowie eine Umstellung des bestehenden V1-/Bestands-Extrude auf ProfileRef. WD-21F schafft nur die generische Foundation; konkrete Feature-Umstellungen erfolgen erst in dem späteren Featureblock, der PROFILE/PATH tatsächlich als Quelle nutzt. Kein neues Persistenzschema ist Teil dieser Definition.
 
+Completion-/Regression-Evidence: Auf dem verifizierten Head `490a6430de8b6c88e4897a52f7bff27d6d436ac7` lief der manuell gestartete Aggregate-Workflow `WD-21E Identity Reference Foundation #18` auf `feature/wd-21f-profile-path-dependency-recompute` vollständig SUCCESS. Der Aggregate-Workflow enthält dabei zusätzlich den WD-21F-Vertragstest `tests/wd-21f-profile-path-dependency-recompute.mjs`; damit sind neuer F-Vertrag und bestehender Compatibility-Unterbau gemeinsam nachgewiesen. Der vorherige Lauf #17 bestätigte den unveränderten Compatibility-Unterbau bereits vor Aufnahme des F-Tests.
+
+Finaler Scope-Abgleich gegen den autorisierten Ausgangsstand `98fba11406d11cfc59a7c8dba480df1aacb2fd55`: 5 Commits voraus / 0 zurück; Änderungen ausschließlich an `src/application/dependency-graph.js`, `tests/wd-21f-profile-path-dependency-recompute.mjs` und der zweizeiligen CI-Einbindung in `.github/workflows/wd-21e-identity-reference-foundation.yml`. `extrude.js`, `sketch-editing.js`, StableReference-/Identity-/Derivation-Code, Projektschema und UI blieben unangetastet.
+
 ## Verbindliche Build-Kennungsregel
 
 Bei jedem Implementierungs-WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtbare Build-/Brand-Kennung und WD-/Projektstatusdokumentation konsistent sein. Eine widersprüchliche sichtbare Kennung ist ein BLOCKER und verhindert PASS/FROZEN.
@@ -164,4 +170,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts tragen `-R1`, `-R2`, … und
 
 ## Nächster zulässiger Schritt
 
-WD-21F ist gegen die WD-21E-Freeze-Baseline `2c0940d6f58eac99aa89664d252b433488745207` **DEFINED / NOT IMPLEMENTED**. Der nächste zulässige Schritt ist ausschließlich eine separat autorisierte WD-21F Implementation Scope Reconciliation. Noch keine Implementierung und kein Implementierungsbranch.
+WD-21F ist auf Freeze-Baseline `490a6430de8b6c88e4897a52f7bff27d6d436ac7` **PASS / FROZEN / 0 BLOCKER**. WD-21G beginnt nicht automatisch. Ein WD-21G-/RB-02-Integrationsschritt erfordert eine separate Reconciliation/Freigabe gegen diesen eingefrorenen Stand.
