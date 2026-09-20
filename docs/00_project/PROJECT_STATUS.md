@@ -1,6 +1,6 @@
 # CM3D – Projektstatus
 
-Stand: 2026-09-12
+Stand: 2026-09-20
 
 ## Aktueller Gesamtstand
 
@@ -122,11 +122,25 @@ WD-21D.4-R2 ist damit **PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER**.
 
 ### WD-21D.5 – Generic Profile / Open Path Derivation API
 
-**DEFINED / NOT IMPLEMENTED**
+**PASS / FROZEN / 0 BLOCKER**
 
 ### WD-21D.6 – Derivation Regression / Compatibility Gate
 
-**DEFINED / NOT IMPLEMENTED**
+**PASS / FROZEN / 0 BLOCKER**
+
+Automatische Regression auf der WD-21E-Freeze-Baseline `2c0940d6f58eac99aa89664d252b433488745207`: SUCCESS.
+
+## WD-21E – Stable Profile/Path Reference & Selection
+
+**PASS / FROZEN / 0 BLOCKER**
+
+Freeze-Baseline: `2c0940d6f58eac99aa89664d252b433488745207`.
+
+WD-21E schließt die Identity-/StableReference-Grundlage für Profile und offene Pfade. Persistente `profileIdentities` und `pathIdentities` werden im Sketch-Schema geführt; Profile/Pfade werden über ihre persistenten Source-Element-IDs wiedererkannt. Die StableReference-Brücke unterstützt PROFILE/PATH mit `ownerId`/`targetId` und den kontrollierten Zuständen RESOLVED, MISSING, INVALID und UNRESOLVED.
+
+Completion-/Regression-Evidence: automatischer Push-Lauf `WD-21E Identity Reference Foundation #12` auf der Freeze-Baseline vollständig SUCCESS. Der sequenzielle Gate-Lauf umfasst WD-20A/20C, WD-21A.2/A.3, WD-21B.2/B.3, WD-21C.2–C.8-R2, WD-21D.1–D.6 und abschließend den WD-21E Profile/Path Reference Contract. Zusätzlich war der separate WD-21D.6 Derivation Regression Compatibility Gate #28 SUCCESS. Offene Blocker: 0.
+
+Während der Completion-Regressions wurden ausschließlich historische Test-Fixtures an das inzwischen verpflichtende Sketch-Schema angepasst. Korrigierte Kette: WD-21A.2 → WD-21A.3 → WD-21B.2 → WD-21B.3 → WD-21C.3 → WD-21C.6. Ergänzt wurden ausschließlich fehlende leere `profileIdentities: {}` / `pathIdentities: {}`; Assertions und Produktsemantik wurden dadurch nicht abgeschwächt.
 
 ## Verbindliche Build-Kennungsregel
 
@@ -136,4 +150,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts tragen `-R1`, `-R2`, … und
 
 ## Nächster zulässiger Schritt
 
-WD-21D.4-R2 ist **PASS / FROZEN / DEVICE VERIFIED / 0 BLOCKER**. WD-21D.5 beginnt nicht automatisch. Der nächste zulässige Schritt ist ausschließlich die separate **WD-21D.5 Reconciliation/Definition – Generic Profile / Open Path Derivation API** gegen den eingefrorenen D.4-R2-Stand. Noch keine D.5-Implementierung im selben Schritt.
+WD-21E ist auf Freeze-Baseline `2c0940d6f58eac99aa89664d252b433488745207` **PASS / FROZEN / 0 BLOCKER**. WD-21F beginnt nicht automatisch. Ein weiterer Funktionsblock erfordert eine separate Reconciliation/Freigabe gegen diesen eingefrorenen Stand.
