@@ -142,6 +142,20 @@ Completion-/Regression-Evidence: automatischer Push-Lauf `WD-21E Identity Refere
 
 Während der Completion-Regressions wurden ausschließlich historische Test-Fixtures an das inzwischen verpflichtende Sketch-Schema angepasst. Korrigierte Kette: WD-21A.2 → WD-21A.3 → WD-21B.2 → WD-21B.3 → WD-21C.3 → WD-21C.6. Ergänzt wurden ausschließlich fehlende leere `profileIdentities: {}` / `pathIdentities: {}`; Assertions und Produktsemantik wurden dadurch nicht abgeschwächt.
 
+## WD-21F – Profile/Path Dependency & Recompute Integration
+
+**DEFINED / NOT IMPLEMENTED**
+
+Definition basis: WD-21E Freeze-Baseline `2c0940d6f58eac99aa89664d252b433488745207`.
+
+WD-21F erweitert ausschließlich die vorhandene Dependency-/Recompute-Foundation so, dass persistente PROFILE-/PATH-StableReferences aus WD-21E als konkrete Dependency-Quellen verwendet werden können. Die bestehende objektbasierte Graph-/Cycle-Architektur bleibt erhalten: die Dependency-Kante führt vom besitzenden Sketch zum abhängigen Feature, ihre Quellgültigkeit wird jedoch über die konkrete PROFILE-/PATH-Referenz aufgelöst.
+
+Verbindliche Zustandssemantik: RESOLVED erlaubt Recompute. MISSING, INVALID oder UNRESOLVED bleiben als Root Cause an der Source-Reference erhalten und führen am abhängigen Feature deterministisch zu BLOCKED. Kein geometrisches Ersatzprofil, kein automatisches Rebinding und kein stiller Fallback auf ein anderes Profil, einen anderen Pfad oder die gesamte Skizze. Wird dieselbe persistente Identity später wieder eindeutig RESOLVED, muss die Abhängigkeit wieder recompute-fähig werden. Die bestehende Cycle-Erkennung bleibt autoritativ; kein zweiter Dependency-Graph.
+
+Scope von WD-21F: generische Dependency-Edge-Erzeugung für PROFILE/PATH, Root-Cause→BLOCKED-Propagation, Traversal/Recompute-Autorität über diese Kanten, Wiederfreigabe nach erneutem RESOLVED sowie Regression des bestehenden SKETCH→Extrude-Verhaltens.
+
+Ausdrücklich ausgeschlossen: neue UI, neue Profil-/Pfad-Selektion, neue Geometrieableitung oder Sketch-Mutationen, Sweep/Loft/Revolve/Thin Extrude, Multi-Profil-Extrude sowie eine Umstellung des bestehenden V1-/Bestands-Extrude auf ProfileRef. WD-21F schafft nur die generische Foundation; konkrete Feature-Umstellungen erfolgen erst in dem späteren Featureblock, der PROFILE/PATH tatsächlich als Quelle nutzt. Kein neues Persistenzschema ist Teil dieser Definition.
+
 ## Verbindliche Build-Kennungsregel
 
 Bei jedem Implementierungs-WD-Teilschritt müssen autoritative Build-ID, `document.title`, sichtbare Build-/Brand-Kennung und WD-/Projektstatusdokumentation konsistent sein. Eine widersprüchliche sichtbare Kennung ist ein BLOCKER und verhindert PASS/FROZEN.
@@ -150,4 +164,4 @@ Korrekturläufe innerhalb desselben WD-Teilschritts tragen `-R1`, `-R2`, … und
 
 ## Nächster zulässiger Schritt
 
-WD-21E ist auf Freeze-Baseline `2c0940d6f58eac99aa89664d252b433488745207` **PASS / FROZEN / 0 BLOCKER**. WD-21F beginnt nicht automatisch. Ein weiterer Funktionsblock erfordert eine separate Reconciliation/Freigabe gegen diesen eingefrorenen Stand.
+WD-21F ist gegen die WD-21E-Freeze-Baseline `2c0940d6f58eac99aa89664d252b433488745207` **DEFINED / NOT IMPLEMENTED**. Der nächste zulässige Schritt ist ausschließlich eine separat autorisierte WD-21F Implementation Scope Reconciliation. Noch keine Implementierung und kein Implementierungsbranch.
