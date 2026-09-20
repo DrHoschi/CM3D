@@ -32,7 +32,7 @@ const sketch = { objectId:'sketch_c6', type:'sketch', data:{ plane:'localXY', po
   a1:{arcId:'a1',startPointId:'p_source',endPointId:'p_r',control:{x:1.5,y:2}}
 }, splines:{
   s1:{splineId:'s1',startPointId:'p_u',endPointId:'p_source',controls:[{controlId:'ctl1',x:0.5,y:1.5}]}
-} } };
+}, profileIdentities:{}, pathIdentities:{} } };
 
 const store = makeStore(sketch);
 const arcControlBefore = structuredClone(store.getObject('sketch_c6').data.arcs.a1.control);
@@ -80,7 +80,7 @@ assert.equal(state.disconnect.enabled, false);
 
 const pairSketch = { objectId:'pair', type:'sketch', data:{ plane:'localXY', points:{
   a:{pointId:'a',x:0,y:0}, b:{pointId:'b',x:1,y:0}
-}, lines:{}, circles:{}, arcs:{ ar:{arcId:'ar',startPointId:'a',endPointId:'b',control:{x:0.5,y:1}} }, splines:{} } };
+}, lines:{}, circles:{}, arcs:{ ar:{arcId:'ar',startPointId:'a',endPointId:'b',control:{x:0.5,y:1}} }, splines:{}, profileIdentities:{}, pathIdentities:{} } };
 const pairStore = makeStore(pairSketch);
 const beforePair = pairStore.snapshot();
 assert.equal(pairStore.connectSketchPoints('pair','a','b'), false);
@@ -89,7 +89,7 @@ assert.equal(pairStore.undoStack.length, 0);
 
 const lineCompatSketch = { objectId:'line_compat', type:'sketch', data:{ plane:'localXY', points:{
   shared:{pointId:'shared',x:0,y:0}, left:{pointId:'left',x:-1,y:0}, right:{pointId:'right',x:1,y:0}
-}, lines:{ l1:{lineId:'l1',startPointId:'left',endPointId:'shared'}, l2:{lineId:'l2',startPointId:'shared',endPointId:'right'} }, circles:{}, arcs:{}, splines:{} } };
+}, lines:{ l1:{lineId:'l1',startPointId:'left',endPointId:'shared'}, l2:{lineId:'l2',startPointId:'shared',endPointId:'right'} }, circles:{}, arcs:{}, splines:{}, profileIdentities:{}, pathIdentities:{} } };
 const lineStore = makeStore(lineCompatSketch);
 const lineResult = lineStore.disconnectSketchLineFromPoint('line_compat','shared','l1');
 assert.ok(lineResult?.newPointId);
