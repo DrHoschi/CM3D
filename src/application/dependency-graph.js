@@ -19,6 +19,29 @@ const addEdge = (outgoing, incoming, edge) => {
 
 const resolvedEdgesOnly = edges => (edges ?? []).filter(edge => edge?.state === ReferenceState.RESOLVED);
 
+const dependencySourceObjectId = reference => {
+  if (!reference) return null;
+  if ([ReferenceTargetKind.PROFILE, ReferenceTargetKind.PATH].includes(reference.targetKind)) {
+    return reference.ownerId ?? null;
+  }
+  return reference.targetId ?? null;
+};
+
+export function createDependencyEdge(store, dependentObjectId, reference, kind = 'GENERIC_REFERENCE') {
+  if (!dependentObjectId || !reference) return null;
+  const sourceObjectId = dependencySourceObjectId(reference);
+  if (!sourceObjectId) return null;
+  const resolution = resolveStableReference(store, reference);
+  return {
+    sourceObjectId,
+    dependentObjectId,
+    kind,
+    reference: cloneRef(reference),
+    state: resolution.state,
+    diagnostics: resolution.diagnostics.map(cloneDiagnostic)
+  };
+}
+
 export function detectDependencyCycles(edges = []) {
   const adjacency = new Map();
   const nodeIds = new Set();
@@ -144,25 +167,17 @@ export function buildDependencyGraph(store) {
       continue;
     }
 
-    const resolution = resolveStableReference(store, ref);
-    const edge = {
-      sourceObjectId: ref.targetId,
-      dependentObjectId: object.objectId,
-      kind: 'SKETCH_TO_EXTRUDE',
-      reference: cloneRef(ref),
-      state: resolution.state,
-      diagnostics: resolution.diagnostics.map(cloneDiagnostic)
-    };
+    const edge = createDependencyEdge(store, object.objectId, ref, 'SKETCH_TO_EXTRUDE');
     addEdge(outgoing, incoming, edge);
 
-    if (resolution.state !== ReferenceState.RESOLVED) {
+    if (edge.state !== ReferenceState.RESOLVED) {
       node.state = DependencyNodeState.BLOCKED;
-      node.upstreamState = resolution.state;
+      node.upstreamState = edge.state;
       node.diagnostics.push({
         code: `UPSTREAM_${resolution.state}`,
-        message: `Abhängige Berechnung ist blockiert, weil die Quellreferenz ${resolution.state} ist.`
+        message: `Abhängige Berechnung ist blockiert, weil die Quellreferenz ${edge.state} ist.`
       });
-      node.diagnostics.push(...resolution.diagnostics.map(cloneDiagnostic));
+      node.diagnostics.push(...edge.diagnostics.map(cloneDiagnostic));
     }
   }
 
