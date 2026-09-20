@@ -1,10 +1,13 @@
 import { getSketchElement, getSketchPoint } from '../model/sketch-topology.js';
+import { resolveStableReference, ReferenceState } from './stable-reference.js';
 
 export const SelectionTargetKind = Object.freeze({
   OBJECT: 'OBJECT',
   SKETCH: 'SKETCH',
   SKETCH_ELEMENT: 'SKETCH_ELEMENT',
-  SKETCH_POINT: 'SKETCH_POINT'
+  SKETCH_POINT: 'SKETCH_POINT',
+  PROFILE: 'PROFILE',
+  PATH: 'PATH'
 });
 
 export function createSelectionRef(targetKind, ownerId, targetId, subTargetId = null) {
@@ -32,10 +35,10 @@ export function selectionRefsFromLegacy(store) {
 
   if (sketchElements.length) {
     return sketchElements.map(item => createSelectionRef(
-      item.kind === 'point' ? SelectionTargetKind.SKETCH_POINT : SelectionTargetKind.SKETCH_ELEMENT,
+      item.kind === 'point' ? SelectionTargetKind.SKETCH_POINT : item.kind === 'profile' ? SelectionTargetKind.PROFILE : item.kind === 'path' ? SelectionTargetKind.PATH : SelectionTargetKind.SKETCH_ELEMENT,
       item.sketchId,
       item.elementId,
-      item.kind === 'point' ? null : item.kind
+      ['point','profile','path'].includes(item.kind) ? null : item.kind
     ));
   }
 
@@ -50,6 +53,10 @@ export function selectionRefsFromLegacy(store) {
 export function resolveSelectionSketchTarget(store, ref) {
   const sketch = store.getObject?.(ref.ownerId) ?? null;
   if (sketch?.type !== 'sketch') return null;
+  if ([SelectionTargetKind.PROFILE, SelectionTargetKind.PATH].includes(ref.targetKind)) {
+    const resolution = resolveStableReference(store, ref);
+    return resolution.state === ReferenceState.RESOLVED ? { kind: ref.targetKind.toLowerCase(), target: resolution } : null;
+  }
   if (ref.targetKind === SelectionTargetKind.SKETCH_POINT) {
     return getSketchPoint(sketch, ref.targetId) ? { kind: 'point', target: getSketchPoint(sketch, ref.targetId) } : null;
   }
@@ -83,7 +90,15 @@ export function installSelectionRefFoundation(store) {
       const resolved = resolveSelectionSketchTarget(store, ref);
       if (!resolved) return false;
       if (additive && store.setSketchMultiSelectEnabled) store.setSketchMultiSelectEnabled(true, false);
-      result = store.selectSketchElement?.(ref.ownerId, resolved.kind, ref.targetId, notify) === true;
+      if ([SelectionTargetKind.PROFILE, SelectionTargetKind.PATH].includes(ref.targetKind)) {
+        store.select?.(ref.ownerId, false, false);
+        const next = { sketchId: ref.ownerId, kind: resolved.kind, elementId: ref.targetId };
+        if (additive) store.selection.sketchElements = [...(store.selection.sketchElements ?? []).filter(item => item.sketchId === ref.ownerId), next];
+        else store.selection.sketchElements = [next];
+        store.selection.sketchElement = next;
+        if (notify) store.emit?.('selectionChanged', { sketchElement: structuredClone(next) });
+        result = true;
+      } else result = store.selectSketchElement?.(ref.ownerId, resolved.kind, ref.targetId, notify) === true;
     }
 
     sync();
