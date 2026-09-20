@@ -58,3 +58,5 @@ jobs:
         run: node tests/wd-21d6-derivation-regression-compatibility-gate.mjs
       - name: Run WD-21E profile path reference contract
         run: node tests/wd-21e-profile-path-reference.mjs
+      - name: Run WD-21F profile path dependency recompute regression
+        run: node tests/wd-21f-profile-path-dependency-recompute.mjs
