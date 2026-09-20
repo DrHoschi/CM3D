@@ -1,9 +1,9 @@
-name: WD-21E Identity Reference Foundation
+name: WD-21G.1 Profile Path Selection & Projection
 
 on:
   push:
     branches:
-      - feature/wd-21d-profile-open-path-derivation
+      - feature/wd-21g1-profile-path-selection-integration
   workflow_dispatch:
 
 jobs:
@@ -60,3 +60,5 @@ jobs:
         run: node tests/wd-21e-profile-path-reference.mjs
       - name: Run WD-21F profile path dependency recompute regression
         run: node tests/wd-21f-profile-path-dependency-recompute.mjs
+      - name: Run WD-21G.1 profile path selection regression
+        run: node tests/wd-21g1-profile-path-selection.mjs
