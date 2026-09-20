@@ -16,7 +16,8 @@ const sketch = {
       pt_d:{pointId:'pt_d',x:0,y:2}
     },
     lines:{ ln_keep:{lineId:'ln_keep',startPointId:'pt_a',endPointId:'pt_d'} },
-    circles:{}, arcs:{}, splines:{}
+    circles:{}, arcs:{}, splines:{},
+    profileIdentities:{}, pathIdentities:{}
   }
 };
 
