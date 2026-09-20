@@ -7,8 +7,8 @@ const line=(id,a,b)=>({lineId:id,startPointId:a,endPointId:b});
 const point=(id,x,y)=>({pointId:id,x,y});
 const sketch={objectId:'sketch',type:'sketch',data:{
   plane:'localXY',
-  points:{a:point('a',0,0),b:point('b',2,0),c:point('c',2,2),d:point('d',0,2),e:point('e',3,0),f:point('f',4,0)},
-  lines:{ab:line('ab','a','b'),bc:line('bc','b','c'),cd:line('cd','c','d'),da:line('da','d','a'),ef:line('ef','e','f')},
+  points:{a:point('a',0,0),b:point('b',2,0),c:point('c',2,2),d:point('d',0,2),e:point('e',3,0),f:point('f',4,0),g:point('g',5,0),h:point('h',6,0),i:point('i',7,0)},
+  lines:{ab:line('ab','a','b'),bc:line('bc','b','c'),cd:line('cd','c','d'),da:line('da','d','a'),ef:line('ef','e','f'),fg:line('fg','f','g'),gh:line('gh','g','h'),hi:line('hi','h','i')},
   circles:{},arcs:{},splines:{},profileIdentities:{},pathIdentities:{}
 }};
 const featureProfile={objectId:'feature_profile',type:'feature.synthetic',data:{}};
@@ -64,12 +64,21 @@ graph=buildDependencyGraph(store,declared);
 assert.equal(graph.dependenciesOf('feature_profile')[0].state,ReferenceState.RESOLVED);
 assert.equal(graph.nodeState('feature_profile').state,'READY');
 
-const split=sketch.data.lines.ef;
-sketch.data.lines.ef={...split,endPointId:'e'};
+const savedFG=sketch.data.lines.fg;
+sketch.data.points.q0=point('q0',10,0);
+sketch.data.points.q1=point('q1',11,0);
+sketch.data.lines.fg={...savedFG,startPointId:'q0',endPointId:'q1'};
 graph=buildDependencyGraph(store,declared);
-assert.notEqual(graph.dependenciesOf('feature_path')[0].state,ReferenceState.RESOLVED);
+assert.equal(graph.dependenciesOf('feature_path')[0].state,ReferenceState.UNRESOLVED);
 assert.equal(graph.nodeState('feature_path').state,ReferenceState.BLOCKED);
-sketch.data.lines.ef=split;
+assert.equal(graph.nodeState('feature_path').upstreamState,ReferenceState.UNRESOLVED);
+sketch.data.lines.fg=savedFG;
+delete sketch.data.points.q0;
+delete sketch.data.points.q1;
+
+graph=buildDependencyGraph(store,declared);
+assert.equal(graph.dependenciesOf('feature_path')[0].state,ReferenceState.RESOLVED);
+assert.equal(graph.nodeState('feature_path').state,'READY');
 
 assert.equal(buildDependencyGraph(store).dependenciesOf('feature_profile').length,0);
 console.log('WD-21F Profile/Path Dependency & Recompute Foundation regression: PASS');
