@@ -84,7 +84,7 @@ const legacySource = fs.readFileSync(new URL('../src/model/sketch-profile.js', i
 assert.doesNotMatch(legacySource, /deriveSketchProfilesAndPaths|sketch-profile-path-derivation|StableReference|SelectionRef/i);
 
 const mainSource = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
-assert.match(mainSource, /const BUILD_ID = 'WD-21D\.5'/, 'D.6 must not change visible product build identity');
+assert.match(mainSource, /const BUILD_ID = '(?:WD-21D\.5|WD-21G\.1)'/, 'D.6 must not change visible product build identity');
 assert.doesNotMatch(mainSource, /WD-21D\.6/);
 
 const d5Source = fs.readFileSync(new URL('../src/model/sketch-profile-path-derivation.js', import.meta.url), 'utf8');

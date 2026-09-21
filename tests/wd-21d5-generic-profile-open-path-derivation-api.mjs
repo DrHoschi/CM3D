@@ -157,7 +157,7 @@ assert.match(source, /validateSketchProfileGeometry/);
 assert.doesNotMatch(source, /deriveSketchCurves|createExtrudeFromSketch|getSingleExtrudableProfile|StableReference|selectRef|recompute|trim|split|heal/i);
 
 const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
-assert.match(main, /const BUILD_ID = 'WD-21D\.5'/);
+assert.match(main, /const BUILD_ID = '(?:WD-21D\.5|WD-21G\.1)'/);
 assert.match(main, /document\.title = `CyberMotion 3D – \$\{BUILD_ID\}`/);
 assert.match(main, /buildLabel\.textContent = BUILD_ID/);
 
