@@ -77,7 +77,7 @@ assert.deepEqual(selectionRefsFromLegacy(store), [
 store.selection.sketchElement = { sketchId: 'obj_sketch', kind: 'line', elementId: 'line_1' };
 store.selection.sketchElements = [];
 assert.deepEqual(selectionRefsFromLegacy(store), [
-  { targetKind: 'SKETCH_ELEMENT', ownerId: 'obj_sketch', targetId: 'line_1' }
+  { targetKind: 'SKETCH_ELEMENT', ownerId: 'obj_sketch', targetId: 'line_1', subTargetId: 'line' }
 ]);
 
 store.selection.sketchElements = [
@@ -85,7 +85,7 @@ store.selection.sketchElements = [
   { sketchId: 'obj_sketch', kind: 'point', elementId: 'point_1' }
 ];
 assert.deepEqual(selectionRefsFromLegacy(store), [
-  { targetKind: 'SKETCH_ELEMENT', ownerId: 'obj_sketch', targetId: 'line_1' },
+  { targetKind: 'SKETCH_ELEMENT', ownerId: 'obj_sketch', targetId: 'line_1', subTargetId: 'line' },
   { targetKind: 'SKETCH_POINT', ownerId: 'obj_sketch', targetId: 'point_1' }
 ]);
 
