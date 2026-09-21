@@ -16,6 +16,8 @@ jobs:
           node-version: '22'
       - name: Run WD-20A project schema regression
         run: node tests/wd-20a-project-schema.mjs
+      - name: Run WD-20B SelectionRef regression
+        run: node tests/wd-20b-selection-ref.mjs
       - name: Run WD-20C stable reference regression
         run: node tests/wd-20c-stable-reference.mjs
       - name: Run WD-21A.2 topology regression
