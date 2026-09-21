@@ -23,7 +23,7 @@ assert.match(runtime, /meta\?\.kind===selectedElement\.kind/);
 assert.match(runtime, /meta\?\.elementId===selectedElement\.elementId/);
 assert.match(runtime, /if\(matched\)focusNode=matched/);
 
-assert.match(main, /const BUILD_ID = '(?:WD-21C\.8-R2|WD-21D\.[1-9](?:-R\d+)?)'/);
+assert.match(main, /const BUILD_ID = '(?:WD-21C\.8-R2|WD-21D\.[1-9](?:-R\d+)?|WD-21G\.1)'/);
 assert.match(main, /document\.title = `CyberMotion 3D – \$\{BUILD_ID\}`/);
 assert.match(main, /buildLabel\.textContent = BUILD_ID/);
 
