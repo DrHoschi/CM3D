@@ -102,7 +102,7 @@ assert.match(source, /buildSplineRenderPoints/);
 assert.doesNotMatch(source, /createExtrudeFromSketch|StableReference|deriveClosedSketchProfiles|CLOSED_CONTOUR|OPEN_PATH/);
 
 const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
-assert.match(main, /const BUILD_ID = 'WD-21D\.[1-9](?:-R\d+)?'/);
+assert.match(main, /const BUILD_ID = '(?:WD-21D\.[1-9](?:-R\d+)?|WD-21G\.1)'/);
 assert.match(main, /document\.title = `CyberMotion 3D – \$\{BUILD_ID\}`/);
 assert.match(main, /buildLabel\.textContent = BUILD_ID/);
 
