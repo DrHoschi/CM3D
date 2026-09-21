@@ -91,9 +91,10 @@ export function installSelectionRefFoundation(store) {
       if (!resolved) return false;
       if (additive && store.setSketchMultiSelectEnabled) store.setSketchMultiSelectEnabled(true, false);
       if ([SelectionTargetKind.PROFILE, SelectionTargetKind.PATH].includes(ref.targetKind)) {
+        const preserved = additive ? [...(store.selection.sketchElements ?? []).filter(item => item.sketchId === ref.ownerId)] : [];
         store.select?.(ref.ownerId, false, false);
         const next = { sketchId: ref.ownerId, kind: resolved.kind, elementId: ref.targetId };
-        if (additive) store.selection.sketchElements = [...(store.selection.sketchElements ?? []).filter(item => item.sketchId === ref.ownerId), next];
+        if (additive) store.selection.sketchElements = [...preserved, next];
         else store.selection.sketchElements = [next];
         store.selection.sketchElement = next;
         if (notify) store.emit?.('selectionChanged', { sketchElement: structuredClone(next) });
