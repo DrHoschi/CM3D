@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { resolveStableReference } from '../application/stable-reference.js';
 
 const idsForIdentity = (kind, identity) => kind === 'PROFILE'
@@ -122,9 +123,41 @@ function installViewerProjection(store, runtime) {
     store.selectRef({ targetKind: entry.kind, ownerId: sketch.objectId, targetId: entry.id }, true, event.metaKey || event.ctrlKey || event.shiftKey);
   };
 
+  const overlays = [];
+  const clearOverlays = () => {
+    while (overlays.length) {
+      const overlay = overlays.pop();
+      overlay.parent?.remove(overlay);
+      overlay.geometry?.dispose?.();
+      overlay.material?.dispose?.();
+    }
+  };
+  const overlayFor = (child, kind) => {
+    if (!child.geometry) return;
+    const color = kind === 'PROFILE' ? 0x63d6ff : 0xff8bd8;
+    const line = child.clone(false);
+    line.geometry = child.geometry.clone();
+    line.material = new THREE.LineBasicMaterial({ color, depthTest:false, depthWrite:false, transparent:true, opacity:1 });
+    line.renderOrder = 1000;
+    line.userData = { cm3dProfilePathSelectionOverlay:true, selectionKind:kind };
+    child.parent?.add(line);
+    overlays.push(line);
+
+    const points = new THREE.Points(
+      child.geometry.clone(),
+      new THREE.PointsMaterial({ color, size:6, sizeAttenuation:false, depthTest:false, depthWrite:false })
+    );
+    points.renderOrder = 1001;
+    points.userData.cm3dProfilePathSelectionOverlay = true;
+    points.userData.selectionKind = kind;
+    child.parent?.add(points);
+    overlays.push(points);
+  };
+
   const baseSyncSelection = runtime.syncSelection.bind(runtime);
   runtime.syncSelection = () => {
     baseSyncSelection();
+    clearOverlays();
     const refs = currentDerivedRefs(store);
     const selected = new Map();
     for (const ref of refs) {
@@ -133,11 +166,15 @@ function installViewerProjection(store, runtime) {
       const identity = map?.[ref.targetId];
       for (const id of idsForIdentity(ref.targetKind, identity)) selected.set(`${ref.ownerId}:${id}`, ref.targetKind);
     }
-    for (const node of runtime.objectMap.values()) node.traverse(child => {
-      const meta = child.userData?.cm3dSketchElement;
-      if (!meta || !child.material?.color || meta.kind === 'point') return;
-      const kind = selected.get(`${meta.sketchId}:${meta.elementId}`);
-      if (kind) child.material.color.set(kind === 'PROFILE' ? 0x63d6ff : 0xff8bd8);
-    });
+    for (const node of runtime.objectMap.values()) {
+      const matches = [];
+      node.traverse(child => {
+        const meta = child.userData?.cm3dSketchElement;
+        if (!meta || meta.kind === 'point' || child.userData?.cm3dProfilePathSelectionOverlay) return;
+        const kind = selected.get(`${meta.sketchId}:${meta.elementId}`);
+        if (kind) matches.push({ child, kind });
+      });
+      for (const { child, kind } of matches) overlayFor(child, kind);
+    }
   };
 }
