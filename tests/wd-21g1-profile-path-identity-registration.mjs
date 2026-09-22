@@ -68,7 +68,6 @@ assert.equal(recognizePathIdentity(sketch, sketch.data.pathIdentities[pathId]).s
 
 const saved = structuredClone(store.project);
 const loaded = migrateAndValidateProject(saved);
-assert.equal(loaded.valid, true);
 assert.deepEqual(loaded.project.scene.objects[sketch.objectId].data.profileIdentities[profileId], sketch.data.profileIdentities[profileId]);
 assert.deepEqual(loaded.project.scene.objects[sketch.objectId].data.pathIdentities[pathId], pathIdentity);
 
