@@ -62,5 +62,7 @@ jobs:
         run: node tests/wd-21e-profile-path-reference.mjs
       - name: Run WD-21F profile path dependency recompute regression
         run: node tests/wd-21f-profile-path-dependency-recompute.mjs
+      - name: Run WD-21G.1 profile path identity registration lifecycle regression
+        run: node tests/wd-21g1-profile-path-identity-registration.mjs
       - name: Run WD-21G.1 profile path selection regression
         run: node tests/wd-21g1-profile-path-selection.mjs
