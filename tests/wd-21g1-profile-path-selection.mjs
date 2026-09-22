@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { SelectionTargetKind, createSelectionRef, installSelectionRefFoundation } from '../src/application/selection-ref.js';
 import { resolveStableReference, ReferenceState } from '../src/application/stable-reference.js';
 
@@ -51,5 +52,12 @@ assert.equal(resolveStableReference(store,pathRef).state,ReferenceState.INVALID)
 
 // A missing identity cannot be newly selected.
 assert.equal(store.selectRef(createSelectionRef(SelectionTargetKind.PATH,sketch.objectId,'missing')),false);
+
+const projectionSource = await readFile(new URL('../src/ui/profile-path-selection.js', import.meta.url), 'utf8');
+assert.match(projectionSource, /cm3dProfilePathSelectionOverlay/);
+assert.match(projectionSource, /clearOverlays\(\)/);
+assert.match(projectionSource, /PointsMaterial\(\{ color, size:6, sizeAttenuation:false/);
+assert.match(projectionSource, /kind === 'PROFILE' \? 0x63d6ff : 0xff8bd8/);
+assert.doesNotMatch(projectionSource, /child\.material\.color\.set\(kind === 'PROFILE'/);
 
 console.log('WD-21G.1 profile/path selection regression: PASS');
