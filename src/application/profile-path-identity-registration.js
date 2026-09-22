@@ -20,15 +20,19 @@ function registrationCandidates(sketch) {
   const derived = deriveSketchProfilesAndPaths(sketch);
   const existingProfileSources = Object.values(sketch.data?.profileIdentities ?? {}).map(identity => identitySourceIds(identity, 'PROFILE'));
   const existingPathSources = Object.values(sketch.data?.pathIdentities ?? {}).map(identity => identitySourceIds(identity, 'PATH'));
+  // A derived component may change classification after topology damage. Treat all
+  // persistent PROFILE/PATH sources as one ownership set so a broken PROFILE cannot
+  // silently acquire a successor PATH identity (or vice versa).
+  const existingIdentitySources = [...existingProfileSources, ...existingPathSources];
 
   const profiles = (derived.profiles ?? []).filter(profile => {
     if (profile.validationStatus !== 'VALID') return false;
     const source = profileSourceIds(profile);
-    return source.length && !existingProfileSources.some(existing => overlaps(existing, source));
+    return source.length && !existingIdentitySources.some(existing => overlaps(existing, source));
   });
   const paths = (derived.openPaths ?? []).filter(path => {
     const source = pathSourceIds(path);
-    return source.length && !existingPathSources.some(existing => overlaps(existing, source));
+    return source.length && !existingIdentitySources.some(existing => overlaps(existing, source));
   });
   return { profiles, paths };
 }
