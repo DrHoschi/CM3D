@@ -68,7 +68,7 @@ function refRow(store, sketchId, entry, labelText, depth) {
   row.append(spacer, label);
   row.addEventListener('click', event => {
     event.stopPropagation();
-    store.selectRef(ref, true, event.metaKey || event.ctrlKey || event.shiftKey);
+    store.selectRef(ref, true, store.sketchMultiSelectEnabled || event.metaKey || event.ctrlKey || event.shiftKey);
   });
   return row;
 }
