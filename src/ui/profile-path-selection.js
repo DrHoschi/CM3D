@@ -81,12 +81,19 @@ function installInspector(store, ui) {
   fieldset.hidden = true;
   fieldset.innerHTML = `
     <legend id="profile-path-selection-legend">Profil / Pfad</legend>
+    <label class="sketch-multiselect-row"><input id="profile-path-multiselect-toggle" type="checkbox"> Mehrfachauswahl</label>
     <div class="id-box"><strong>Identity</strong><code id="profile-path-selection-id">–</code></div>
     <div class="id-box"><strong>Owner Sketch</strong><code id="profile-path-selection-owner">–</code></div>
     <div class="id-box"><strong>Status</strong><code id="profile-path-selection-status">–</code></div>
     <p class="muted sketch-dependency-note">Abgeleitete Auswahl. Geometrie wird über die zugehörigen Skizzenelemente bearbeitet.</p>
   `;
   form.insertBefore(fieldset, form.firstChild);
+  const multiSelectToggle = fieldset.querySelector('#profile-path-multiselect-toggle');
+  multiSelectToggle.addEventListener('change', () => store.setSketchMultiSelectEnabled(multiSelectToggle.checked));
+  store.subscribe(event => {
+    if (event.type === 'selectionChanged') multiSelectToggle.checked = store.sketchMultiSelectEnabled;
+  });
+  multiSelectToggle.checked = store.sketchMultiSelectEnabled;
 
   const baseRenderInspector = ui.renderInspector.bind(ui);
   ui.renderInspector = () => {
