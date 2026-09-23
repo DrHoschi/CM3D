@@ -60,6 +60,9 @@ assert.match(projectionSource, /PointsMaterial\(\{ color, size:6, sizeAttenuatio
 assert.match(projectionSource, /kind === 'PROFILE' \? 0x63d6ff : 0xff8bd8/);
 assert.doesNotMatch(projectionSource, /child\.material\.color\.set\(kind === 'PROFILE'/);
 
+// Touch tree selection reuses the existing sketch multi-selection mode; desktop modifiers remain supported.
+assert.match(projectionSource, /store\.selectRef\(ref, true, store\.sketchMultiSelectEnabled \|\| event\.metaKey \|\| event\.ctrlKey \|\| event\.shiftKey\)/);
+
 // Tree labels are projected from a deterministic persistent-identity order.
 assert.match(projectionSource, /\.sort\(\(a, b\) => a\.id\.localeCompare\(b\.id\)\)/);
 
