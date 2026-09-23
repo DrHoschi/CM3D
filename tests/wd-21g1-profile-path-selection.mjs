@@ -60,4 +60,16 @@ assert.match(projectionSource, /PointsMaterial\(\{ color, size:6, sizeAttenuatio
 assert.match(projectionSource, /kind === 'PROFILE' \? 0x63d6ff : 0xff8bd8/);
 assert.doesNotMatch(projectionSource, /child\.material\.color\.set\(kind === 'PROFILE'/);
 
+// Tree labels are projected from a deterministic persistent-identity order.
+assert.match(projectionSource, /\.sort\(\(a, b\) => a\.id\.localeCompare\(b\.id\)\)/);
+
+// The productive PROFILE/PATH bridge must publish selectionChanged only after refs/primaryRef are current.
+const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+const derivedSelectionBranch = mainSource.match(/if\(\['PROFILE','PATH'\]\.includes\(ref\.targetKind\)\)\{[\s\S]*?return true;\}/)?.[0] ?? '';
+assert.ok(derivedSelectionBranch, 'productive PROFILE/PATH selection branch must exist');
+const syncIndex = derivedSelectionBranch.lastIndexOf('syncSelectionRefs()');
+const emitIndex = derivedSelectionBranch.lastIndexOf("store.emit('selectionChanged'");
+assert.ok(syncIndex >= 0 && emitIndex >= 0 && syncIndex < emitIndex,
+  'PROFILE/PATH selection refs and primaryRef must be synchronized before first selectionChanged notification');
+
 console.log('WD-21G.1 profile/path selection regression: PASS');
