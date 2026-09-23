@@ -11,7 +11,7 @@ function identities(sketch, kind) {
     kind,
     id: kind === 'PROFILE' ? identity.profileId : identity.pathId,
     identity
-  }));
+  })).sort((a, b) => a.id.localeCompare(b.id));
 }
 
 function currentDerivedRefs(store) {
