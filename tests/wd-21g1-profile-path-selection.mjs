@@ -60,6 +60,12 @@ assert.match(projectionSource, /PointsMaterial\(\{ color, size:6, sizeAttenuatio
 assert.match(projectionSource, /kind === 'PROFILE' \? 0x63d6ff : 0xff8bd8/);
 assert.doesNotMatch(projectionSource, /child\.material\.color\.set\(kind === 'PROFILE'/);
 
+// PROFILE/PATH Inspector exposes the same central sketch multi-selection authority for touch.
+assert.match(projectionSource, /id="profile-path-multiselect-toggle"/);
+assert.match(projectionSource, /store\.setSketchMultiSelectEnabled\(multiSelectToggle\.checked\)/);
+assert.match(projectionSource, /multiSelectToggle\.checked = store\.sketchMultiSelectEnabled/);
+assert.doesNotMatch(projectionSource, /profilePathMultiSelectEnabled|profilePathMultiSelection/);
+
 // Touch tree selection reuses the existing sketch multi-selection mode; desktop modifiers remain supported.
 assert.match(projectionSource, /store\.selectRef\(ref, true, store\.sketchMultiSelectEnabled \|\| event\.metaKey \|\| event\.ctrlKey \|\| event\.shiftKey\)/);
 
