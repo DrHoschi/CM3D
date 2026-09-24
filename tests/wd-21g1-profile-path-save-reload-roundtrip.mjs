@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { AppStore } from '../src/application/store.js';
 import { installProfilePathIdentityRegistrationLifecycle } from '../src/application/profile-path-identity-registration.js';
 import { recognizePathIdentity } from '../src/model/sketch-profile-path-identity.js';
 import { createProject, createSketchObject } from '../src/model/project.js';
@@ -32,8 +31,22 @@ line('b_line_1','b0','b1');
 point('c0',0,4); point('c1',1,4); point('c2',2,4); point('c3',3,4);
 line('c_line_1','c0','c1'); line('c_line_2','c1','c2'); line('c_line_3','c2','c3');
 
-const store = new AppStore();
-store.replaceProject(project);
+const listeners = new Set();
+const history = [];
+const store = {
+  project,
+  getObject(id) { return this.project.scene.objects[id] ?? null; },
+  snapshot() { return structuredClone(this.project); },
+  pushHistory(before, label) { history.push({ before, after: structuredClone(this.project), label }); },
+  touch() { this.project.project.modifiedAt = new Date().toISOString(); },
+  emit(type, detail = {}) { for (const listener of listeners) listener({ type, ...detail }); },
+  subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
+  replaceProject(nextProject) {
+    this.project = nextProject;
+    this.emit('projectLoaded', { projectId: nextProject.project.projectId });
+    return true;
+  }
+};
 const lifecycle = installProfilePathIdentityRegistrationLifecycle(store);
 const registered = lifecycle.reconcileAll();
 assert.equal(registered.length, 1);
