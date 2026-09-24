@@ -90,4 +90,10 @@ const emitIndex = derivedSelectionBranch.lastIndexOf("store.emit('selectionChang
 assert.ok(syncIndex >= 0 && emitIndex >= 0 && syncIndex < emitIndex,
   'PROFILE/PATH selection refs and primaryRef must be synchronized before first selectionChanged notification');
 
+// Productive PROFILE/PATH additive selection mirrors sketch multi-select toggle-out semantics.
+assert.match(derivedSelectionBranch, /findIndex\(item=>item\.kind===next\.kind&&item\.elementId===next\.elementId\)/);
+assert.match(derivedSelectionBranch, /if\(index>=0\)store\.selection\.sketchElements\.splice\(index,1\);else store\.selection\.sketchElements\.push\(next\)/);
+assert.match(derivedSelectionBranch, /store\.selection\.sketchElement=store\.selection\.sketchElements\.at\(-1\)\?\?null/);
+assert.match(derivedSelectionBranch, /sketchElement:store\.selection\.sketchElement\?structuredClone\(store\.selection\.sketchElement\):null/);
+
 console.log('WD-21G.1 profile/path selection regression: PASS');
