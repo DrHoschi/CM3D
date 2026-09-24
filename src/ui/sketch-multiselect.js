@@ -50,7 +50,7 @@ export function installSketchMultiSelection(store,runtime,ui){
   const repaint=()=>{
     const selected=store.getSelectedSketchElements();
     for(const node of runtime.objectMap.values())node.traverse(child=>{const meta=child.userData?.cm3dSketchElement;if(!meta||!child.material?.color)return;const active=selected.some(item=>same(item,meta));child.material.color.set(active?0x63d6ff:meta.kind==='line'?0xf4d35e:0xffffff);});
-    document.querySelectorAll('.sketch-element-item').forEach(row=>{const sketchId=row.closest('[data-object-id]')?.dataset?.objectId;const meta={sketchId,kind:row.dataset.sketchElementKind,elementId:row.dataset.sketchElement};row.classList.toggle('selected',selected.some(item=>item.kind===meta.kind&&item.elementId===meta.elementId&&(sketchId?item.sketchId===sketchId:true)));});
+    document.querySelectorAll('.sketch-element-item[data-sketch-element]').forEach(row=>{const sketchId=row.closest('[data-object-id]')?.dataset?.objectId;const meta={sketchId,kind:row.dataset.sketchElementKind,elementId:row.dataset.sketchElement};row.classList.toggle('selected',selected.some(item=>item.kind===meta.kind&&item.elementId===meta.elementId&&(sketchId?item.sketchId===sketchId:true)));});
   };
   store.subscribe(event=>{if(['selectionChanged','geometryChanged','projectChanged','projectLoaded'].includes(event.type))setTimeout(repaint,0);});
   repaint();
