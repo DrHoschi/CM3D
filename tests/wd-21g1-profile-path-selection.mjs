@@ -69,6 +69,15 @@ assert.doesNotMatch(projectionSource, /profilePathMultiSelectEnabled|profilePath
 // Touch tree selection reuses the existing sketch multi-selection mode; desktop modifiers remain supported.
 assert.match(projectionSource, /store\.selectRef\(ref, true, store\.sketchMultiSelectEnabled \|\| event\.metaKey \|\| event\.ctrlKey \|\| event\.shiftKey\)/);
 
+// Tree projections are isolated: sketch-element repaint excludes PROFILE/PATH rows,
+ // while PROFILE/PATH rows derive all selected styling from the central SelectionRefs.
+const sketchMultiSelectSource = await readFile(new URL('../src/ui/sketch-multiselect.js', import.meta.url), 'utf8');
+assert.match(sketchMultiSelectSource, /querySelectorAll\('\.sketch-element-item\[data-sketch-element\]'\)/);
+assert.match(projectionSource, /const syncTreeSelection = \(\) =>/);
+assert.match(projectionSource, /const refs = currentDerivedRefs\(store\)/);
+assert.match(projectionSource, /querySelectorAll\('\.sketch-element-item\[data-selection-kind\]\[data-selection-target\]'\)/);
+assert.match(projectionSource, /row\.classList\.toggle\('selected', refs\.some\(ref =>/);
+
 // Tree labels are projected from a deterministic persistent-identity order.
 assert.match(projectionSource, /\.sort\(\(a, b\) => a\.id\.localeCompare\(b\.id\)\)/);
 
