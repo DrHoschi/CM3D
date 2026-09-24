@@ -38,8 +38,22 @@ export function installProfilePathSelectionProjection(store, runtime, ui) {
 
   installInspector(store, ui);
   installViewerProjection(store, runtime);
+  const syncTreeSelection = () => {
+    const refs = currentDerivedRefs(store);
+    document.querySelectorAll('.sketch-element-item[data-selection-kind][data-selection-target]').forEach(row => {
+      const sketchId = row.closest('[data-object-id]')?.dataset?.objectId;
+      row.classList.toggle('selected', refs.some(ref =>
+        ref.targetKind === row.dataset.selectionKind
+        && ref.targetId === row.dataset.selectionTarget
+        && (sketchId ? ref.ownerId === sketchId : true)));
+    });
+  };
+  store.subscribe(event => {
+    if (event.type === 'selectionChanged') setTimeout(syncTreeSelection, 0);
+  });
 
   ui.render();
+  syncTreeSelection();
   runtime.syncSelection();
   return { getSelectedRefs: () => currentDerivedRefs(store) };
 }
