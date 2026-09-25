@@ -1,10 +1,24 @@
 import * as THREE from 'three';
 import { deleteSavedProject, hasSavedProjects, listProjects, loadProject, saveProject } from '../persistence/storage.js';
 import { downloadProjectFile, readProjectFile } from '../persistence/project-file.js';
+import { recognizePathIdentity } from '../model/sketch-profile-path-identity.js';
 
 const UNIT_TO_METERS={mm:0.001,cm:0.01,m:1,km:1000};
 const validUnit=u=>Object.prototype.hasOwnProperty.call(UNIT_TO_METERS,u)?u:'m';
 const clean=v=>Number(Number(v).toPrecision(12));
+const pathIdentityEvidence=(project,phase)=>{
+  const rows=[];
+  for(const sketch of Object.values(project?.scene?.objects??{})){
+    if(sketch?.type!=='sketch')continue;
+    const identities=Object.values(sketch.data?.pathIdentities??{}).sort((a,b)=>a.pathId.localeCompare(b.pathId));
+    identities.forEach((identity,index)=>{
+      const recognition=recognizePathIdentity(sketch,identity);
+      rows.push({phase,sketchId:sketch.objectId,visiblePathNumber:index+1,pathId:identity.pathId,sourceElementIds:[...(identity.source?.elementIds??[])].sort((a,b)=>a.localeCompare(b)),recognitionState:recognition.state,recognizedElementIds:[...(recognition.target?.curves??[])].map(curve=>curve.elementId).sort((a,b)=>a.localeCompare(b))});
+    });
+  }
+  console.table(rows);
+  return rows;
+};
 const typeIcon=t=>t==='group'?'▾':t==='assembly'?'◆':t==='primitive.sphere'?'●':t==='primitive.cylinder'?'⬭':'■';
 
 export class AppUI {
@@ -27,8 +41,8 @@ export class AppUI {
   fromMeters(v){return clean(Number(v)/this.factor());}
   setDisplayUnit(unit){unit=validUnit(unit);this.store.project.settings??={};this.store.project.settings.units??={};if(this.unit()===unit)return;this.store.project.settings.units.lengthDisplayUnit=unit;this.store.touch();this.store.emit('unitChanged',{unit});this.setStatus(`Einheit auf ${unit} geändert.`);}
   created(label,id){this.setStatus(`${label} erzeugt: ${id}`);}
-  save(){try{const r=saveProject(this.store.project);this.refreshProjects(r.projectId);this.setStatus(`Projekt gespeichert (${r.bytes} Zeichen).`);}catch(e){this.fail(e);}}
-  load(){try{const id=this.projectSelect.value;if(!id)throw new Error('Bitte ein gespeichertes Projekt auswählen.');const p=loadProject(id);this.store.replaceProject(p);this.refreshProjects(id);this.setStatus(`Projekt geladen: ${p.project.name}`);}catch(e){this.fail(e);}}
+  save(){try{pathIdentityEvidence(this.store.project,'BEFORE SAVE');const r=saveProject(this.store.project);this.refreshProjects(r.projectId);this.setStatus(`Projekt gespeichert (${r.bytes} Zeichen).`);}catch(e){this.fail(e);}}
+  load(){try{const id=this.projectSelect.value;if(!id)throw new Error('Bitte ein gespeichertes Projekt auswählen.');const p=loadProject(id);this.store.replaceProject(p);pathIdentityEvidence(this.store.project,'AFTER LOAD');this.refreshProjects(id);this.setStatus(`Projekt geladen: ${p.project.name}`);}catch(e){this.fail(e);}}
   exportProjectFile(){try{const r=downloadProjectFile(this.store.project);this.setStatus(`Projektdatei exportiert: ${r.fileName}`);}catch(e){this.fail(e);}}
   async importProjectFile(event){
     const input=event?.target;const file=input?.files?.[0];
