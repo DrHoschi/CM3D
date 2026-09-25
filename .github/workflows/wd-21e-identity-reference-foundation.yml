@@ -20,6 +20,8 @@ jobs:
         run: node tests/wd-20b-selection-ref.mjs
       - name: Run WD-20C stable reference regression
         run: node tests/wd-20c-stable-reference.mjs
+      - name: Run WD-20D dependency graph regression
+        run: node tests/wd-20d-dependency-graph.mjs
       - name: Run WD-21A.2 topology regression
         run: node tests/wd-21a2-sketch-topology-contract.mjs
       - name: Run WD-21A.3 mutation regression
