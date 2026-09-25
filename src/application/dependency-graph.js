@@ -174,7 +174,7 @@ export function buildDependencyGraph(store, declaredDependencies = []) {
       node.state = DependencyNodeState.BLOCKED;
       node.upstreamState = edge.state;
       node.diagnostics.push({
-        code: `UPSTREAM_${resolution.state}`,
+        code: `UPSTREAM_${edge.state}`,
         message: `Abhängige Berechnung ist blockiert, weil die Quellreferenz ${edge.state} ist.`
       });
       node.diagnostics.push(...edge.diagnostics.map(cloneDiagnostic));
