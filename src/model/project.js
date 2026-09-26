@@ -1,5 +1,4 @@
 import { validateSketchTopology } from './sketch-topology.js';
-import { validateFeatureConsumerBinding } from '../application/feature-consumer-binding.js';
 
 export const FORMAT = 'CM3D_PROJECT';
 export const LEGACY_SCHEMA_VERSION = '0.1.0';
@@ -75,6 +74,17 @@ export function migrateAndValidateProject(candidate) {
   return migration;
 }
 
+function validateFeatureConsumerSourceRef(reference, objectId) {
+  const errors = [];
+  const label = `FeatureConsumerBinding ${objectId}`;
+  if (!reference || typeof reference !== 'object' || Array.isArray(reference)) return [`${label} fehlt oder ist ungültig.`];
+  if (!['PROFILE','PATH'].includes(reference.targetKind)) errors.push(`${label}.targetKind muss PROFILE oder PATH sein.`);
+  if (typeof reference.ownerId !== 'string' || !reference.ownerId) errors.push(`${label}.ownerId fehlt.`);
+  if (typeof reference.targetId !== 'string' || !reference.targetId) errors.push(`${label}.targetId fehlt.`);
+  if (reference.subTargetId != null) errors.push(`${label}.subTargetId ist für PROFILE/PATH Consumer nicht zulässig.`);
+  return errors;
+}
+
 export function validateProject(project) {
   const errors=[];
   if(!project||project.format!==FORMAT)errors.push('Ungültiges CM3D-Format.');
@@ -130,7 +140,7 @@ export function validateProject(project) {
         else if(asset.kind!=='model.gltf.bundle')errors.push(`Asset ${assetId} besitzt den falschen Typ für ${o.objectId}.`);
       }
       if(o.type==='sketch')errors.push(...validateSketchTopology(o).errors);
-      if(o.data?.sourceRef)errors.push(...validateFeatureConsumerBinding(o.data.sourceRef, `FeatureConsumerBinding ${o.objectId}`).errors);
+      if(o.data?.sourceRef)errors.push(...validateFeatureConsumerSourceRef(o.data.sourceRef,o.objectId));
       const seen=new Set([o.objectId]); let parent=o.parentId;
       while(parent){if(seen.has(parent)){errors.push(`Parent-Zyklus bei ${o.objectId}.`);break;}seen.add(parent);parent=objects[parent]?.parentId??null;}
     }
