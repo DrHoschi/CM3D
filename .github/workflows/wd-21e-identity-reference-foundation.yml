@@ -1,9 +1,9 @@
-name: WD-21G.1 Profile Path Selection & Projection
+name: WD-21G.2 Profile Path Consumer Binding
 
 on:
   push:
     branches:
-      - feature/wd-21g1-profile-path-selection-integration
+      - feature/WD-21G.2-profile-path-consumer-binding
   workflow_dispatch:
 
 jobs:
@@ -70,3 +70,5 @@ jobs:
         run: node tests/wd-21g1-profile-path-save-reload-roundtrip.mjs
       - name: Run WD-21G.1 profile path selection regression
         run: node tests/wd-21g1-profile-path-selection.mjs
+      - name: Run WD-21G.2 profile path consumer binding regression
+        run: node tests/wd-21g2-profile-path-consumer-binding.mjs
