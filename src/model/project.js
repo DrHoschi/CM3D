@@ -1,4 +1,5 @@
 import { validateSketchTopology } from './sketch-topology.js';
+import { validateFeatureConsumerBinding } from '../application/feature-consumer-binding.js';
 
 export const FORMAT = 'CM3D_PROJECT';
 export const LEGACY_SCHEMA_VERSION = '0.1.0';
@@ -129,6 +130,7 @@ export function validateProject(project) {
         else if(asset.kind!=='model.gltf.bundle')errors.push(`Asset ${assetId} besitzt den falschen Typ für ${o.objectId}.`);
       }
       if(o.type==='sketch')errors.push(...validateSketchTopology(o).errors);
+      if(o.data?.sourceRef)errors.push(...validateFeatureConsumerBinding(o.data.sourceRef, `FeatureConsumerBinding ${o.objectId}`).errors);
       const seen=new Set([o.objectId]); let parent=o.parentId;
       while(parent){if(seen.has(parent)){errors.push(`Parent-Zyklus bei ${o.objectId}.`);break;}seen.add(parent);parent=objects[parent]?.parentId??null;}
     }
