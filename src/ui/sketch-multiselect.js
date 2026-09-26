@@ -1,3 +1,5 @@
+import { getSketchElement, getSketchPoint } from '../model/sketch-topology.js';
+
 export function installSketchMultiSelection(store,runtime,ui){
   store.selection.sketchElements=[];
   store.sketchMultiSelectEnabled=false;
@@ -15,7 +17,9 @@ export function installSketchMultiSelection(store,runtime,ui){
   };
 
   store.selectSketchElement=(sketchId,kind,elementId,notify=true)=>{
-    const sketch=store.getObject(sketchId);const map=kind==='line'?sketch?.data?.lines:kind==='point'?sketch?.data?.points:null;if(sketch?.type!=='sketch'||!map?.[elementId])return false;
+    const sketch=store.getObject(sketchId);
+    const exists=kind==='point'?!!getSketchPoint(sketch,elementId):!!getSketchElement(sketch,elementId,kind);
+    if(sketch?.type!=='sketch'||!exists)return false;
     const next={sketchId,kind,elementId};
     if(!store.sketchMultiSelectEnabled){store.selection.sketchElements=[next];return baseSelectSketchElement(sketchId,kind,elementId,notify);}
     baseSelect(sketchId,false,false);
@@ -27,7 +31,11 @@ export function installSketchMultiSelection(store,runtime,ui){
     return true;
   };
 
-  store.select=(id,notify=true,additive=false)=>{store.selection.sketchElements=[];return baseSelect(id,notify,additive);};
+  store.select=(id,notify=true,additive=false)=>{
+    const preserveSketchElements=store.sketchMultiSelectEnabled&&store.getObject(id)?.type==='sketch'&&store.selection.sketchElements.every(item=>item.sketchId===id);
+    if(!preserveSketchElements)store.selection.sketchElements=[];
+    return baseSelect(id,notify,additive);
+  };
   store.clearSelection=(notify=true)=>{store.selection.sketchElements=[];return baseClear(notify);};
   store.getSelectedSketchElements=()=>store.selection.sketchElements.length?store.selection.sketchElements:store.selection.sketchElement?[store.selection.sketchElement]:[];
 
@@ -42,7 +50,7 @@ export function installSketchMultiSelection(store,runtime,ui){
   const repaint=()=>{
     const selected=store.getSelectedSketchElements();
     for(const node of runtime.objectMap.values())node.traverse(child=>{const meta=child.userData?.cm3dSketchElement;if(!meta||!child.material?.color)return;const active=selected.some(item=>same(item,meta));child.material.color.set(active?0x63d6ff:meta.kind==='line'?0xf4d35e:0xffffff);});
-    document.querySelectorAll('.sketch-element-item').forEach(row=>{const sketchId=row.closest('[data-object-id]')?.dataset?.objectId;const meta={sketchId,kind:row.dataset.sketchElementKind,elementId:row.dataset.sketchElement};row.classList.toggle('selected',selected.some(item=>item.kind===meta.kind&&item.elementId===meta.elementId&&(sketchId?item.sketchId===sketchId:true)));});
+    document.querySelectorAll('.sketch-element-item[data-sketch-element]').forEach(row=>{const sketchId=row.closest('[data-object-id]')?.dataset?.objectId;const meta={sketchId,kind:row.dataset.sketchElementKind,elementId:row.dataset.sketchElement};row.classList.toggle('selected',selected.some(item=>item.kind===meta.kind&&item.elementId===meta.elementId&&(sketchId?item.sketchId===sketchId:true)));});
   };
   store.subscribe(event=>{if(['selectionChanged','geometryChanged','projectChanged','projectLoaded'].includes(event.type))setTimeout(repaint,0);});
   repaint();

@@ -1,0 +1,46 @@
+name: WD-21A.4 Foundation Integration & Contract Coverage Gate
+
+on:
+  push:
+    branches:
+      - feature/wd-21a-sketch-topology-contract-element-foundation
+    paths:
+      - 'src/application/sketch-mutation.js'
+      - 'src/application/domain-transaction.js'
+      - 'src/application/selection-ref.js'
+      - 'src/application/stable-reference.js'
+      - 'src/model/sketch-topology.js'
+      - 'src/model/project.js'
+      - 'src/main.js'
+      - 'tests/wd-21a2-sketch-topology-contract.mjs'
+      - 'tests/wd-21a3-sketch-mutation-contract.mjs'
+      - 'tests/wd-21a4-foundation-integration-gate.mjs'
+      - '.github/workflows/wd-21a4-foundation-gate.yml'
+  pull_request:
+    paths:
+      - 'src/application/sketch-mutation.js'
+      - 'src/application/domain-transaction.js'
+      - 'src/application/selection-ref.js'
+      - 'src/application/stable-reference.js'
+      - 'src/model/sketch-topology.js'
+      - 'src/model/project.js'
+      - 'src/main.js'
+      - 'tests/wd-21a2-sketch-topology-contract.mjs'
+      - 'tests/wd-21a3-sketch-mutation-contract.mjs'
+      - 'tests/wd-21a4-foundation-integration-gate.mjs'
+      - '.github/workflows/wd-21a4-foundation-gate.yml'
+
+jobs:
+  foundation-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run WD-21A.2 topology regression
+        run: node tests/wd-21a2-sketch-topology-contract.mjs
+      - name: Run WD-21A.3 mutation regression
+        run: node tests/wd-21a3-sketch-mutation-contract.mjs
+      - name: Run WD-21A.4 foundation integration gate
+        run: node tests/wd-21a4-foundation-integration-gate.mjs

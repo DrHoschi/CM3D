@@ -1,9 +1,9 @@
-name: WD-21E Identity Reference Foundation
+name: WD-21G.1 Profile Path Selection & Projection
 
 on:
   push:
     branches:
-      - feature/wd-21d-profile-open-path-derivation
+      - feature/wd-21g1-profile-path-selection-integration
   workflow_dispatch:
 
 jobs:
@@ -16,8 +16,12 @@ jobs:
           node-version: '22'
       - name: Run WD-20A project schema regression
         run: node tests/wd-20a-project-schema.mjs
+      - name: Run WD-20B SelectionRef regression
+        run: node tests/wd-20b-selection-ref.mjs
       - name: Run WD-20C stable reference regression
         run: node tests/wd-20c-stable-reference.mjs
+      - name: Run WD-20D dependency graph regression
+        run: node tests/wd-20d-dependency-graph.mjs
       - name: Run WD-21A.2 topology regression
         run: node tests/wd-21a2-sketch-topology-contract.mjs
       - name: Run WD-21A.3 mutation regression
@@ -58,3 +62,11 @@ jobs:
         run: node tests/wd-21d6-derivation-regression-compatibility-gate.mjs
       - name: Run WD-21E profile path reference contract
         run: node tests/wd-21e-profile-path-reference.mjs
+      - name: Run WD-21F profile path dependency recompute regression
+        run: node tests/wd-21f-profile-path-dependency-recompute.mjs
+      - name: Run WD-21G.1 profile path identity registration lifecycle regression
+        run: node tests/wd-21g1-profile-path-identity-registration.mjs
+      - name: Run WD-21G.1 productive save reload path stability regression
+        run: node tests/wd-21g1-profile-path-save-reload-roundtrip.mjs
+      - name: Run WD-21G.1 profile path selection regression
+        run: node tests/wd-21g1-profile-path-selection.mjs

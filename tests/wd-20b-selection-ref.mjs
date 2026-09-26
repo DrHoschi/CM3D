@@ -77,7 +77,7 @@ assert.deepEqual(selectionRefsFromLegacy(store), [
 store.selection.sketchElement = { sketchId: 'obj_sketch', kind: 'line', elementId: 'line_1' };
 store.selection.sketchElements = [];
 assert.deepEqual(selectionRefsFromLegacy(store), [
-  { targetKind: 'SKETCH_ELEMENT', ownerId: 'obj_sketch', targetId: 'line_1' }
+  { targetKind: 'SKETCH_ELEMENT', ownerId: 'obj_sketch', targetId: 'line_1', subTargetId: 'line' }
 ]);
 
 store.selection.sketchElements = [
@@ -85,7 +85,7 @@ store.selection.sketchElements = [
   { sketchId: 'obj_sketch', kind: 'point', elementId: 'point_1' }
 ];
 assert.deepEqual(selectionRefsFromLegacy(store), [
-  { targetKind: 'SKETCH_ELEMENT', ownerId: 'obj_sketch', targetId: 'line_1' },
+  { targetKind: 'SKETCH_ELEMENT', ownerId: 'obj_sketch', targetId: 'line_1', subTargetId: 'line' },
   { targetKind: 'SKETCH_POINT', ownerId: 'obj_sketch', targetId: 'point_1' }
 ]);
 
@@ -94,11 +94,11 @@ installSelectionRefFoundation(store);
 assert.equal(store.selectRef(createSelectionRef(SelectionTargetKind.OBJECT, 'obj_box', 'obj_box')), true);
 assert.deepEqual(store.getPrimarySelectionRef(), { targetKind: 'OBJECT', ownerId: 'obj_box', targetId: 'obj_box' });
 assert.equal(store.selectRef(createSelectionRef(SelectionTargetKind.SKETCH_ELEMENT, 'obj_sketch', 'line_1')), true);
-assert.deepEqual(store.getPrimarySelectionRef(), { targetKind: 'SKETCH_ELEMENT', ownerId: 'obj_sketch', targetId: 'line_1' });
+assert.deepEqual(store.getPrimarySelectionRef(), { targetKind: 'SKETCH_ELEMENT', ownerId: 'obj_sketch', targetId: 'line_1', subTargetId: 'line' });
 assert.equal(store.selectRef(createSelectionRef(SelectionTargetKind.SKETCH_POINT, 'obj_sketch', 'point_1'), true, true), true);
 assert.equal(store.sketchMultiSelectEnabled, true);
 assert.deepEqual(store.getSelectionRefs(), [
-  { targetKind: 'SKETCH_ELEMENT', ownerId: 'obj_sketch', targetId: 'line_1' },
+  { targetKind: 'SKETCH_ELEMENT', ownerId: 'obj_sketch', targetId: 'line_1', subTargetId: 'line' },
   { targetKind: 'SKETCH_POINT', ownerId: 'obj_sketch', targetId: 'point_1' }
 ]);
 store.clearSelectionRefs();

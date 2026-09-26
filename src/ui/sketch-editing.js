@@ -157,10 +157,6 @@ export function installSketchEditing(store, runtime, ui) {
   installInspectorEditing(ui, store);
   installViewportEditing(runtime, store);
 
-  document.title = 'CyberMotion 3D – WD-12A';
-  const buildLabel = document.querySelector('.brand small');
-  if (buildLabel) buildLabel.textContent = 'WD-12A';
-
   ui.render();
   runtime.rebuild();
 }

@@ -1,9 +1,14 @@
+import { getSketchElement, getSketchPoint } from '../model/sketch-topology.js';
+import { recognizeProfileIdentity, recognizePathIdentity } from '../model/sketch-profile-path-identity.js';
+
 export const ReferenceTargetKind = Object.freeze({
   OBJECT: 'OBJECT',
   SKETCH: 'SKETCH',
   SKETCH_ELEMENT: 'SKETCH_ELEMENT',
   SKETCH_POINT: 'SKETCH_POINT',
-  FEATURE: 'FEATURE'
+  FEATURE: 'FEATURE',
+  PROFILE: 'PROFILE',
+  PATH: 'PATH'
 });
 
 export const ReferenceState = Object.freeze({
@@ -77,10 +82,29 @@ export function resolveStableReference(store, reference) {
     ]);
   }
 
-  const map = reference.targetKind === ReferenceTargetKind.SKETCH_POINT
-    ? owner.data?.points
-    : owner.data?.lines;
-  if (!map?.[reference.targetId]) {
+  if (reference.targetKind === ReferenceTargetKind.PROFILE || reference.targetKind === ReferenceTargetKind.PATH) {
+    const collection = reference.targetKind === ReferenceTargetKind.PROFILE
+      ? owner.data?.profileIdentities
+      : owner.data?.pathIdentities;
+    const identity = collection?.[reference.targetId] ?? null;
+    if (!identity) {
+      return createReferenceResolution(reference, ReferenceState.MISSING, [
+        { code: 'IDENTITY_MISSING', message: `Persistente Identität fehlt: ${reference.targetId}` }
+      ]);
+    }
+    const recognition = reference.targetKind === ReferenceTargetKind.PROFILE
+      ? recognizeProfileIdentity(owner, identity)
+      : recognizePathIdentity(owner, identity);
+    return createReferenceResolution(reference, recognition.state, recognition.diagnostics.map(diagnostic => ({
+      code: diagnostic.code,
+      message: diagnostic.code
+    })));
+  }
+
+  const target = reference.targetKind === ReferenceTargetKind.SKETCH_POINT
+    ? getSketchPoint(owner, reference.targetId)
+    : getSketchElement(owner, reference.targetId, reference.subTargetId ?? null)?.element;
+  if (!target) {
     return createReferenceResolution(reference, ReferenceState.MISSING, [
       { code: 'SUBTARGET_MISSING', message: `Referenzziel fehlt: ${reference.targetId}` }
     ]);

@@ -1,0 +1,42 @@
+name: WD-21B.2 Endpoint Connect Contract Regression
+
+on:
+  push:
+    branches:
+      - feature/wd-21b-sketch-connectivity-editing-integration
+    paths:
+      - 'src/application/sketch-mutation.js'
+      - 'src/model/sketch-topology.js'
+      - 'src/application/stable-reference.js'
+      - 'src/application/selection-ref.js'
+      - 'src/main.js'
+      - 'tests/wd-21a2-sketch-topology-contract.mjs'
+      - 'tests/wd-21a3-sketch-mutation-contract.mjs'
+      - 'tests/wd-21b2-endpoint-connect-contract.mjs'
+      - '.github/workflows/wd-21b2-endpoint-connect.yml'
+  pull_request:
+    paths:
+      - 'src/application/sketch-mutation.js'
+      - 'src/model/sketch-topology.js'
+      - 'src/application/stable-reference.js'
+      - 'src/application/selection-ref.js'
+      - 'src/main.js'
+      - 'tests/wd-21a2-sketch-topology-contract.mjs'
+      - 'tests/wd-21a3-sketch-mutation-contract.mjs'
+      - 'tests/wd-21b2-endpoint-connect-contract.mjs'
+      - '.github/workflows/wd-21b2-endpoint-connect.yml'
+
+jobs:
+  endpoint-connect-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run WD-21A.2 topology regression
+        run: node tests/wd-21a2-sketch-topology-contract.mjs
+      - name: Run WD-21A.3 mutation regression
+        run: node tests/wd-21a3-sketch-mutation-contract.mjs
+      - name: Run WD-21B.2 endpoint connect contract regression
+        run: node tests/wd-21b2-endpoint-connect-contract.mjs

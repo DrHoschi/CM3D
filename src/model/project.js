@@ -1,3 +1,5 @@
+import { validateSketchTopology } from './sketch-topology.js';
+
 export const FORMAT = 'CM3D_PROJECT';
 export const LEGACY_SCHEMA_VERSION = '0.1.0';
 export const SCHEMA_VERSION = '0.2.0';
@@ -20,10 +22,25 @@ export const createSphereObject=(project,name='Kugel')=>baseObject(project,'prim
 export const createCylinderObject=(project,name='Zylinder')=>baseObject(project,'primitive.cylinder',name,{radius:0.5,height:1,segments:32});
 export const createGroupObject=(project,name='Gruppe')=>baseObject(project,'group',name,{},false);
 export const createAssemblyObject=(project,name='Baugruppe')=>baseObject(project,'assembly',name,{assembly:{kind:'generic'}},false);
-export const createSketchObject=(project,name='Skizze')=>baseObject(project,'sketch',name,{plane:'localXY',points:{},lines:{}},false);
+export const createSketchObject=(project,name='Skizze')=>baseObject(project,'sketch',name,{plane:'localXY',points:{},lines:{},circles:{},arcs:{},splines:{},profileIdentities:{},pathIdentities:{}},false);
 export const createExternalGltfObject=(project,assetId,name='Importiertes Modell')=>baseObject(project,'external.gltf',name,{assetId,sourceFormat:'gltf'},false);
 export const createSketchPoint=(x=0,y=0)=>({pointId:uuid('pt'),x:Number(x),y:Number(y)});
 export const createSketchLine=(startPointId,endPointId)=>({lineId:uuid('ln'),startPointId,endPointId});
+
+function normalizeSketchCollections(project) {
+  for (const object of Object.values(project?.scene?.objects ?? {})) {
+    if (object?.type !== 'sketch') continue;
+    object.data ??= {};
+    object.data.points ??= {};
+    object.data.lines ??= {};
+    object.data.circles ??= {};
+    object.data.arcs ??= {};
+    object.data.splines ??= {};
+    object.data.profileIdentities ??= {};
+    object.data.pathIdentities ??= {};
+  }
+  return project;
+}
 
 export function migrateProjectToCurrent(candidate) {
   if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
@@ -37,10 +54,11 @@ export function migrateProjectToCurrent(candidate) {
     throw new Error('schemaVersion fehlt.');
   }
   if (sourceVersion === SCHEMA_VERSION) {
-    return { project:structuredClone(candidate), migrated:false, fromVersion:sourceVersion, toVersion:SCHEMA_VERSION };
+    const project = normalizeSketchCollections(structuredClone(candidate));
+    return { project, migrated:false, fromVersion:sourceVersion, toVersion:SCHEMA_VERSION };
   }
   if (sourceVersion === LEGACY_SCHEMA_VERSION) {
-    const project = structuredClone(candidate);
+    const project = normalizeSketchCollections(structuredClone(candidate));
     project.schemaVersion = SCHEMA_VERSION;
     return { project, migrated:true, fromVersion:sourceVersion, toVersion:SCHEMA_VERSION };
   }
@@ -110,20 +128,7 @@ export function validateProject(project) {
         else if(!asset)errors.push(`Asset ${assetId} fehlt für GLB/GLTF-Objekt ${o.objectId}.`);
         else if(asset.kind!=='model.gltf.bundle')errors.push(`Asset ${assetId} besitzt den falschen Typ für ${o.objectId}.`);
       }
-      if(o.type==='sketch'){
-        if(o.data?.plane!=='localXY')errors.push(`Ungültige Skizzenebene für ${o.objectId}.`);
-        if(!o.data?.points||Array.isArray(o.data.points)||typeof o.data.points!=='object')errors.push(`Skizzenpunkte fehlen für ${o.objectId}.`);
-        if(!o.data?.lines||Array.isArray(o.data.lines)||typeof o.data.lines!=='object')errors.push(`Skizzenlinien fehlen für ${o.objectId}.`);
-        for(const [pointKey,p] of Object.entries(o.data?.points??{})){
-          if(pointKey!==p.pointId)errors.push(`Punktschlüssel stimmt nicht mit pointId überein: ${pointKey}`);
-          if(!Number.isFinite(p.x)||!Number.isFinite(p.y))errors.push(`Ungültiger Skizzenpunkt ${pointKey} in ${o.objectId}.`);
-        }
-        for(const [lineKey,l] of Object.entries(o.data?.lines??{})){
-          if(lineKey!==l.lineId)errors.push(`Linienschlüssel stimmt nicht mit lineId überein: ${lineKey}`);
-          if(!o.data?.points?.[l.startPointId]||!o.data?.points?.[l.endPointId])errors.push(`Skizzenlinie ${lineKey} referenziert fehlende Punkte in ${o.objectId}.`);
-          if(l.startPointId===l.endPointId)errors.push(`Skizzenlinie ${lineKey} benötigt zwei verschiedene Punkte.`);
-        }
-      }
+      if(o.type==='sketch')errors.push(...validateSketchTopology(o).errors);
       const seen=new Set([o.objectId]); let parent=o.parentId;
       while(parent){if(seen.has(parent)){errors.push(`Parent-Zyklus bei ${o.objectId}.`);break;}seen.add(parent);parent=objects[parent]?.parentId??null;}
     }

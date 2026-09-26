@@ -1,0 +1,37 @@
+name: WD-21B.5 Visible Connectivity Actions Regression
+
+on:
+  push:
+    branches:
+      - feature/wd-21b-sketch-connectivity-editing-integration
+    paths:
+      - 'src/**'
+      - 'tests/wd-21a2-sketch-topology-contract.mjs'
+      - 'tests/wd-21a3-sketch-mutation-contract.mjs'
+      - 'tests/wd-21b2-endpoint-connect-contract.mjs'
+      - 'tests/wd-21b3-endpoint-disconnect-contract.mjs'
+      - 'tests/wd-21b4-connectivity-command-selection.mjs'
+      - 'tests/wd-21b5-visible-connectivity-actions.mjs'
+      - '.github/workflows/wd-21b5-visible-connectivity-actions.yml'
+  workflow_dispatch:
+
+jobs:
+  visible-connectivity-actions-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run WD-21A.2 topology regression
+        run: node tests/wd-21a2-sketch-topology-contract.mjs
+      - name: Run WD-21A.3 mutation regression
+        run: node tests/wd-21a3-sketch-mutation-contract.mjs
+      - name: Run WD-21B.2 connect regression
+        run: node tests/wd-21b2-endpoint-connect-contract.mjs
+      - name: Run WD-21B.3 disconnect regression
+        run: node tests/wd-21b3-endpoint-disconnect-contract.mjs
+      - name: Run WD-21B.4 command selection regression
+        run: node tests/wd-21b4-connectivity-command-selection.mjs
+      - name: Run WD-21B.5 visible action regression
+        run: node tests/wd-21b5-visible-connectivity-actions.mjs
