@@ -1,4 +1,5 @@
 import { validateSketchTopology } from './sketch-topology.js';
+import { ConstructionReferenceObjectType, validateConstructionReferenceObject } from './construction-reference.js';
 
 export const FORMAT = 'CM3D_PROJECT';
 export const LEGACY_SCHEMA_VERSION = '0.1.0';
@@ -24,6 +25,8 @@ export const createGroupObject=(project,name='Gruppe')=>baseObject(project,'grou
 export const createAssemblyObject=(project,name='Baugruppe')=>baseObject(project,'assembly',name,{assembly:{kind:'generic'}},false);
 export const createSketchObject=(project,name='Skizze')=>baseObject(project,'sketch',name,{plane:'localXY',points:{},lines:{},circles:{},arcs:{},splines:{},profileIdentities:{},pathIdentities:{}},false);
 export const createExternalGltfObject=(project,assetId,name='Importiertes Modell')=>baseObject(project,'external.gltf',name,{assetId,sourceFormat:'gltf'},false);
+export const createWorkPlaneObject=(project,name='Arbeitsebene',definition={origin:{x:0,y:0,z:0},normal:{x:0,y:0,z:1},xAxis:{x:1,y:0,z:0}})=>baseObject(project,ConstructionReferenceObjectType.WORK_PLANE,name,{workPlaneId:uuid('wp'),definition:structuredClone(definition)},false);
+export const createConstructionAxisObject=(project,name='Konstruktionsachse',definition={origin:{x:0,y:0,z:0},direction:{x:0,y:0,z:1}})=>baseObject(project,ConstructionReferenceObjectType.AXIS,name,{constructionAxisId:uuid('axis'),definition:structuredClone(definition)},false);
 export const createSketchPoint=(x=0,y=0)=>({pointId:uuid('pt'),x:Number(x),y:Number(y)});
 export const createSketchLine=(startPointId,endPointId)=>({lineId:uuid('ln'),startPointId,endPointId});
 
@@ -140,6 +143,7 @@ export function validateProject(project) {
         else if(asset.kind!=='model.gltf.bundle')errors.push(`Asset ${assetId} besitzt den falschen Typ für ${o.objectId}.`);
       }
       if(o.type==='sketch')errors.push(...validateSketchTopology(o).errors);
+      if([ConstructionReferenceObjectType.WORK_PLANE,ConstructionReferenceObjectType.AXIS].includes(o.type))errors.push(...validateConstructionReferenceObject(o));
       if(o.data?.sourceRef)errors.push(...validateFeatureConsumerSourceRef(o.data.sourceRef,o.objectId));
       const seen=new Set([o.objectId]); let parent=o.parentId;
       while(parent){if(seen.has(parent)){errors.push(`Parent-Zyklus bei ${o.objectId}.`);break;}seen.add(parent);parent=objects[parent]?.parentId??null;}
