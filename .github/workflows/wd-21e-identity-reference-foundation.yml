@@ -1,9 +1,9 @@
-name: WD-21G.2 Profile Path Consumer Binding
+name: WD-22A Construction Reference Foundation
 
 on:
   push:
     branches:
-      - feature/WD-21G.2-profile-path-consumer-binding
+      - feature/WD-22A-construction-reference-foundation
   workflow_dispatch:
 
 jobs:
@@ -72,3 +72,5 @@ jobs:
         run: node tests/wd-21g1-profile-path-selection.mjs
       - name: Run WD-21G.2 profile path consumer binding regression
         run: node tests/wd-21g2-profile-path-consumer-binding.mjs
+      - name: Run WD-22A construction reference foundation regression
+        run: node tests/wd-22a-construction-reference-foundation.mjs
