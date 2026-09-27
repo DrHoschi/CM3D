@@ -1,5 +1,12 @@
 import { getSketchElement, getSketchPoint } from '../model/sketch-topology.js';
 import { recognizeProfileIdentity, recognizePathIdentity } from '../model/sketch-profile-path-identity.js';
+import {
+  ConstructionReferenceObjectType,
+  SYSTEM_CONSTRUCTION_OWNER_ID,
+  isGlobalWorkPlaneId,
+  validateConstructionAxisDefinition,
+  validateWorkPlaneDefinition
+} from '../model/construction-reference.js';
 
 export const ReferenceTargetKind = Object.freeze({
   OBJECT: 'OBJECT',
@@ -8,7 +15,9 @@ export const ReferenceTargetKind = Object.freeze({
   SKETCH_POINT: 'SKETCH_POINT',
   FEATURE: 'FEATURE',
   PROFILE: 'PROFILE',
-  PATH: 'PATH'
+  PATH: 'PATH',
+  WORK_PLANE: 'WORK_PLANE',
+  CONSTRUCTION_AXIS: 'CONSTRUCTION_AXIS'
 });
 
 export const ReferenceState = Object.freeze({
@@ -54,6 +63,15 @@ export function resolveStableReference(store, reference) {
   const unresolved = () => createReferenceResolution(reference, ReferenceState.UNRESOLVED);
   if (!store || !reference || !targetKinds.has(reference.targetKind)) return unresolved();
 
+  if (reference.targetKind === ReferenceTargetKind.WORK_PLANE && reference.ownerId === SYSTEM_CONSTRUCTION_OWNER_ID) {
+    if (!isGlobalWorkPlaneId(reference.targetId)) {
+      return createReferenceResolution(reference, ReferenceState.MISSING, [
+        { code: 'SYSTEM_WORK_PLANE_MISSING', message: `Globale Arbeitsebene fehlt: ${reference.targetId}` }
+      ]);
+    }
+    return createReferenceResolution(reference, ReferenceState.RESOLVED);
+  }
+
   const owner = store.getObject?.(reference.ownerId) ?? null;
   if (!owner) {
     return createReferenceResolution(reference, ReferenceState.MISSING, [
@@ -72,6 +90,33 @@ export function resolveStableReference(store, reference) {
       return createReferenceResolution(reference, ReferenceState.INVALID, [
         { code: 'TARGET_KIND_MISMATCH', message: `Referenzziel ${reference.targetId} ist keine Skizze.` }
       ]);
+    }
+    return createReferenceResolution(reference, ReferenceState.RESOLVED);
+  }
+
+  if (reference.targetKind === ReferenceTargetKind.WORK_PLANE || reference.targetKind === ReferenceTargetKind.CONSTRUCTION_AXIS) {
+    const expectedType = reference.targetKind === ReferenceTargetKind.WORK_PLANE
+      ? ConstructionReferenceObjectType.WORK_PLANE
+      : ConstructionReferenceObjectType.AXIS;
+    const identityKey = reference.targetKind === ReferenceTargetKind.WORK_PLANE ? 'workPlaneId' : 'constructionAxisId';
+    if (owner.type !== expectedType) {
+      return createReferenceResolution(reference, ReferenceState.INVALID, [
+        { code: 'OWNER_KIND_MISMATCH', message: `Referenz-Eigentümer ${reference.ownerId} besitzt nicht den erwarteten Construction-Reference-Typ.` }
+      ]);
+    }
+    if (owner.data?.[identityKey] !== reference.targetId) {
+      return createReferenceResolution(reference, ReferenceState.MISSING, [
+        { code: 'IDENTITY_MISSING', message: `Persistente Construction-Identität fehlt: ${reference.targetId}` }
+      ]);
+    }
+    const validationErrors = reference.targetKind === ReferenceTargetKind.WORK_PLANE
+      ? validateWorkPlaneDefinition(owner.data?.definition)
+      : validateConstructionAxisDefinition(owner.data?.definition);
+    if (validationErrors.length) {
+      return createReferenceResolution(reference, ReferenceState.INVALID, validationErrors.map(message => ({
+        code: 'CONSTRUCTION_DEFINITION_INVALID',
+        message
+      })));
     }
     return createReferenceResolution(reference, ReferenceState.RESOLVED);
   }
