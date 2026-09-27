@@ -1,4 +1,5 @@
 import { ReferenceTargetKind, ReferenceState, resolveStableReference } from './stable-reference.js';
+import { SYSTEM_CONSTRUCTION_OWNER_ID } from '../model/construction-reference.js';
 
 export const DependencyNodeState = Object.freeze({
   READY: 'READY',
@@ -21,7 +22,8 @@ const resolvedEdgesOnly = edges => (edges ?? []).filter(edge => edge?.state === 
 
 const dependencySourceObjectId = reference => {
   if (!reference) return null;
-  if ([ReferenceTargetKind.PROFILE, ReferenceTargetKind.PATH].includes(reference.targetKind)) {
+  if ([ReferenceTargetKind.PROFILE, ReferenceTargetKind.PATH, ReferenceTargetKind.WORK_PLANE, ReferenceTargetKind.CONSTRUCTION_AXIS].includes(reference.targetKind)) {
+    if (reference.ownerId === SYSTEM_CONSTRUCTION_OWNER_ID) return null;
     return reference.ownerId ?? null;
   }
   return reference.targetId ?? null;
