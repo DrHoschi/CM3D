@@ -156,6 +156,23 @@ export function buildDependencyGraph(store, declaredDependencies = []) {
   }
 
   for (const object of Object.values(store?.project?.scene?.objects ?? {})) {
+    if (object?.type !== 'sketch' || !object.data?.planeRef) continue;
+    const node = nodes.get(object.objectId);
+    const resolution = resolveStableReference(store, object.data.planeRef);
+    const edge = createDependencyEdge(store, object.objectId, object.data.planeRef, 'WORK_PLANE_TO_SKETCH');
+    if (edge) addEdge(outgoing, incoming, edge);
+    if (resolution.state !== ReferenceState.RESOLVED) {
+      node.state = DependencyNodeState.BLOCKED;
+      node.upstreamState = resolution.state;
+      node.diagnostics.push({
+        code: `UPSTREAM_${resolution.state}`,
+        message: `Skizzenebene ist blockiert, weil die Work-Plane-Referenz ${resolution.state} ist.`
+      });
+      node.diagnostics.push(...resolution.diagnostics.map(cloneDiagnostic));
+    }
+  }
+
+  for (const object of Object.values(store?.project?.scene?.objects ?? {})) {
     if (object?.type !== 'feature.extrude') continue;
     const ref = object.data?.sourceSketchRef ?? null;
     const node = nodes.get(object.objectId);
