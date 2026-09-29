@@ -1,9 +1,9 @@
-name: WD-22A Construction Reference Foundation
+name: WD-22B Sketch Work Plane Reference Binding
 
 on:
   push:
     branches:
-      - feature/WD-22A-construction-reference-foundation
+      - feature/WD-22B-sketch-work-plane-binding
   workflow_dispatch:
 
 jobs:
@@ -74,3 +74,5 @@ jobs:
         run: node tests/wd-21g2-profile-path-consumer-binding.mjs
       - name: Run WD-22A construction reference foundation regression
         run: node tests/wd-22a-construction-reference-foundation.mjs
+      - name: Run WD-22B sketch work plane binding regression
+        run: node tests/wd-22b-sketch-work-plane-binding.mjs
