@@ -1,9 +1,9 @@
-name: WD-22B Sketch Work Plane Reference Binding
+name: WD-22C Construction Axis Line Foundation
 
 on:
   push:
     branches:
-      - feature/WD-22B-sketch-work-plane-binding
+      - feature/WD-22C-construction-axis-line-foundation
   workflow_dispatch:
 
 jobs:
@@ -76,3 +76,5 @@ jobs:
         run: node tests/wd-22a-construction-reference-foundation.mjs
       - name: Run WD-22B sketch work plane binding regression
         run: node tests/wd-22b-sketch-work-plane-binding.mjs
+      - name: Run WD-22C construction axis line foundation regression
+        run: node tests/wd-22c-construction-axis-line-foundation.mjs
