@@ -3,6 +3,7 @@ import { recognizeProfileIdentity, recognizePathIdentity } from '../model/sketch
 import {
   ConstructionReferenceObjectType,
   SYSTEM_CONSTRUCTION_OWNER_ID,
+  isGlobalConstructionAxisId,
   isGlobalWorkPlaneId,
   validateConstructionAxisDefinition,
   validateWorkPlaneDefinition
@@ -63,10 +64,15 @@ export function resolveStableReference(store, reference) {
   const unresolved = () => createReferenceResolution(reference, ReferenceState.UNRESOLVED);
   if (!store || !reference || !targetKinds.has(reference.targetKind)) return unresolved();
 
-  if (reference.targetKind === ReferenceTargetKind.WORK_PLANE && reference.ownerId === SYSTEM_CONSTRUCTION_OWNER_ID) {
-    if (!isGlobalWorkPlaneId(reference.targetId)) {
+  if (reference.ownerId === SYSTEM_CONSTRUCTION_OWNER_ID
+    && [ReferenceTargetKind.WORK_PLANE, ReferenceTargetKind.CONSTRUCTION_AXIS].includes(reference.targetKind)) {
+    const exists = reference.targetKind === ReferenceTargetKind.WORK_PLANE
+      ? isGlobalWorkPlaneId(reference.targetId)
+      : isGlobalConstructionAxisId(reference.targetId);
+    if (!exists) {
+      const kind = reference.targetKind === ReferenceTargetKind.WORK_PLANE ? 'WORK_PLANE' : 'CONSTRUCTION_AXIS';
       return createReferenceResolution(reference, ReferenceState.MISSING, [
-        { code: 'SYSTEM_WORK_PLANE_MISSING', message: `Globale Arbeitsebene fehlt: ${reference.targetId}` }
+        { code: `SYSTEM_${kind}_MISSING`, message: `Globale Konstruktionsreferenz fehlt: ${reference.targetId}` }
       ]);
     }
     return createReferenceResolution(reference, ReferenceState.RESOLVED);
