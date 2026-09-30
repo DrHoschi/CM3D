@@ -11,12 +11,24 @@ export const GlobalWorkPlaneId = Object.freeze({
   YZ: 'GLOBAL_YZ'
 });
 
+export const GlobalConstructionAxisId = Object.freeze({
+  X: 'GLOBAL_X',
+  Y: 'GLOBAL_Y',
+  Z: 'GLOBAL_Z'
+});
+
 const vector = (x, y, z) => ({ x, y, z });
 
 export const GlobalWorkPlaneDefinition = Object.freeze({
   [GlobalWorkPlaneId.XY]: Object.freeze({ origin:Object.freeze(vector(0,0,0)), normal:Object.freeze(vector(0,0,1)), xAxis:Object.freeze(vector(1,0,0)) }),
   [GlobalWorkPlaneId.XZ]: Object.freeze({ origin:Object.freeze(vector(0,0,0)), normal:Object.freeze(vector(0,1,0)), xAxis:Object.freeze(vector(1,0,0)) }),
   [GlobalWorkPlaneId.YZ]: Object.freeze({ origin:Object.freeze(vector(0,0,0)), normal:Object.freeze(vector(1,0,0)), xAxis:Object.freeze(vector(0,1,0)) })
+});
+
+export const GlobalConstructionAxisDefinition = Object.freeze({
+  [GlobalConstructionAxisId.X]: Object.freeze({ origin:Object.freeze(vector(0,0,0)), direction:Object.freeze(vector(1,0,0)) }),
+  [GlobalConstructionAxisId.Y]: Object.freeze({ origin:Object.freeze(vector(0,0,0)), direction:Object.freeze(vector(0,1,0)) }),
+  [GlobalConstructionAxisId.Z]: Object.freeze({ origin:Object.freeze(vector(0,0,0)), direction:Object.freeze(vector(0,0,1)) })
 });
 
 const finiteVector = value => !!value
@@ -34,6 +46,10 @@ const crossLengthSquared = (a, b) => {
 
 export function isGlobalWorkPlaneId(targetId) {
   return Object.values(GlobalWorkPlaneId).includes(targetId);
+}
+
+export function isGlobalConstructionAxisId(targetId) {
+  return Object.values(GlobalConstructionAxisId).includes(targetId);
 }
 
 export function validateWorkPlaneDefinition(definition, label = 'WorkPlane.definition') {
