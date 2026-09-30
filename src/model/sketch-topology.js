@@ -18,6 +18,10 @@ export function isSketchObject(sketch) {
   return sketch?.type === 'sketch';
 }
 
+export function isConstructionSketchLine(line) {
+  return line?.construction === true;
+}
+
 export function getSketchElementDefinition(kind) {
   return SketchElementRegistry[kind] ?? null;
 }
@@ -73,7 +77,6 @@ function validateElementMap(sketch, kind, errors) {
     if (key !== element?.[definition.idField]) errors.push(`${definition.idField}-Schlüssel stimmt nicht mit ID überein: ${key}`);
   }
 }
-
 
 function isPlainMap(value) {
   return !!value && !Array.isArray(value) && typeof value === 'object';
@@ -154,6 +157,7 @@ export function validateSketchTopology(sketch) {
 
   for (const [lineKey, line] of Object.entries(sketch.data?.lines ?? {})) {
     validateEndpointElement(sketch, line, `Skizzenlinie ${lineKey}`, errors);
+    if (line.construction != null && typeof line.construction !== 'boolean') errors.push(`Skizzenlinie ${lineKey}.construction muss boolean sein.`);
   }
 
   for (const [circleKey, circle] of Object.entries(sketch.data?.circles ?? {})) {
