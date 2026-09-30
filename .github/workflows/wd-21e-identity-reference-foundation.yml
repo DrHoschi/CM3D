@@ -1,9 +1,9 @@
-name: WD-22C Construction Axis Line Foundation
+name: WD-22D Planar Face Reference Foundation
 
 on:
   push:
     branches:
-      - feature/WD-22C-construction-axis-line-foundation
+      - feature/WD-22D-planar-face-reference-foundation
   workflow_dispatch:
 
 jobs:
@@ -78,3 +78,5 @@ jobs:
         run: node tests/wd-22b-sketch-work-plane-binding.mjs
       - name: Run WD-22C construction axis line foundation regression
         run: node tests/wd-22c-construction-axis-line-foundation.mjs
+      - name: Run WD-22D planar face reference foundation regression
+        run: node tests/wd-22d-planar-face-reference-foundation.mjs
