@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { AppStore } from '../src/application/store.js';
 import { buildDependencyGraph, DependencyNodeState } from '../src/application/dependency-graph.js';
 import { frameFromWorkPlaneDefinition, resolveSketchPlaneBinding } from '../src/application/sketch-plane-binding.js';
 import { createStableReference, ReferenceState, ReferenceTargetKind, resolveStableReference } from '../src/application/stable-reference.js';
@@ -9,6 +8,33 @@ import { createPartialProject, mergePartialProject } from '../src/persistence/pa
 import { parseProjectFileText, serializeProjectFile } from '../src/persistence/project-file.js';
 
 const insert=(project,object)=>{project.scene.objects[object.objectId]=object;project.scene.rootObjectIds.push(object.objectId);};
+
+class TestStore {
+  constructor(project=createProject('test')) {
+    this.project=structuredClone(project);
+    this.selection={selectedObjectIds:[],activeObjectId:null,hoveredObjectId:null};
+  }
+  getObject(id){return this.project.scene.objects[id]??null;}
+  replaceProject(project){this.project=structuredClone(project);this.clearSelection();}
+  select(id,notify=true,additive=false){
+    if(!id||!this.getObject(id))return;
+    if(additive){
+      const selected=new Set(this.selection.selectedObjectIds);
+      selected.has(id)?selected.delete(id):selected.add(id);
+      this.selection.selectedObjectIds=[...selected];
+      this.selection.activeObjectId=selected.has(id)?id:(this.selection.selectedObjectIds.at(-1)??null);
+    } else {
+      this.selection.selectedObjectIds=[id];
+      this.selection.activeObjectId=id;
+    }
+  }
+  clearSelection(){this.selection.selectedObjectIds=[];this.selection.activeObjectId=null;this.selection.hoveredObjectId=null;}
+  snapshot(){return structuredClone(this.project);}
+  getWorldTransform(id){return structuredClone(this.getObject(id)?.transform ?? {position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1},scale:{x:1,y:1,z:1}});}
+  touch(){}
+  pushHistory(){}
+  emit(){}
+}
 
 const legacy=createSketchObject(createProject('legacy'));
 assert.equal(legacy.data.plane,'localXY');
@@ -21,8 +47,7 @@ insert(project,plane);insert(project,sketch);
 sketch.data.planeRef=createStableReference(ReferenceTargetKind.WORK_PLANE,plane.objectId,plane.data.workPlaneId);
 assert.equal(validateProject(project).valid,true);
 
-const store=new AppStore();
-store.replaceProject(project);
+const store=new TestStore(project);
 const binding=resolveSketchPlaneBinding(store,store.getObject(sketch.objectId));
 assert.equal(binding.mode,'BOUND');
 assert.equal(binding.resolution.state,ReferenceState.RESOLVED);
@@ -72,7 +97,7 @@ store.select(plane.objectId,false);
 store.select(sketch.objectId,false,true);
 const joint=createPartialProject(store);
 const jointTarget=sketch.data.planeRef.targetId;
-const jointDest=new AppStore();
+const jointDest=new TestStore();
 mergePartialProject(jointDest,joint);
 const importedSketch=Object.values(jointDest.project.scene.objects).find(o=>o.type==='sketch');
 const importedPlane=Object.values(jointDest.project.scene.objects).find(o=>o.type==='construction.workPlane');
@@ -84,7 +109,7 @@ assert.equal(resolveStableReference(jointDest,importedSketch.data.planeRef).stat
 store.clearSelection(false);
 store.select(sketch.objectId,false);
 const isolated=createPartialProject(store);
-const isolatedDest=new AppStore();
+const isolatedDest=new TestStore();
 mergePartialProject(isolatedDest,isolated);
 const isolatedSketch=Object.values(isolatedDest.project.scene.objects).find(o=>o.type==='sketch');
 assert.ok(isolatedSketch);
