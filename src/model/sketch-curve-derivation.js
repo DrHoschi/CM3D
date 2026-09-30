@@ -1,4 +1,4 @@
-import { SketchElementKind, SketchElementRegistry, getSketchPoint } from './sketch-topology.js';
+import { SketchElementKind, SketchElementRegistry, getSketchPoint, isConstructionSketchLine } from './sketch-topology.js';
 import { buildArcRenderPoints } from '../application/sketch-arc-geometry.js';
 import { buildSplineRenderPoints } from '../application/sketch-spline-geometry.js';
 
@@ -74,7 +74,9 @@ export function deriveSketchCurves(sketch, { segments = CURVE_DERIVATION_SEGMENT
     const definition = SketchElementRegistry[kind];
     const collection = sketch.data?.[definition.collection] ?? {};
     for (const elementId of Object.keys(collection).sort()) {
-      const result = deriveOne(sketch, kind, elementId, collection[elementId], segments);
+      const element = collection[elementId];
+      if (kind === SketchElementKind.LINE && isConstructionSketchLine(element)) continue;
+      const result = deriveOne(sketch, kind, elementId, element, segments);
       if (result.curve) curves.push(result.curve);
       if (result.diagnostic) diagnostics.push(deepFreeze(result.diagnostic));
     }
