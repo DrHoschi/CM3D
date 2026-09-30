@@ -28,7 +28,7 @@ export const createExternalGltfObject=(project,assetId,name='Importiertes Modell
 export const createWorkPlaneObject=(project,name='Arbeitsebene',definition={origin:{x:0,y:0,z:0},normal:{x:0,y:0,z:1},xAxis:{x:1,y:0,z:0}})=>baseObject(project,ConstructionReferenceObjectType.WORK_PLANE,name,{workPlaneId:uuid('wp'),definition:structuredClone(definition)},false);
 export const createConstructionAxisObject=(project,name='Konstruktionsachse',definition={origin:{x:0,y:0,z:0},direction:{x:0,y:0,z:1}})=>baseObject(project,ConstructionReferenceObjectType.AXIS,name,{constructionAxisId:uuid('axis'),definition:structuredClone(definition)},false);
 export const createSketchPoint=(x=0,y=0)=>({pointId:uuid('pt'),x:Number(x),y:Number(y)});
-export const createSketchLine=(startPointId,endPointId)=>({lineId:uuid('ln'),startPointId,endPointId});
+export const createSketchLine=(startPointId,endPointId,{construction=false}={})=>({lineId:uuid('ln'),startPointId,endPointId,...(construction?{construction:true}:{})});
 
 function normalizeSketchCollections(project) {
   for (const object of Object.values(project?.scene?.objects ?? {})) {
