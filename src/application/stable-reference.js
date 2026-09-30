@@ -1,5 +1,6 @@
 import { getSketchElement, getSketchPoint } from '../model/sketch-topology.js';
 import { recognizeProfileIdentity, recognizePathIdentity } from '../model/sketch-profile-path-identity.js';
+import { isExtrudePlanarFaceId, validateExtrudePlanarFaceOwner } from '../model/planar-face-reference.js';
 import {
   ConstructionReferenceObjectType,
   SYSTEM_CONSTRUCTION_OWNER_ID,
@@ -18,7 +19,8 @@ export const ReferenceTargetKind = Object.freeze({
   PROFILE: 'PROFILE',
   PATH: 'PATH',
   WORK_PLANE: 'WORK_PLANE',
-  CONSTRUCTION_AXIS: 'CONSTRUCTION_AXIS'
+  CONSTRUCTION_AXIS: 'CONSTRUCTION_AXIS',
+  PLANAR_FACE: 'PLANAR_FACE'
 });
 
 export const ReferenceState = Object.freeze({
@@ -96,6 +98,33 @@ export function resolveStableReference(store, reference) {
       return createReferenceResolution(reference, ReferenceState.INVALID, [
         { code: 'TARGET_KIND_MISMATCH', message: `Referenzziel ${reference.targetId} ist keine Skizze.` }
       ]);
+    }
+    return createReferenceResolution(reference, ReferenceState.RESOLVED);
+  }
+
+  if (reference.targetKind === ReferenceTargetKind.PLANAR_FACE) {
+    if (owner.type !== 'feature.extrude') {
+      return createReferenceResolution(reference, ReferenceState.INVALID, [
+        { code: 'OWNER_KIND_MISMATCH', message: `Referenz-Eigentümer ${reference.ownerId} ist keine Extrusion.` }
+      ]);
+    }
+    if (!isExtrudePlanarFaceId(reference.targetId)) {
+      return createReferenceResolution(reference, ReferenceState.MISSING, [
+        { code: 'PLANAR_FACE_MISSING', message: `Planare Extrude-Fläche fehlt: ${reference.targetId}` }
+      ]);
+    }
+    const recomputeState = owner.extensions?.recomputeState;
+    if (recomputeState?.state === ReferenceState.BLOCKED || recomputeState?.state === 'BLOCKED') {
+      return createReferenceResolution(reference, ReferenceState.BLOCKED, [
+        { code: 'OWNER_BLOCKED', message: `Extrusion ${reference.ownerId} ist durch eine vorgelagerte Abhängigkeit blockiert.` }
+      ]);
+    }
+    const validationErrors = validateExtrudePlanarFaceOwner(owner);
+    if (validationErrors.length) {
+      return createReferenceResolution(reference, ReferenceState.INVALID, validationErrors.map(message => ({
+        code: 'PLANAR_FACE_OWNER_INVALID',
+        message
+      })));
     }
     return createReferenceResolution(reference, ReferenceState.RESOLVED);
   }
