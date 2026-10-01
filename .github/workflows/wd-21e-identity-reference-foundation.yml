@@ -1,4 +1,4 @@
-name: WD-22I Reference-Aware Align Foundation
+name: WD-23A Extrude V2 Foundation
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
       - feature/WD-22G-reference-aware-snap-foundation
       - feature/WD-22H-reference-aware-measurement-foundation
       - feature/WD-22I-reference-aware-align-foundation
+      - feature/WD-23A-extrude-v2-foundation
   workflow_dispatch:
 
 jobs:
@@ -95,3 +96,5 @@ jobs:
         run: node tests/wd-22h-reference-aware-measurement-foundation.mjs
       - name: Run WD-22I reference-aware align foundation regression
         run: node tests/wd-22i-reference-aware-align-foundation.mjs
+      - name: Run WD-23A extrude V2 foundation regression
+        run: node tests/wd-23a-extrude-v2-foundation.mjs
