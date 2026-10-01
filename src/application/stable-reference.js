@@ -6,196 +6,64 @@ import {
   SYSTEM_CONSTRUCTION_OWNER_ID,
   isGlobalConstructionAxisId,
   isGlobalWorkPlaneId,
-  validateConstructionAxisDefinition,
-  validateWorkPlaneDefinition
+  resolveWorkPlaneDefinition,
+  validateConstructionAxisDefinition
 } from '../model/construction-reference.js';
 
-export const ReferenceTargetKind = Object.freeze({
-  OBJECT: 'OBJECT',
-  SKETCH: 'SKETCH',
-  SKETCH_ELEMENT: 'SKETCH_ELEMENT',
-  SKETCH_POINT: 'SKETCH_POINT',
-  FEATURE: 'FEATURE',
-  PROFILE: 'PROFILE',
-  PATH: 'PATH',
-  WORK_PLANE: 'WORK_PLANE',
-  CONSTRUCTION_AXIS: 'CONSTRUCTION_AXIS',
-  PLANAR_FACE: 'PLANAR_FACE'
-});
-
-export const ReferenceState = Object.freeze({
-  RESOLVED: 'RESOLVED',
-  UNRESOLVED: 'UNRESOLVED',
-  MISSING: 'MISSING',
-  INVALID: 'INVALID',
-  BLOCKED: 'BLOCKED'
-});
-
+export const ReferenceTargetKind = Object.freeze({ OBJECT:'OBJECT', SKETCH:'SKETCH', SKETCH_ELEMENT:'SKETCH_ELEMENT', SKETCH_POINT:'SKETCH_POINT', FEATURE:'FEATURE', PROFILE:'PROFILE', PATH:'PATH', WORK_PLANE:'WORK_PLANE', CONSTRUCTION_AXIS:'CONSTRUCTION_AXIS', PLANAR_FACE:'PLANAR_FACE' });
+export const ReferenceState = Object.freeze({ RESOLVED:'RESOLVED', UNRESOLVED:'UNRESOLVED', MISSING:'MISSING', INVALID:'INVALID', BLOCKED:'BLOCKED' });
 const targetKinds = new Set(Object.values(ReferenceTargetKind));
 const states = new Set(Object.values(ReferenceState));
-
-export function createStableReference(targetKind, ownerId, targetId, subTargetId = null) {
-  if (!targetKinds.has(targetKind)) throw new Error(`Unsupported StableReference targetKind: ${targetKind}`);
-  if (!ownerId || !targetId) throw new Error('StableReference requires ownerId and targetId.');
-  const ref = { targetKind, ownerId, targetId };
-  if (subTargetId != null) ref.subTargetId = subTargetId;
-  return ref;
-}
-
-export function sameStableReference(a, b) {
-  return !!a && !!b
-    && a.targetKind === b.targetKind
-    && a.ownerId === b.ownerId
-    && a.targetId === b.targetId
-    && (a.subTargetId ?? null) === (b.subTargetId ?? null);
-}
-
-export function createReferenceResolution(reference, state = ReferenceState.UNRESOLVED, diagnostics = []) {
-  if (!reference) throw new Error('ReferenceResolution requires a reference.');
-  if (!states.has(state)) throw new Error(`Unsupported ReferenceState: ${state}`);
-  return {
-    reference: { ...reference },
-    state,
-    diagnostics: Array.isArray(diagnostics)
-      ? diagnostics.map(item => ({ code: item?.code ?? 'REFERENCE', message: item?.message ?? String(item) }))
-      : []
-  };
-}
+export function createStableReference(targetKind, ownerId, targetId, subTargetId = null) { if (!targetKinds.has(targetKind)) throw new Error(`Unsupported StableReference targetKind: ${targetKind}`); if (!ownerId || !targetId) throw new Error('StableReference requires ownerId and targetId.'); const ref={targetKind,ownerId,targetId}; if(subTargetId!=null)ref.subTargetId=subTargetId; return ref; }
+export function sameStableReference(a,b){return !!a&&!!b&&a.targetKind===b.targetKind&&a.ownerId===b.ownerId&&a.targetId===b.targetId&&(a.subTargetId??null)===(b.subTargetId??null);}
+export function createReferenceResolution(reference,state=ReferenceState.UNRESOLVED,diagnostics=[]){if(!reference)throw new Error('ReferenceResolution requires a reference.');if(!states.has(state))throw new Error(`Unsupported ReferenceState: ${state}`);return{reference:{...reference},state,diagnostics:Array.isArray(diagnostics)?diagnostics.map(item=>({code:item?.code??'REFERENCE',message:item?.message??String(item)})):[]};}
 
 export function resolveStableReference(store, reference) {
-  const unresolved = () => createReferenceResolution(reference, ReferenceState.UNRESOLVED);
-  if (!store || !reference || !targetKinds.has(reference.targetKind)) return unresolved();
-
-  if (reference.ownerId === SYSTEM_CONSTRUCTION_OWNER_ID
-    && [ReferenceTargetKind.WORK_PLANE, ReferenceTargetKind.CONSTRUCTION_AXIS].includes(reference.targetKind)) {
-    const exists = reference.targetKind === ReferenceTargetKind.WORK_PLANE
-      ? isGlobalWorkPlaneId(reference.targetId)
-      : isGlobalConstructionAxisId(reference.targetId);
-    if (!exists) {
-      const kind = reference.targetKind === ReferenceTargetKind.WORK_PLANE ? 'WORK_PLANE' : 'CONSTRUCTION_AXIS';
-      return createReferenceResolution(reference, ReferenceState.MISSING, [
-        { code: `SYSTEM_${kind}_MISSING`, message: `Globale Konstruktionsreferenz fehlt: ${reference.targetId}` }
-      ]);
-    }
-    return createReferenceResolution(reference, ReferenceState.RESOLVED);
+  const unresolved=()=>createReferenceResolution(reference,ReferenceState.UNRESOLVED);
+  if(!store||!reference||!targetKinds.has(reference.targetKind))return unresolved();
+  if(reference.ownerId===SYSTEM_CONSTRUCTION_OWNER_ID&&[ReferenceTargetKind.WORK_PLANE,ReferenceTargetKind.CONSTRUCTION_AXIS].includes(reference.targetKind)){
+    const exists=reference.targetKind===ReferenceTargetKind.WORK_PLANE?isGlobalWorkPlaneId(reference.targetId):isGlobalConstructionAxisId(reference.targetId);
+    if(!exists){const kind=reference.targetKind===ReferenceTargetKind.WORK_PLANE?'WORK_PLANE':'CONSTRUCTION_AXIS';return createReferenceResolution(reference,ReferenceState.MISSING,[{code:`SYSTEM_${kind}_MISSING`,message:`Globale Konstruktionsreferenz fehlt: ${reference.targetId}`}]);}
+    return createReferenceResolution(reference,ReferenceState.RESOLVED);
   }
-
-  const owner = store.getObject?.(reference.ownerId) ?? null;
-  if (!owner) {
-    return createReferenceResolution(reference, ReferenceState.MISSING, [
-      { code: 'OWNER_MISSING', message: `Referenz-Eigentümer fehlt: ${reference.ownerId}` }
-    ]);
+  const owner=store.getObject?.(reference.ownerId)??null;
+  if(!owner)return createReferenceResolution(reference,ReferenceState.MISSING,[{code:'OWNER_MISSING',message:`Referenz-Eigentümer fehlt: ${reference.ownerId}`}]);
+  if([ReferenceTargetKind.OBJECT,ReferenceTargetKind.SKETCH,ReferenceTargetKind.FEATURE].includes(reference.targetKind)){
+    const target=store.getObject?.(reference.targetId)??null;
+    if(!target)return createReferenceResolution(reference,ReferenceState.MISSING,[{code:'TARGET_MISSING',message:`Referenzziel fehlt: ${reference.targetId}`}]);
+    if(reference.targetKind===ReferenceTargetKind.SKETCH&&target.type!=='sketch')return createReferenceResolution(reference,ReferenceState.INVALID,[{code:'TARGET_KIND_MISMATCH',message:`Referenzziel ${reference.targetId} ist keine Skizze.`}]);
+    return createReferenceResolution(reference,ReferenceState.RESOLVED);
   }
-
-  if (reference.targetKind === ReferenceTargetKind.OBJECT || reference.targetKind === ReferenceTargetKind.SKETCH || reference.targetKind === ReferenceTargetKind.FEATURE) {
-    const target = store.getObject?.(reference.targetId) ?? null;
-    if (!target) {
-      return createReferenceResolution(reference, ReferenceState.MISSING, [
-        { code: 'TARGET_MISSING', message: `Referenzziel fehlt: ${reference.targetId}` }
-      ]);
-    }
-    if (reference.targetKind === ReferenceTargetKind.SKETCH && target.type !== 'sketch') {
-      return createReferenceResolution(reference, ReferenceState.INVALID, [
-        { code: 'TARGET_KIND_MISMATCH', message: `Referenzziel ${reference.targetId} ist keine Skizze.` }
-      ]);
-    }
-    return createReferenceResolution(reference, ReferenceState.RESOLVED);
+  if(reference.targetKind===ReferenceTargetKind.PLANAR_FACE){
+    if(owner.type!=='feature.extrude')return createReferenceResolution(reference,ReferenceState.INVALID,[{code:'OWNER_KIND_MISMATCH',message:`Referenz-Eigentümer ${reference.ownerId} ist keine Extrusion.`}]);
+    if(!isExtrudePlanarFaceId(reference.targetId))return createReferenceResolution(reference,ReferenceState.MISSING,[{code:'PLANAR_FACE_MISSING',message:`Planare Extrude-Fläche fehlt: ${reference.targetId}`}]);
+    if(owner.extensions?.recomputeState?.state===ReferenceState.BLOCKED||owner.extensions?.recomputeState?.state==='BLOCKED')return createReferenceResolution(reference,ReferenceState.BLOCKED,[{code:'OWNER_BLOCKED',message:`Extrusion ${reference.ownerId} ist durch eine vorgelagerte Abhängigkeit blockiert.`}]);
+    const validationErrors=validateExtrudePlanarFaceOwner(owner);
+    if(validationErrors.length)return createReferenceResolution(reference,ReferenceState.INVALID,validationErrors.map(message=>({code:'PLANAR_FACE_OWNER_INVALID',message})));
+    return createReferenceResolution(reference,ReferenceState.RESOLVED);
   }
-
-  if (reference.targetKind === ReferenceTargetKind.PLANAR_FACE) {
-    if (owner.type !== 'feature.extrude') {
-      return createReferenceResolution(reference, ReferenceState.INVALID, [
-        { code: 'OWNER_KIND_MISMATCH', message: `Referenz-Eigentümer ${reference.ownerId} ist keine Extrusion.` }
-      ]);
-    }
-    if (!isExtrudePlanarFaceId(reference.targetId)) {
-      return createReferenceResolution(reference, ReferenceState.MISSING, [
-        { code: 'PLANAR_FACE_MISSING', message: `Planare Extrude-Fläche fehlt: ${reference.targetId}` }
-      ]);
-    }
-    const recomputeState = owner.extensions?.recomputeState;
-    if (recomputeState?.state === ReferenceState.BLOCKED || recomputeState?.state === 'BLOCKED') {
-      return createReferenceResolution(reference, ReferenceState.BLOCKED, [
-        { code: 'OWNER_BLOCKED', message: `Extrusion ${reference.ownerId} ist durch eine vorgelagerte Abhängigkeit blockiert.` }
-      ]);
-    }
-    const validationErrors = validateExtrudePlanarFaceOwner(owner);
-    if (validationErrors.length) {
-      return createReferenceResolution(reference, ReferenceState.INVALID, validationErrors.map(message => ({
-        code: 'PLANAR_FACE_OWNER_INVALID',
-        message
-      })));
-    }
-    return createReferenceResolution(reference, ReferenceState.RESOLVED);
+  if(reference.targetKind===ReferenceTargetKind.WORK_PLANE){
+    if(owner.type!==ConstructionReferenceObjectType.WORK_PLANE)return createReferenceResolution(reference,ReferenceState.INVALID,[{code:'OWNER_KIND_MISMATCH',message:`Referenz-Eigentümer ${reference.ownerId} besitzt nicht den erwarteten Construction-Reference-Typ.`}]);
+    if(owner.data?.workPlaneId!==reference.targetId)return createReferenceResolution(reference,ReferenceState.MISSING,[{code:'IDENTITY_MISSING',message:`Persistente Construction-Identität fehlt: ${reference.targetId}`}]);
+    const resolved=resolveWorkPlaneDefinition(store,reference);
+    return createReferenceResolution(reference,resolved.state,resolved.diagnostics);
   }
-
-  if (reference.targetKind === ReferenceTargetKind.WORK_PLANE || reference.targetKind === ReferenceTargetKind.CONSTRUCTION_AXIS) {
-    const expectedType = reference.targetKind === ReferenceTargetKind.WORK_PLANE
-      ? ConstructionReferenceObjectType.WORK_PLANE
-      : ConstructionReferenceObjectType.AXIS;
-    const identityKey = reference.targetKind === ReferenceTargetKind.WORK_PLANE ? 'workPlaneId' : 'constructionAxisId';
-    if (owner.type !== expectedType) {
-      return createReferenceResolution(reference, ReferenceState.INVALID, [
-        { code: 'OWNER_KIND_MISMATCH', message: `Referenz-Eigentümer ${reference.ownerId} besitzt nicht den erwarteten Construction-Reference-Typ.` }
-      ]);
-    }
-    if (owner.data?.[identityKey] !== reference.targetId) {
-      return createReferenceResolution(reference, ReferenceState.MISSING, [
-        { code: 'IDENTITY_MISSING', message: `Persistente Construction-Identität fehlt: ${reference.targetId}` }
-      ]);
-    }
-    const validationErrors = reference.targetKind === ReferenceTargetKind.WORK_PLANE
-      ? validateWorkPlaneDefinition(owner.data?.definition)
-      : validateConstructionAxisDefinition(owner.data?.definition);
-    if (validationErrors.length) {
-      return createReferenceResolution(reference, ReferenceState.INVALID, validationErrors.map(message => ({
-        code: 'CONSTRUCTION_DEFINITION_INVALID',
-        message
-      })));
-    }
-    return createReferenceResolution(reference, ReferenceState.RESOLVED);
+  if(reference.targetKind===ReferenceTargetKind.CONSTRUCTION_AXIS){
+    if(owner.type!==ConstructionReferenceObjectType.AXIS)return createReferenceResolution(reference,ReferenceState.INVALID,[{code:'OWNER_KIND_MISMATCH',message:`Referenz-Eigentümer ${reference.ownerId} besitzt nicht den erwarteten Construction-Reference-Typ.`}]);
+    if(owner.data?.constructionAxisId!==reference.targetId)return createReferenceResolution(reference,ReferenceState.MISSING,[{code:'IDENTITY_MISSING',message:`Persistente Construction-Identität fehlt: ${reference.targetId}`}]);
+    const validationErrors=validateConstructionAxisDefinition(owner.data?.definition);
+    if(validationErrors.length)return createReferenceResolution(reference,ReferenceState.INVALID,validationErrors.map(message=>({code:'CONSTRUCTION_DEFINITION_INVALID',message})));
+    return createReferenceResolution(reference,ReferenceState.RESOLVED);
   }
-
-  if (owner.type !== 'sketch') {
-    return createReferenceResolution(reference, ReferenceState.INVALID, [
-      { code: 'OWNER_KIND_MISMATCH', message: `Referenz-Eigentümer ${reference.ownerId} ist keine Skizze.` }
-    ]);
+  if(owner.type!=='sketch')return createReferenceResolution(reference,ReferenceState.INVALID,[{code:'OWNER_KIND_MISMATCH',message:`Referenz-Eigentümer ${reference.ownerId} ist keine Skizze.`}]);
+  if(reference.targetKind===ReferenceTargetKind.PROFILE||reference.targetKind===ReferenceTargetKind.PATH){
+    const collection=reference.targetKind===ReferenceTargetKind.PROFILE?owner.data?.profileIdentities:owner.data?.pathIdentities; const identity=collection?.[reference.targetId]??null;
+    if(!identity)return createReferenceResolution(reference,ReferenceState.MISSING,[{code:'IDENTITY_MISSING',message:`Persistente Identität fehlt: ${reference.targetId}`}]);
+    const recognition=reference.targetKind===ReferenceTargetKind.PROFILE?recognizeProfileIdentity(owner,identity):recognizePathIdentity(owner,identity);
+    return createReferenceResolution(reference,recognition.state,recognition.diagnostics.map(diagnostic=>({code:diagnostic.code,message:diagnostic.code})));
   }
-
-  if (reference.targetKind === ReferenceTargetKind.PROFILE || reference.targetKind === ReferenceTargetKind.PATH) {
-    const collection = reference.targetKind === ReferenceTargetKind.PROFILE
-      ? owner.data?.profileIdentities
-      : owner.data?.pathIdentities;
-    const identity = collection?.[reference.targetId] ?? null;
-    if (!identity) {
-      return createReferenceResolution(reference, ReferenceState.MISSING, [
-        { code: 'IDENTITY_MISSING', message: `Persistente Identität fehlt: ${reference.targetId}` }
-      ]);
-    }
-    const recognition = reference.targetKind === ReferenceTargetKind.PROFILE
-      ? recognizeProfileIdentity(owner, identity)
-      : recognizePathIdentity(owner, identity);
-    return createReferenceResolution(reference, recognition.state, recognition.diagnostics.map(diagnostic => ({
-      code: diagnostic.code,
-      message: diagnostic.code
-    })));
-  }
-
-  const target = reference.targetKind === ReferenceTargetKind.SKETCH_POINT
-    ? getSketchPoint(owner, reference.targetId)
-    : getSketchElement(owner, reference.targetId, reference.subTargetId ?? null)?.element;
-  if (!target) {
-    return createReferenceResolution(reference, ReferenceState.MISSING, [
-      { code: 'SUBTARGET_MISSING', message: `Referenzziel fehlt: ${reference.targetId}` }
-    ]);
-  }
-  return createReferenceResolution(reference, ReferenceState.RESOLVED);
+  const target=reference.targetKind===ReferenceTargetKind.SKETCH_POINT?getSketchPoint(owner,reference.targetId):getSketchElement(owner,reference.targetId,reference.subTargetId??null)?.element;
+  if(!target)return createReferenceResolution(reference,ReferenceState.MISSING,[{code:'SUBTARGET_MISSING',message:`Referenzziel fehlt: ${reference.targetId}`}]);
+  return createReferenceResolution(reference,ReferenceState.RESOLVED);
 }
-
-export function blockReferenceResolution(resolution, code = 'DEPENDENCY_BLOCKED', message = 'Referenz ist durch eine vorgelagerte Abhängigkeit blockiert.') {
-  if (!resolution?.reference) throw new Error('blockReferenceResolution requires a resolution.');
-  return createReferenceResolution(resolution.reference, ReferenceState.BLOCKED, [
-    ...(resolution.diagnostics ?? []),
-    { code, message }
-  ]);
-}
+export function blockReferenceResolution(resolution,code='DEPENDENCY_BLOCKED',message='Referenz ist durch eine vorgelagerte Abhängigkeit blockiert.'){if(!resolution?.reference)throw new Error('blockReferenceResolution requires a resolution.');return createReferenceResolution(resolution.reference,ReferenceState.BLOCKED,[...(resolution.diagnostics??[]),{code,message}]);}
