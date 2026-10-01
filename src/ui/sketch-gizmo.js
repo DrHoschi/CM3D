@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { createStableReference, ReferenceTargetKind } from '../application/stable-reference.js';
+import { enumerateReferenceSnapTargets, resolveReferenceSnap } from '../application/reference-snap.js';
 
 const AXIS_LENGTH = 0.5;
 const AXIS_HEAD_LENGTH = 0.12;
@@ -220,6 +222,29 @@ export function installSketchGizmo(store, runtime) {
     return Number.isFinite(step) && step > SNAP_EPS ? Math.round(value / step) * step : value;
   };
 
+  const referenceSnapLocal = (drag, localTarget) => {
+    if (!store.snap.enabled) return null;
+    const node = runtime.objectMap.get(drag.sketchId);
+    if (!node) return null;
+    node.updateWorldMatrix(true, false);
+    const world = node.localToWorld(localTarget.clone());
+    const step = Number(store.snap.translate);
+    const tolerance = Number.isFinite(step) && step > SNAP_EPS ? step * 0.5 : 0.01;
+    const excludedReferences = drag.adapter.kind === 'topology-points'
+      ? drag.adapter.initial.pointIds.map(pointId => createStableReference(ReferenceTargetKind.SKETCH_POINT, drag.sketchId, pointId))
+      : [];
+    const result = resolveReferenceSnap(
+      store,
+      { x: world.x, y: world.y, z: world.z },
+      enumerateReferenceSnapTargets(store),
+      { tolerance, excludedReferences }
+    );
+    if (!result.snapped) return null;
+    const displacement = Math.hypot(result.position.x - world.x, result.position.y - world.y, result.position.z - world.z);
+    if (displacement <= SNAP_EPS) return null;
+    return node.worldToLocal(new THREE.Vector3(result.position.x, result.position.y, result.position.z));
+  };
+
   const applyPreview = (drag, dx, dy) => {
     const currentSketch = store.getObject(drag.sketchId);
     if (currentSketch?.type !== 'sketch') return false;
@@ -303,8 +328,17 @@ export function installSketchGizmo(store, runtime) {
     let dy = point.y - drag.start.y;
     if (drag.axis === 'x') dy = 0;
     if (drag.axis === 'y') dx = 0;
-    dx = snap(drag.adapter.anchor.x + dx) - drag.adapter.anchor.x;
-    dy = snap(drag.adapter.anchor.y + dy) - drag.adapter.anchor.y;
+    const rawTarget = new THREE.Vector3(drag.adapter.anchor.x + dx, drag.adapter.anchor.y + dy, 0);
+    const referenceTarget = referenceSnapLocal(drag, rawTarget);
+    if (referenceTarget) {
+      dx = referenceTarget.x - drag.adapter.anchor.x;
+      dy = referenceTarget.y - drag.adapter.anchor.y;
+      if (drag.axis === 'x') dy = 0;
+      if (drag.axis === 'y') dx = 0;
+    } else {
+      dx = snap(rawTarget.x) - drag.adapter.anchor.x;
+      dy = snap(rawTarget.y) - drag.adapter.anchor.y;
+    }
     drag.delta = { dx, dy };
     if (!applyPreview(drag, dx, dy)) return;
     runtime.rebuild();
@@ -370,12 +404,13 @@ export function installSketchGizmo(store, runtime) {
 
   rebuildGizmo();
   return Object.freeze({
-    version: 'WD-21C.5',
+    version: 'WD-22G',
     alignCameraToSketch,
     rebuildGizmo,
     manipulationKinds: Object.freeze(['point', 'line', 'circle']),
     circleMoveChangesRadius: false,
     mixedCircleSelectionIncluded: false,
-    centralCommit: 'runSketchMutation'
+    centralCommit: 'runSketchMutation',
+    referenceAwareSnap: true
   });
 }
