@@ -1,4 +1,4 @@
-name: WD-22H Reference-Aware Measurement Foundation
+name: WD-22I Reference-Aware Align Foundation
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
       - feature/WD-22F-derived-work-plane-foundation
       - feature/WD-22G-reference-aware-snap-foundation
       - feature/WD-22H-reference-aware-measurement-foundation
+      - feature/WD-22I-reference-aware-align-foundation
   workflow_dispatch:
 
 jobs:
@@ -92,3 +93,5 @@ jobs:
         run: node tests/wd-22g-reference-aware-snap-foundation.mjs
       - name: Run WD-22H reference-aware measurement foundation regression
         run: node tests/wd-22h-reference-aware-measurement-foundation.mjs
+      - name: Run WD-22I reference-aware align foundation regression
+        run: node tests/wd-22i-reference-aware-align-foundation.mjs
