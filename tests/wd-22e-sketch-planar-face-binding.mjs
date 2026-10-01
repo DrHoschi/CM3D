@@ -17,11 +17,9 @@ const extrude=(id,sourceSketchId,depth=10,direction='positive')=>({
 });
 const storeFor=project=>({project,getObject(id){return this.project.scene.objects[id]??null;}});
 
-// Legacy localXY remains untouched.
 const legacy=createSketchObject(createProject('legacy'),'Legacy');
 assert.equal(resolveSketchPlaneBinding(storeFor(createProject('empty')),legacy).mode,'LEGACY_LOCAL_XY');
 
-// Productive PLANAR_FACE binding resolves through the existing planeRef authority.
 const project=createProject('WD-22E');
 const source=createSketchObject(project,'Source');
 const bound=createSketchObject(project,'Face Bound');
@@ -45,7 +43,6 @@ assert.deepEqual(binding.frame.origin,{x:0,y:0,z:0});
 assert.deepEqual(binding.frame.zAxis,{x:0,y:0,z:-1});
 assert.deepEqual(binding.frame.yAxis,{x:0,y:-1,z:0});
 
-// The StableReference remains identical while derived CAP_END frame follows recompute inputs.
 bound.data.planeRef=faceRef(feature.objectId,ExtrudePlanarFaceId.CAP_END);
 const persistedRef=structuredClone(bound.data.planeRef);
 feature.data.depth=25;
@@ -53,7 +50,6 @@ binding=resolveSketchPlaneBinding(store,bound);
 assert.deepEqual(bound.data.planeRef,persistedRef);
 assert.equal(binding.frame.origin.z,25);
 
-// Dependency projection is owner based and uses the generalized plane edge.
 let graph=buildDependencyGraph(store);
 const planeEdge=graph.dependenciesOf(bound.objectId).find(edge=>edge.kind==='PLANE_REFERENCE_TO_SKETCH');
 assert.ok(planeEdge);
@@ -61,7 +57,6 @@ assert.equal(planeEdge.sourceObjectId,feature.objectId);
 assert.equal(planeEdge.state,ReferenceState.RESOLVED);
 assert.equal(graph.nodeState(bound.objectId).state,DependencyNodeState.READY);
 
-// Missing, invalid and blocked owners never produce a stale frame.
 const savedRef=structuredClone(bound.data.planeRef);
 bound.data.planeRef=faceRef('missing_extrude');
 binding=resolveSketchPlaneBinding(store,bound);
@@ -76,25 +71,28 @@ binding=resolveSketchPlaneBinding(store,bound);
 assert.equal(binding.resolution.state,ReferenceState.BLOCKED);assert.equal(binding.frame,null);
 delete feature.extensions.recomputeState;
 
-// Save -> reload preserves only the stable planeRef; the frame is derived again.
 const reloaded=parseProjectFileText(serializeProjectFile(project));
 assert.deepEqual(reloaded.scene.objects[bound.objectId].data.planeRef,persistedRef);
 const reloadedBinding=resolveSketchPlaneBinding(storeFor(reloaded),reloaded.scene.objects[bound.objectId]);
 assert.equal(reloadedBinding.resolution.state,ReferenceState.RESOLVED);
 assert.equal(reloadedBinding.frame.origin.z,25);
 
-// Existing cycle authority blocks a direct Sketch -> Extrude -> Face -> same Sketch loop.
-const directProject=createProject('WD-22E direct cycle');
-const directSketch=createSketchObject(directProject,'Direct');
-const directExtrude=extrude('extrude_direct',directSketch.objectId);
-insert(directProject,directSketch);insert(directProject,directExtrude);
-directSketch.data.planeRef=faceRef(directExtrude.objectId);
-const directStore=storeFor(directProject);
-const directGraph=buildDependencyGraph(directStore);
+// Before a future binding mutation writes planeRef, the existing guard rejects the new Extrude -> Sketch edge.
+const guardProject=createProject('WD-22E cycle guard');
+const guardSketch=createSketchObject(guardProject,'Guard');
+const guardExtrude=extrude('extrude_guard',guardSketch.objectId);
+insert(guardProject,guardSketch);insert(guardProject,guardExtrude);
+const guardGraph=buildDependencyGraph(storeFor(guardProject));
+const guardResult=validateDependencyEdge(guardGraph,guardExtrude.objectId,guardSketch.objectId);
+assert.equal(guardResult.allowed,false);
+assert.equal(guardResult.code,'DEPENDENCY_CYCLE');
+
+// Persisted direct cycle is also detected and blocked.
+guardSketch.data.planeRef=faceRef(guardExtrude.objectId);
+const directGraph=buildDependencyGraph(storeFor(guardProject));
 assert.equal(directGraph.hasCycles,true);
-assert.equal(directGraph.nodeState(directSketch.objectId).state,DependencyNodeState.BLOCKED);
-assert.equal(directGraph.nodeState(directExtrude.objectId).state,DependencyNodeState.BLOCKED);
-assert.equal(validateDependencyEdge(buildDependencyGraph(storeFor((()=>{const p=createProject('guard');const s=createSketchObject(p,'S');const e=extrude('guard_extrude',s.objectId);insert(p,s);insert(p,e);return p;})())),directExtrude.objectId,directSketch.objectId).allowed,true);
+assert.equal(directGraph.nodeState(guardSketch.objectId).state,DependencyNodeState.BLOCKED);
+assert.equal(directGraph.nodeState(guardExtrude.objectId).state,DependencyNodeState.BLOCKED);
 
 // Indirect cycle: A -> ExtrudeA -> B -> ExtrudeB -> A.
 const indirectProject=createProject('WD-22E indirect cycle');
