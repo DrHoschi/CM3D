@@ -137,10 +137,10 @@ export function validateSketchTopology(sketch) {
   if (!planeRef) {
     if (sketch.data?.plane !== 'localXY') errors.push(`Ungültige Skizzenebene für ${sketch.objectId}.`);
   } else {
-    if (planeRef.targetKind !== 'WORK_PLANE') errors.push(`planeRef für ${sketch.objectId} muss WORK_PLANE referenzieren.`);
+    if (!['WORK_PLANE', 'PLANAR_FACE'].includes(planeRef.targetKind)) errors.push(`planeRef für ${sketch.objectId} muss WORK_PLANE oder PLANAR_FACE referenzieren.`);
     if (typeof planeRef.ownerId !== 'string' || !planeRef.ownerId) errors.push(`planeRef.ownerId fehlt für ${sketch.objectId}.`);
     if (typeof planeRef.targetId !== 'string' || !planeRef.targetId) errors.push(`planeRef.targetId fehlt für ${sketch.objectId}.`);
-    if (planeRef.subTargetId != null) errors.push(`planeRef.subTargetId ist für Sketch-Work-Plane-Bindings nicht zulässig.`);
+    if (planeRef.subTargetId != null) errors.push(`planeRef.subTargetId ist für Sketch-Plane-Bindings nicht zulässig.`);
   }
   if (!sketch.data?.points || Array.isArray(sketch.data.points) || typeof sketch.data.points !== 'object') {
     errors.push(`Skizzenpunkte fehlen für ${sketch.objectId}.`);
