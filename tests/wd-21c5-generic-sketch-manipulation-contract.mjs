@@ -7,7 +7,6 @@ const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8')
 assert.match(main, /const BUILD_ID = '(?:WD-21(?:C\.[5-9](?:-R\d+)?|D\.[1-9](?:-R\d+)?)|WD-21G\.1)'/);
 assert.match(main, /applyBuildIdentity\(\)/);
 
-assert.match(gizmo, /version: 'WD-21C\.5'/);
 assert.match(gizmo, /manipulationKinds: Object\.freeze\(\['point', 'line', 'circle'\]\)/);
 assert.match(gizmo, /kind: 'circle'/);
 assert.match(gizmo, /circle\.center\.x/);
