@@ -1,9 +1,10 @@
-name: WD-22D Planar Face Reference Foundation
+name: WD-22E Sketch Planar Face Binding
 
 on:
   push:
     branches:
       - feature/WD-22D-planar-face-reference-foundation
+      - feature/WD-22E-sketch-planar-face-binding
   workflow_dispatch:
 
 jobs:
@@ -80,3 +81,5 @@ jobs:
         run: node tests/wd-22c-construction-axis-line-foundation.mjs
       - name: Run WD-22D planar face reference foundation regression
         run: node tests/wd-22d-planar-face-reference-foundation.mjs
+      - name: Run WD-22E sketch planar face binding regression
+        run: node tests/wd-22e-sketch-planar-face-binding.mjs
