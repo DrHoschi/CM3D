@@ -37,6 +37,17 @@ const rotateEulerXYZ = (vector, rotation = {x:0,y:0,z:0}) => {
   return {x,y,z};
 };
 
+const inverseRotateEulerXYZ = (vector, rotation = {x:0,y:0,z:0}) => {
+  let {x,y,z}=vector;
+  const cx=Math.cos(rotation.x??0), sx=Math.sin(rotation.x??0);
+  const cy=Math.cos(rotation.y??0), sy=Math.sin(rotation.y??0);
+  const cz=Math.cos(rotation.z??0), sz=Math.sin(rotation.z??0);
+  [x,y]=[x*cz+y*sz,-x*sz+y*cz];
+  [x,z]=[x*cy-z*sy,x*sy+z*cy];
+  [y,z]=[y*cx+z*sx,-y*sx+z*cx];
+  return {x,y,z};
+};
+
 const frameFromDefinition = definition => {
   if (!definition) return null;
   const zAxis=normalizeVector(definition.normal);
@@ -47,23 +58,44 @@ const frameFromDefinition = definition => {
   return yAxis?{origin:{...definition.origin},xAxis,yAxis,zAxis}:null;
 };
 
-const localSketchPointToWorld = (store, sketch, point) => {
-  const planeRef=sketch.data?.planeRef;
+const sketchFrame = (store, sketch) => {
+  const planeRef=sketch?.data?.planeRef;
   if (planeRef?.targetKind === ReferenceTargetKind.WORK_PLANE) {
     const resolved=resolveWorkPlaneDefinition(store,planeRef);
-    const frame=resolved.state===ReferenceState.RESOLVED?frameFromDefinition(resolved.definition):null;
-    if (frame) return addVector(frame.origin,addVector(scaleVector(frame.xAxis,point.x),scaleVector(frame.yAxis,point.y)));
+    return resolved.state===ReferenceState.RESOLVED?frameFromDefinition(resolved.definition):null;
   }
   if (planeRef?.targetKind === ReferenceTargetKind.PLANAR_FACE) {
     const owner=store.getObject?.(planeRef.ownerId)??null;
-    const frame=frameFromDefinition(extrudePlanarFaceDefinition(owner,planeRef.targetId));
-    if (frame) return addVector(frame.origin,addVector(scaleVector(frame.xAxis,point.x),scaleVector(frame.yAxis,point.y)));
+    return frameFromDefinition(extrudePlanarFaceDefinition(owner,planeRef.targetId));
   }
+  return null;
+};
+
+const localSketchPointToWorld = (store, sketch, point) => {
+  const frame=sketchFrame(store,sketch);
+  if (frame) return addVector(frame.origin,addVector(scaleVector(frame.xAxis,point.x),scaleVector(frame.yAxis,point.y)));
   const transform=sketch.transform??{};
   const scaled={x:point.x*(transform.scale?.x??1),y:point.y*(transform.scale?.y??1),z:0};
   const rotated=rotateEulerXYZ(scaled,transform.rotation);
   return addVector(rotated,transform.position??{x:0,y:0,z:0});
 };
+
+export function worldPointToSketchLocal(store, sketch, worldPoint) {
+  if (!sketch || sketch.type!=='sketch' || !finitePoint(worldPoint)) return null;
+  const frame=sketchFrame(store,sketch);
+  if (frame) {
+    const delta=subtractVector(worldPoint,frame.origin);
+    const x=dotVector(delta,frame.xAxis), y=dotVector(delta,frame.yAxis);
+    return Number.isFinite(x)&&Number.isFinite(y)?{x,y}:null;
+  }
+  const transform=sketch.transform??{};
+  const delta=subtractVector(worldPoint,transform.position??{x:0,y:0,z:0});
+  const local=inverseRotateEulerXYZ(delta,transform.rotation);
+  const sx=transform.scale?.x??1, sy=transform.scale?.y??1;
+  if (!Number.isFinite(sx)||!Number.isFinite(sy)||sx===0||sy===0) return null;
+  const x=local.x/sx, y=local.y/sy;
+  return Number.isFinite(x)&&Number.isFinite(y)?{x,y}:null;
+}
 
 export function referenceGeometryForReference(store, reference) {
   if (!reference || !supportedKinds.has(reference.targetKind)) return null;
