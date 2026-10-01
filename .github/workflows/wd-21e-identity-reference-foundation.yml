@@ -1,4 +1,4 @@
-name: WD-22F Derived Work Plane Foundation
+name: WD-22G Reference-Aware Snap Foundation
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
       - feature/WD-22D-planar-face-reference-foundation
       - feature/WD-22E-sketch-planar-face-binding
       - feature/WD-22F-derived-work-plane-foundation
+      - feature/WD-22G-reference-aware-snap-foundation
   workflow_dispatch:
 
 jobs:
@@ -86,3 +87,5 @@ jobs:
         run: node tests/wd-22e-sketch-planar-face-binding.mjs
       - name: Run WD-22F derived work plane foundation regression
         run: node tests/wd-22f-derived-work-plane-foundation.mjs
+      - name: Run WD-22G reference-aware snap foundation regression
+        run: node tests/wd-22g-reference-aware-snap-foundation.mjs
