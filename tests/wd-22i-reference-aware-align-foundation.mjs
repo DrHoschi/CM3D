@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { ReferenceTargetKind } from '../src/application/stable-reference.js';
+import { SYSTEM_CONSTRUCTION_OWNER_ID } from '../src/model/construction-reference.js';
 import { ReferenceAlignState, referenceAlignResult, commitReferenceAlign } from '../src/application/reference-align.js';
 
 const pointRef=(ownerId,targetId)=>({ownerId,targetKind:ReferenceTargetKind.SKETCH_POINT,targetId});
-const axisRef=targetId=>({ownerId:'__SYSTEM_CONSTRUCTION__',targetKind:ReferenceTargetKind.CONSTRUCTION_AXIS,targetId});
+const axisRef=targetId=>({ownerId:SYSTEM_CONSTRUCTION_OWNER_ID,targetKind:ReferenceTargetKind.CONSTRUCTION_AXIS,targetId});
 
 function storeFor(objects) {
   let mutations=0;
