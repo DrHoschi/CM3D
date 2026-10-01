@@ -21,15 +21,17 @@ const shapeForProfile = profile => {
 export function installExtrudeRuntime(runtime) {
   const baseGeometryFor = runtime.geometryFor.bind(runtime);
   runtime.geometryFor = object => {
-    if (object?.type !== 'feature.extrude') return baseGeometryFor(object);
+    if (!['feature.extrude','feature.thin-extrude'].includes(object?.type)) return baseGeometryFor(object);
     const depth = Number(object.data?.depth);
     if (!Number.isFinite(depth) || depth <= 0) return null;
 
-    const profiles = Array.isArray(object.data?.profiles) && object.data.profiles.length
-      ? object.data.profiles
-      : object.data?.profile
-        ? [{ ...object.data.profile, holes:[] }]
-        : [];
+    const profiles = object.type === 'feature.thin-extrude'
+      ? Array.isArray(object.data?.contour) && object.data.contour.length ? [{ points:object.data.contour, holes:[] }] : []
+      : Array.isArray(object.data?.profiles) && object.data.profiles.length
+        ? object.data.profiles
+        : object.data?.profile
+          ? [{ ...object.data.profile, holes:[] }]
+          : [];
     const shapes = profiles.map(shapeForProfile).filter(Boolean);
     if (!shapes.length) return null;
 
