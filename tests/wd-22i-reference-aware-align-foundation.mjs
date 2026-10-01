@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { ReferenceTargetKind } from '../src/application/stable-reference.js';
-import { SYSTEM_CONSTRUCTION_OWNER_ID } from '../src/model/construction-reference.js';
+import { ConstructionReferenceObjectType, SYSTEM_CONSTRUCTION_OWNER_ID } from '../src/model/construction-reference.js';
 import { ReferenceAlignState, referenceAlignResult, commitReferenceAlign } from '../src/application/reference-align.js';
 
 const pointRef=(ownerId,targetId)=>({ownerId,targetKind:ReferenceTargetKind.SKETCH_POINT,targetId});
@@ -37,7 +37,7 @@ const toXAxis=referenceAlignResult(store,pointRef('sketch-a','p1'),axisRef('GLOB
 assert.equal(toXAxis.state,ReferenceAlignState.VALID);
 assert.equal(toXAxis.targetPositionWorld.y,0);
 
-const plane={objectId:'plane-a',type:'construction-reference',data:{definition:{kind:'WORK_PLANE',mode:'FREE',origin:{x:0,y:0,z:5},normal:{x:0,y:0,z:1},xAxis:{x:1,y:0,z:0}}}};
+const plane={objectId:'plane-a',type:ConstructionReferenceObjectType.WORK_PLANE,data:{workPlaneId:'PLANE',definition:{origin:{x:0,y:0,z:5},normal:{x:0,y:0,z:1},xAxis:{x:1,y:0,z:0}}}};
 store.objects['plane-a']=plane;
 const planeReference={ownerId:'plane-a',targetKind:ReferenceTargetKind.WORK_PLANE,targetId:'PLANE'};
 const toPlane=referenceAlignResult(store,pointRef('sketch-a','p1'),planeReference);
