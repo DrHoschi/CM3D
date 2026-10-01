@@ -144,7 +144,7 @@ export function enumerateReferenceSnapTargets(store) {
   const refs=[];
   for (const targetId of Object.values(GlobalWorkPlaneId)) refs.push(createStableReference(ReferenceTargetKind.WORK_PLANE,SYSTEM_CONSTRUCTION_OWNER_ID,targetId));
   for (const targetId of Object.values(GlobalConstructionAxisId)) refs.push(createStableReference(ReferenceTargetKind.CONSTRUCTION_AXIS,SYSTEM_CONSTRUCTION_OWNER_ID,targetId));
-  const objects=store?.project?.objects??{};
+  const objects=store?.project?.scene?.objects??{};
   for (const object of Object.values(objects)) {
     if (object?.type==='sketch') {
       for (const pointId of Object.keys(object.data?.points??{})) refs.push(createStableReference(ReferenceTargetKind.SKETCH_POINT,object.objectId,pointId));
