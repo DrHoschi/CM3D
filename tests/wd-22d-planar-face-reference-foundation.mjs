@@ -2,13 +2,17 @@ import assert from 'node:assert/strict';
 import { buildDependencyGraph } from '../src/application/dependency-graph.js';
 import { createStableReference, ReferenceState, ReferenceTargetKind, resolveStableReference } from '../src/application/stable-reference.js';
 import { ExtrudePlanarFaceId, extrudePlanarFaceDefinition } from '../src/model/planar-face-reference.js';
+import { createProject } from '../src/model/project.js';
 import { serializeProjectFile, parseProjectFileText } from '../src/persistence/project-file.js';
 
-const identityTransform=()=>({position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0},scale:{x:1,y:1,z:1}});
+const identityTransform=()=>({position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1},scale:{x:1,y:1,z:1},pivot:{x:0,y:0,z:0}});
 const sourceRef=createStableReference(ReferenceTargetKind.SKETCH,'sketch_1','sketch_1');
-const extrude=(direction='positive',depth=10)=>({objectId:'extrude_1',type:'feature.extrude',name:'Extrude',parentId:null,transform:identityTransform(),data:{sourceSketchRef:sourceRef,depth,direction,profile:{points:[{x:0,y:0},{x:1,y:0},{x:1,y:1}]}},extensions:{}});
-const consumer={objectId:'consumer_1',type:'synthetic.consumer',name:'Consumer',parentId:null,transform:identityTransform(),data:{},extensions:{}};
-const project={schemaVersion:'0.2.0',projectId:'wd22d',name:'WD-22D',scene:{rootObjectIds:['extrude_1','consumer_1'],objects:{extrude_1:extrude(),consumer_1:consumer}},metadata:{}};
+const extrude=(direction='positive',depth=10)=>({objectId:'extrude_1',type:'feature.extrude',name:'Extrude',parentId:null,order:0,transform:identityTransform(),data:{sourceSketchRef:sourceRef,depth,direction,profile:{points:[{x:0,y:0},{x:1,y:0},{x:1,y:1}]}},materialIds:[],flags:{visible:true,locked:false},extensions:{}});
+const consumer={objectId:'consumer_1',type:'synthetic.consumer',name:'Consumer',parentId:null,order:1,transform:identityTransform(),data:{},materialIds:[],flags:{visible:true,locked:false},extensions:{}};
+const project=createProject('WD-22D');
+project.scene.rootObjectIds.push('extrude_1','consumer_1');
+project.scene.objects.extrude_1=extrude();
+project.scene.objects.consumer_1=consumer;
 const store={project,getObject(id){return this.project.scene.objects[id]??null;}};
 const ref=id=>createStableReference(ReferenceTargetKind.PLANAR_FACE,'extrude_1',id);
 
@@ -59,7 +63,8 @@ store.project.scene.objects.extrude_1.data.depth=0;
 assert.equal(resolveStableReference(store,stableRef).state,ReferenceState.INVALID);
 store.project.scene.objects.extrude_1=extrude('positive',10);
 
-const persisted={...project,scene:{...project.scene,objects:{...project.scene.objects,consumer_1:{...consumer,data:{faceRef:stableRef}}}}};
+const persisted=structuredClone(project);
+persisted.scene.objects.consumer_1.data.faceRef=stableRef;
 const reloaded=parseProjectFileText(serializeProjectFile(persisted));
 assert.deepEqual(reloaded.scene.objects.consumer_1.data.faceRef,stableRef);
 assert.equal(reloaded.schemaVersion,'0.2.0');
