@@ -26,6 +26,7 @@ export const createAssemblyObject=(project,name='Baugruppe')=>baseObject(project
 export const createSketchObject=(project,name='Skizze')=>baseObject(project,'sketch',name,{plane:'localXY',points:{},lines:{},circles:{},arcs:{},splines:{},profileIdentities:{},pathIdentities:{}},false);
 export const createExternalGltfObject=(project,assetId,name='Importiertes Modell')=>baseObject(project,'external.gltf',name,{assetId,sourceFormat:'gltf'},false);
 export const createWorkPlaneObject=(project,name='Arbeitsebene',definition={origin:{x:0,y:0,z:0},normal:{x:0,y:0,z:1},xAxis:{x:1,y:0,z:0}})=>baseObject(project,ConstructionReferenceObjectType.WORK_PLANE,name,{workPlaneId:uuid('wp'),definition:structuredClone(definition)},false);
+export const createOffsetWorkPlaneObject=(project,sourceRef,offsetMm=0,name='Versetzte Arbeitsebene')=>baseObject(project,ConstructionReferenceObjectType.WORK_PLANE,name,{workPlaneId:uuid('wp'),derivation:{kind:'OFFSET',sourceRef:structuredClone(sourceRef),offsetMm:Number(offsetMm)}},false);
 export const createConstructionAxisObject=(project,name='Konstruktionsachse',definition={origin:{x:0,y:0,z:0},direction:{x:0,y:0,z:1}})=>baseObject(project,ConstructionReferenceObjectType.AXIS,name,{constructionAxisId:uuid('axis'),definition:structuredClone(definition)},false);
 export const createSketchPoint=(x=0,y=0)=>({pointId:uuid('pt'),x:Number(x),y:Number(y)});
 export const createSketchLine=(startPointId,endPointId,{construction=false}={})=>({lineId:uuid('ln'),startPointId,endPointId,...(construction?{construction:true}:{})});
@@ -46,40 +47,23 @@ function normalizeSketchCollections(project) {
 }
 
 export function migrateProjectToCurrent(candidate) {
-  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
-    throw new Error('Projektstruktur fehlt oder ist ungültig.');
-  }
-  if (candidate.format !== FORMAT) {
-    throw new Error(`Ungültiges CM3D-Format: ${candidate.format ?? 'fehlt'}.`);
-  }
+  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('Projektstruktur fehlt oder ist ungültig.');
+  if (candidate.format !== FORMAT) throw new Error(`Ungültiges CM3D-Format: ${candidate.format ?? 'fehlt'}.`);
   const sourceVersion = candidate.schemaVersion;
-  if (typeof sourceVersion !== 'string' || !sourceVersion) {
-    throw new Error('schemaVersion fehlt.');
-  }
-  if (sourceVersion === SCHEMA_VERSION) {
-    const project = normalizeSketchCollections(structuredClone(candidate));
-    return { project, migrated:false, fromVersion:sourceVersion, toVersion:SCHEMA_VERSION };
-  }
-  if (sourceVersion === LEGACY_SCHEMA_VERSION) {
-    const project = normalizeSketchCollections(structuredClone(candidate));
-    project.schemaVersion = SCHEMA_VERSION;
-    return { project, migrated:true, fromVersion:sourceVersion, toVersion:SCHEMA_VERSION };
-  }
+  if (typeof sourceVersion !== 'string' || !sourceVersion) throw new Error('schemaVersion fehlt.');
+  if (sourceVersion === SCHEMA_VERSION) { const project = normalizeSketchCollections(structuredClone(candidate)); return { project, migrated:false, fromVersion:sourceVersion, toVersion:SCHEMA_VERSION }; }
+  if (sourceVersion === LEGACY_SCHEMA_VERSION) { const project = normalizeSketchCollections(structuredClone(candidate)); project.schemaVersion = SCHEMA_VERSION; return { project, migrated:true, fromVersion:sourceVersion, toVersion:SCHEMA_VERSION }; }
   throw new Error(`Nicht unterstützte schemaVersion: ${sourceVersion}.`);
 }
 
 export function migrateAndValidateProject(candidate) {
-  const migration = migrateProjectToCurrent(candidate);
-  const result = validateProject(migration.project);
-  if (!result.valid) {
-    throw new Error(result.errors.join('\n'));
-  }
+  const migration = migrateProjectToCurrent(candidate); const result = validateProject(migration.project);
+  if (!result.valid) throw new Error(result.errors.join('\n'));
   return migration;
 }
 
 function validateFeatureConsumerSourceRef(reference, objectId) {
-  const errors = [];
-  const label = `FeatureConsumerBinding ${objectId}`;
+  const errors = []; const label = `FeatureConsumerBinding ${objectId}`;
   if (!reference || typeof reference !== 'object' || Array.isArray(reference)) return [`${label} fehlt oder ist ungültig.`];
   if (!['PROFILE','PATH'].includes(reference.targetKind)) errors.push(`${label}.targetKind muss PROFILE oder PATH sein.`);
   if (typeof reference.ownerId !== 'string' || !reference.ownerId) errors.push(`${label}.ownerId fehlt.`);
@@ -95,31 +79,9 @@ export function validateProject(project) {
   if(!project?.project?.projectId)errors.push('projectId fehlt.');
   if(!project?.scene?.objects||typeof project.scene.objects!=='object')errors.push('scene.objects fehlt oder ist ungültig.');
   if(!project?.materials||Array.isArray(project.materials)||typeof project.materials!=='object')errors.push('materials muss eine Material-Map sein.');
-
   const assetMap=new Map();
   if(!Array.isArray(project?.assets))errors.push('assets muss ein Array sein.');
-  else for(const asset of project.assets){
-    if(!asset?.assetId){errors.push('Asset ohne assetId.');continue;}
-    if(assetMap.has(asset.assetId))errors.push(`Doppelte assetId: ${asset.assetId}.`);
-    assetMap.set(asset.assetId,asset);
-    if(asset.kind==='model.gltf.bundle'){
-      if(!['glb','gltf'].includes(asset.format))errors.push(`Ungültiges GLB/GLTF-Assetformat für ${asset.assetId}.`);
-      if(!asset.entryFile)errors.push(`entryFile fehlt für ${asset.assetId}.`);
-      if(!Array.isArray(asset.files)||!asset.files.length)errors.push(`Asset-Dateien fehlen für ${asset.assetId}.`);
-      else {
-        const entryName=String(asset.entryFile||'').replace(/\\/g,'/').split('/').pop();
-        let hasEntry=false;
-        for(const file of asset.files){
-          if(!file?.name)errors.push(`Asset-Datei ohne Namen in ${asset.assetId}.`);
-          if(typeof file?.dataUrl!=='string'||!file.dataUrl.startsWith('data:'))errors.push(`Asset-Datei ohne eingebettete Daten in ${asset.assetId}.`);
-          const fileName=String(file?.path||file?.name||'').replace(/\\/g,'/').split('/').pop();
-          if(fileName&&fileName===entryName)hasEntry=true;
-        }
-        if(asset.entryFile&&!hasEntry)errors.push(`Einstiegsdatei ${asset.entryFile} fehlt in ${asset.assetId}.`);
-      }
-    }
-  }
-
+  else for(const asset of project.assets){ if(!asset?.assetId){errors.push('Asset ohne assetId.');continue;} if(assetMap.has(asset.assetId))errors.push(`Doppelte assetId: ${asset.assetId}.`); assetMap.set(asset.assetId,asset); if(asset.kind==='model.gltf.bundle'){ if(!['glb','gltf'].includes(asset.format))errors.push(`Ungültiges GLB/GLTF-Assetformat für ${asset.assetId}.`); if(!asset.entryFile)errors.push(`entryFile fehlt für ${asset.assetId}.`); if(!Array.isArray(asset.files)||!asset.files.length)errors.push(`Asset-Dateien fehlen für ${asset.assetId}.`); else { const entryName=String(asset.entryFile||'').replace(/\\/g,'/').split('/').pop(); let hasEntry=false; for(const file of asset.files){ if(!file?.name)errors.push(`Asset-Datei ohne Namen in ${asset.assetId}.`); if(typeof file?.dataUrl!=='string'||!file.dataUrl.startsWith('data:'))errors.push(`Asset-Datei ohne eingebettete Daten in ${asset.assetId}.`); const fileName=String(file?.path||file?.name||'').replace(/\\/g,'/').split('/').pop(); if(fileName&&fileName===entryName)hasEntry=true; } if(asset.entryFile&&!hasEntry)errors.push(`Einstiegsdatei ${asset.entryFile} fehlt in ${asset.assetId}.`); } } }
   if(project?.scene?.objects){
     const objects=project.scene.objects;
     for(const [key,o] of Object.entries(objects)){
@@ -128,25 +90,15 @@ export function validateProject(project) {
       if(o.parentId===o.objectId)errors.push(`Objekt darf nicht eigener Parent sein: ${o.objectId}.`);
       for(const materialId of o.materialIds??[])if(!project.materials?.[materialId])errors.push(`Material ${materialId} fehlt für ${o.objectId}.`);
       const t=o.transform;
-      if(!t)errors.push(`Transform fehlt für ${o.objectId}.`); else {
-        const values=[t.position?.x,t.position?.y,t.position?.z,t.rotation?.x,t.rotation?.y,t.rotation?.z,t.rotation?.w,t.scale?.x,t.scale?.y,t.scale?.z,t.pivot?.x,t.pivot?.y,t.pivot?.z];
-        if(values.some(v=>!Number.isFinite(v)))errors.push(`Ungültige Transformwerte für ${o.objectId}.`);
-        if([t.scale?.x,t.scale?.y,t.scale?.z].some(v=>v===0))errors.push(`Nullskalierung für ${o.objectId}.`);
-      }
+      if(!t)errors.push(`Transform fehlt für ${o.objectId}.`); else { const values=[t.position?.x,t.position?.y,t.position?.z,t.rotation?.x,t.rotation?.y,t.rotation?.z,t.rotation?.w,t.scale?.x,t.scale?.y,t.scale?.z,t.pivot?.x,t.pivot?.y,t.pivot?.z]; if(values.some(v=>!Number.isFinite(v)))errors.push(`Ungültige Transformwerte für ${o.objectId}.`); if([t.scale?.x,t.scale?.y,t.scale?.z].some(v=>v===0))errors.push(`Nullskalierung für ${o.objectId}.`); }
       if(o.type==='primitive.box'&&['x','y','z'].some(k=>!(o.data?.size?.[k]>0)))errors.push(`Ungültige Box-Abmessung für ${o.objectId}.`);
       if(o.type==='primitive.sphere'&&!(o.data?.radius>0))errors.push(`Ungültiger Kugelradius für ${o.objectId}.`);
       if(o.type==='primitive.cylinder'&&(!(o.data?.radius>0)||!(o.data?.height>0)))errors.push(`Ungültige Zylinderabmessung für ${o.objectId}.`);
-      if(o.type==='external.gltf'){
-        const assetId=o.data?.assetId,asset=assetMap.get(assetId);
-        if(!assetId)errors.push(`assetId fehlt für GLB/GLTF-Objekt ${o.objectId}.`);
-        else if(!asset)errors.push(`Asset ${assetId} fehlt für GLB/GLTF-Objekt ${o.objectId}.`);
-        else if(asset.kind!=='model.gltf.bundle')errors.push(`Asset ${assetId} besitzt den falschen Typ für ${o.objectId}.`);
-      }
+      if(o.type==='external.gltf'){ const assetId=o.data?.assetId,asset=assetMap.get(assetId); if(!assetId)errors.push(`assetId fehlt für GLB/GLTF-Objekt ${o.objectId}.`); else if(!asset)errors.push(`Asset ${assetId} fehlt für GLB/GLTF-Objekt ${o.objectId}.`); else if(asset.kind!=='model.gltf.bundle')errors.push(`Asset ${assetId} besitzt den falschen Typ für ${o.objectId}.`); }
       if(o.type==='sketch')errors.push(...validateSketchTopology(o).errors);
       if([ConstructionReferenceObjectType.WORK_PLANE,ConstructionReferenceObjectType.AXIS].includes(o.type))errors.push(...validateConstructionReferenceObject(o));
       if(o.data?.sourceRef)errors.push(...validateFeatureConsumerSourceRef(o.data.sourceRef,o.objectId));
-      const seen=new Set([o.objectId]); let parent=o.parentId;
-      while(parent){if(seen.has(parent)){errors.push(`Parent-Zyklus bei ${o.objectId}.`);break;}seen.add(parent);parent=objects[parent]?.parentId??null;}
+      const seen=new Set([o.objectId]); let parent=o.parentId; while(parent){if(seen.has(parent)){errors.push(`Parent-Zyklus bei ${o.objectId}.`);break;}seen.add(parent);parent=objects[parent]?.parentId??null;}
     }
   }
   return {valid:errors.length===0,errors};
