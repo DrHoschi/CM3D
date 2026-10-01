@@ -25,7 +25,7 @@ for(const identity of identities)sketch.data.profileIdentities[identity.profileI
 const refs=identities.map(identity=>createStableReference(ReferenceTargetKind.PROFILE,sketch.objectId,identity.profileId));
 const extrude={
   objectId:'extrude-v2',type:'feature.extrude',name:'Extrude V2',parentId:null,order:1,
-  transform:{position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0},scale:{x:1,y:1,z:1}},
+  transform:{position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1},scale:{x:1,y:1,z:1},pivot:{x:0,y:0,z:0}},
   data:{sourceProfileRefs:structuredClone(refs),profiles:[],depth:10,direction:'symmetric'},
   materialIds:[],flags:{visible:true,locked:false},extensions:{}
 };
