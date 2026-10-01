@@ -49,7 +49,7 @@ const rotateEulerXYZ = (vector, rotation) => {
   const cy = Math.cos(rotation.y), sy = Math.sin(rotation.y);
   const cz = Math.cos(rotation.z), sz = Math.sin(rotation.z);
 
-  [y, z] = [y * cx - z * sx, y * cx + z * sx];
+  [y, z] = [y * cx - z * sx, y * sx + z * cx];
   [x, z] = [x * cy + z * sy, -x * sy + z * cy];
   [x, y] = [x * cz - y * sz, x * sz + y * cz];
   return { x, y, z };
