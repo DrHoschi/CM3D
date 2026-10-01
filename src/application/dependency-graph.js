@@ -47,276 +47,102 @@ export function createDependencyEdge(store, dependentObjectId, reference, kind =
 export function detectDependencyCycles(edges = []) {
   const adjacency = new Map();
   const nodeIds = new Set();
-
   for (const edge of resolvedEdgesOnly(edges)) {
-    nodeIds.add(edge.sourceObjectId);
-    nodeIds.add(edge.dependentObjectId);
+    nodeIds.add(edge.sourceObjectId); nodeIds.add(edge.dependentObjectId);
     if (!adjacency.has(edge.sourceObjectId)) adjacency.set(edge.sourceObjectId, []);
     adjacency.get(edge.sourceObjectId).push(edge.dependentObjectId);
   }
-
-  for (const targets of adjacency.values()) targets.sort((a, b) => a.localeCompare(b));
-
-  let index = 0;
-  const indices = new Map();
-  const lowLinks = new Map();
-  const stack = [];
-  const onStack = new Set();
-  const cycles = [];
-
-  const strongConnect = nodeId => {
-    indices.set(nodeId, index);
-    lowLinks.set(nodeId, index);
-    index += 1;
-    stack.push(nodeId);
-    onStack.add(nodeId);
-
-    for (const dependentId of adjacency.get(nodeId) ?? []) {
-      if (!indices.has(dependentId)) {
-        strongConnect(dependentId);
-        lowLinks.set(nodeId, Math.min(lowLinks.get(nodeId), lowLinks.get(dependentId)));
-      } else if (onStack.has(dependentId)) {
-        lowLinks.set(nodeId, Math.min(lowLinks.get(nodeId), indices.get(dependentId)));
-      }
+  for (const targets of adjacency.values()) targets.sort((a,b)=>a.localeCompare(b));
+  let index=0; const indices=new Map(), lowLinks=new Map(), stack=[], onStack=new Set(), cycles=[];
+  const strongConnect=nodeId=>{
+    indices.set(nodeId,index); lowLinks.set(nodeId,index); index+=1; stack.push(nodeId); onStack.add(nodeId);
+    for(const dependentId of adjacency.get(nodeId)??[]){
+      if(!indices.has(dependentId)){strongConnect(dependentId);lowLinks.set(nodeId,Math.min(lowLinks.get(nodeId),lowLinks.get(dependentId)));}
+      else if(onStack.has(dependentId))lowLinks.set(nodeId,Math.min(lowLinks.get(nodeId),indices.get(dependentId)));
     }
-
-    if (lowLinks.get(nodeId) !== indices.get(nodeId)) return;
-
-    const component = [];
-    while (stack.length) {
-      const member = stack.pop();
-      onStack.delete(member);
-      component.push(member);
-      if (member === nodeId) break;
-    }
-
-    component.sort((a, b) => a.localeCompare(b));
-    const selfCycle = component.length === 1 && (adjacency.get(component[0]) ?? []).includes(component[0]);
-    if (component.length > 1 || selfCycle) cycles.push(component);
+    if(lowLinks.get(nodeId)!==indices.get(nodeId))return;
+    const component=[]; while(stack.length){const member=stack.pop();onStack.delete(member);component.push(member);if(member===nodeId)break;}
+    component.sort((a,b)=>a.localeCompare(b));
+    const selfCycle=component.length===1&&(adjacency.get(component[0])??[]).includes(component[0]);
+    if(component.length>1||selfCycle)cycles.push(component);
   };
-
-  for (const nodeId of [...nodeIds].sort((a, b) => a.localeCompare(b))) {
-    if (!indices.has(nodeId)) strongConnect(nodeId);
-  }
-
-  return cycles.sort((a, b) => a.join('\u0000').localeCompare(b.join('\u0000')));
+  for(const nodeId of [...nodeIds].sort((a,b)=>a.localeCompare(b)))if(!indices.has(nodeId))strongConnect(nodeId);
+  return cycles.sort((a,b)=>a.join('\u0000').localeCompare(b.join('\u0000')));
 }
 
 export function wouldCreateDependencyCycle(graph, sourceObjectId, dependentObjectId) {
   if (!sourceObjectId || !dependentObjectId) return false;
   if (sourceObjectId === dependentObjectId) return true;
-
-  const visited = new Set();
-  const pending = [dependentObjectId];
-  while (pending.length) {
-    const current = pending.shift();
-    if (current === sourceObjectId) return true;
-    if (visited.has(current)) continue;
-    visited.add(current);
-    const next = (graph?.dependentsOf?.(current) ?? [])
-      .filter(edge => edge.state === ReferenceState.RESOLVED)
-      .map(edge => edge.dependentObjectId)
-      .sort((a, b) => a.localeCompare(b));
-    pending.push(...next);
-  }
+  const visited=new Set(), pending=[dependentObjectId];
+  while(pending.length){const current=pending.shift();if(current===sourceObjectId)return true;if(visited.has(current))continue;visited.add(current);pending.push(...(graph?.dependentsOf?.(current)??[]).filter(edge=>edge.state===ReferenceState.RESOLVED).map(edge=>edge.dependentObjectId).sort((a,b)=>a.localeCompare(b)));}
   return false;
 }
 
 export function validateDependencyEdge(graph, sourceObjectId, dependentObjectId) {
-  if (!sourceObjectId || !dependentObjectId) {
-    return {
-      allowed: false,
-      code: 'DEPENDENCY_ENDPOINT_MISSING',
-      message: 'Dependency-Kante benötigt Quelle und abhängiges Ziel.'
-    };
-  }
-  if (wouldCreateDependencyCycle(graph, sourceObjectId, dependentObjectId)) {
-    return {
-      allowed: false,
-      code: 'DEPENDENCY_CYCLE',
-      message: `Dependency-Kante ${sourceObjectId} → ${dependentObjectId} würde einen Zyklus erzeugen.`
-    };
-  }
-  return { allowed: true, code: null, message: null };
+  if (!sourceObjectId || !dependentObjectId) return {allowed:false,code:'DEPENDENCY_ENDPOINT_MISSING',message:'Dependency-Kante benötigt Quelle und abhängiges Ziel.'};
+  if (wouldCreateDependencyCycle(graph,sourceObjectId,dependentObjectId)) return {allowed:false,code:'DEPENDENCY_CYCLE',message:`Dependency-Kante ${sourceObjectId} → ${dependentObjectId} würde einen Zyklus erzeugen.`};
+  return {allowed:true,code:null,message:null};
 }
 
 export function buildDependencyGraph(store, declaredDependencies = []) {
-  const nodes = new Map();
-  const outgoing = new Map();
-  const incoming = new Map();
+  const nodes=new Map(), outgoing=new Map(), incoming=new Map();
+  for(const object of Object.values(store?.project?.scene?.objects??{}))nodes.set(object.objectId,{objectId:object.objectId,objectType:object.type,state:DependencyNodeState.READY,upstreamState:null,diagnostics:[]});
 
-  for (const object of Object.values(store?.project?.scene?.objects ?? {})) {
-    nodes.set(object.objectId, {
-      objectId: object.objectId,
-      objectType: object.type,
-      state: DependencyNodeState.READY,
-      upstreamState: null,
-      diagnostics: []
-    });
+  for(const object of Object.values(store?.project?.scene?.objects??{})){
+    if(object?.type!==ConstructionReferenceObjectType.WORK_PLANE||!object.data?.derivation?.sourceRef)continue;
+    const node=nodes.get(object.objectId), edge=createDependencyEdge(store,object.objectId,object.data.derivation.sourceRef,'PLANE_REFERENCE_TO_DERIVED_WORK_PLANE');
+    if(edge)addEdge(outgoing,incoming,edge);
+    if(!edge||edge.state!==ReferenceState.RESOLVED){const state=edge?.state??ReferenceState.INVALID;node.state=DependencyNodeState.BLOCKED;node.upstreamState=state;node.diagnostics.push({code:`UPSTREAM_${state}`,message:`Abgeleitete Arbeitsebene ist blockiert, weil die Quellreferenz ${state} ist.`},...(edge?.diagnostics??[]).map(cloneDiagnostic));}
   }
 
-  for (const object of Object.values(store?.project?.scene?.objects ?? {})) {
-    if (object?.type !== ConstructionReferenceObjectType.WORK_PLANE || !object.data?.derivation?.sourceRef) continue;
-    const node = nodes.get(object.objectId);
-    const edge = createDependencyEdge(store, object.objectId, object.data.derivation.sourceRef, 'PLANE_REFERENCE_TO_DERIVED_WORK_PLANE');
-    if (edge) addEdge(outgoing, incoming, edge);
-    if (!edge || edge.state !== ReferenceState.RESOLVED) {
-      const state = edge?.state ?? ReferenceState.INVALID;
-      node.state = DependencyNodeState.BLOCKED;
-      node.upstreamState = state;
-      node.diagnostics.push({
-        code: `UPSTREAM_${state}`,
-        message: `Abgeleitete Arbeitsebene ist blockiert, weil die Quellreferenz ${state} ist.`
-      });
-      node.diagnostics.push(...(edge?.diagnostics ?? []).map(cloneDiagnostic));
+  for(const object of Object.values(store?.project?.scene?.objects??{})){
+    if(object?.type!=='sketch'||!object.data?.planeRef)continue;
+    const node=nodes.get(object.objectId), resolution=resolveStableReference(store,object.data.planeRef), edge=createDependencyEdge(store,object.objectId,object.data.planeRef,'PLANE_REFERENCE_TO_SKETCH');
+    if(edge)addEdge(outgoing,incoming,edge);
+    if(resolution.state!==ReferenceState.RESOLVED){node.state=DependencyNodeState.BLOCKED;node.upstreamState=resolution.state;node.diagnostics.push({code:`UPSTREAM_${resolution.state}`,message:`Skizzenebene ist blockiert, weil die Ebenenreferenz ${resolution.state} ist.`},...resolution.diagnostics.map(cloneDiagnostic));}
+  }
+
+  for(const object of Object.values(store?.project?.scene?.objects??{})){
+    if(object?.type==='feature.extrude'){
+      const node=nodes.get(object.objectId), profileRefs=Array.isArray(object.data?.sourceProfileRefs)?object.data.sourceProfileRefs:[], refs=profileRefs.length?profileRefs:[object.data?.sourceSketchRef].filter(Boolean), kind=profileRefs.length?'PROFILE_TO_EXTRUDE':'SKETCH_TO_EXTRUDE';
+      if(!refs.length){node.state=DependencyNodeState.MISSING;node.diagnostics.push({code:'SOURCE_REFERENCE_MISSING',message:'Extrusion besitzt keine stabile Quellreferenz.'});continue;}
+      for(const ref of refs){const edge=createDependencyEdge(store,object.objectId,ref,kind);if(edge)addEdge(outgoing,incoming,edge);if(!edge||edge.state!==ReferenceState.RESOLVED){const state=edge?.state??ReferenceState.INVALID;node.state=DependencyNodeState.BLOCKED;node.upstreamState=state;node.diagnostics.push({code:`UPSTREAM_${state}`,message:`Abhängige Berechnung ist blockiert, weil die Quellreferenz ${state} ist.`},...(edge?.diagnostics??[]).map(cloneDiagnostic));}}
     }
-  }
-
-  for (const object of Object.values(store?.project?.scene?.objects ?? {})) {
-    if (object?.type !== 'sketch' || !object.data?.planeRef) continue;
-    const node = nodes.get(object.objectId);
-    const resolution = resolveStableReference(store, object.data.planeRef);
-    const edge = createDependencyEdge(store, object.objectId, object.data.planeRef, 'PLANE_REFERENCE_TO_SKETCH');
-    if (edge) addEdge(outgoing, incoming, edge);
-    if (resolution.state !== ReferenceState.RESOLVED) {
-      node.state = DependencyNodeState.BLOCKED;
-      node.upstreamState = resolution.state;
-      node.diagnostics.push({
-        code: `UPSTREAM_${resolution.state}`,
-        message: `Skizzenebene ist blockiert, weil die Ebenenreferenz ${resolution.state} ist.`
-      });
-      node.diagnostics.push(...resolution.diagnostics.map(cloneDiagnostic));
+    if(object?.type==='feature.thin-extrude'){
+      const node=nodes.get(object.objectId), ref=object.data?.sourceRef;
+      if(!ref){node.state=DependencyNodeState.MISSING;node.diagnostics.push({code:'SOURCE_REFERENCE_MISSING',message:'Thin Extrude besitzt keine stabile PATH-Referenz.'});continue;}
+      const edge=createDependencyEdge(store,object.objectId,ref,'PATH_TO_THIN_EXTRUDE');
+      if(edge)addEdge(outgoing,incoming,edge);
+      if(!edge||edge.state!==ReferenceState.RESOLVED){const state=edge?.state??ReferenceState.INVALID;node.state=DependencyNodeState.BLOCKED;node.upstreamState=state;node.diagnostics.push({code:`UPSTREAM_${state}`,message:`Thin Extrude ist blockiert, weil die PATH-Referenz ${state} ist.`},...(edge?.diagnostics??[]).map(cloneDiagnostic));}
     }
   }
 
-  for (const object of Object.values(store?.project?.scene?.objects ?? {})) {
-    if (object?.type !== 'feature.extrude') continue;
-    const node = nodes.get(object.objectId);
-    const profileRefs = Array.isArray(object.data?.sourceProfileRefs) ? object.data.sourceProfileRefs : [];
-    const refs = profileRefs.length ? profileRefs : [object.data?.sourceSketchRef].filter(Boolean);
-    const kind = profileRefs.length ? 'PROFILE_TO_EXTRUDE' : 'SKETCH_TO_EXTRUDE';
-
-    if (!refs.length) {
-      node.state = DependencyNodeState.MISSING;
-      node.diagnostics.push({
-        code: 'SOURCE_REFERENCE_MISSING',
-        message: 'Extrusion besitzt keine stabile Quellreferenz.'
-      });
-      continue;
-    }
-
-    for (const ref of refs) {
-      const edge = createDependencyEdge(store, object.objectId, ref, kind);
-      if (edge) addEdge(outgoing, incoming, edge);
-      if (!edge || edge.state !== ReferenceState.RESOLVED) {
-        const state = edge?.state ?? ReferenceState.INVALID;
-        node.state = DependencyNodeState.BLOCKED;
-        node.upstreamState = state;
-        node.diagnostics.push({
-          code: `UPSTREAM_${state}`,
-          message: `Abhängige Berechnung ist blockiert, weil die Quellreferenz ${state} ist.`
-        });
-        node.diagnostics.push(...(edge?.diagnostics ?? []).map(cloneDiagnostic));
-      }
-    }
-  }
-
-  for (const dependency of declaredDependencies ?? []) {
-    const dependentObjectId = dependency?.dependentObjectId;
-    const node = nodes.get(dependentObjectId);
-    const edge = createDependencyEdge(store, dependentObjectId, dependency?.reference, dependency?.kind);
-    if (!node || !edge) continue;
-    addEdge(outgoing, incoming, edge);
-    if (edge.state !== ReferenceState.RESOLVED) {
-      node.state = DependencyNodeState.BLOCKED;
-      node.upstreamState = edge.state;
-      node.diagnostics.push({
-        code: `UPSTREAM_${edge.state}`,
-        message: `Abhängige Berechnung ist blockiert, weil die Quellreferenz ${edge.state} ist.`
-      });
-      node.diagnostics.push(...edge.diagnostics.map(cloneDiagnostic));
-    }
-  }
-
-  for (const edges of outgoing.values()) edges.sort((a, b) => a.dependentObjectId.localeCompare(b.dependentObjectId));
-  for (const edges of incoming.values()) edges.sort((a, b) => a.sourceObjectId.localeCompare(b.sourceObjectId));
-
-  const allEdges = [...outgoing.values()].flat();
-  const cycleEdges = allEdges.map(edge => edge.kind === 'PLANE_REFERENCE_TO_DERIVED_WORK_PLANE'
-    && edge.state === ReferenceState.BLOCKED
-    && store?.getObject?.(edge.sourceObjectId)
-    ? { ...edge, state: ReferenceState.RESOLVED }
-    : edge);
-  const cycles = detectDependencyCycles(cycleEdges);
-  for (const cycle of cycles) {
-    for (const objectId of cycle) {
-      const node = nodes.get(objectId);
-      if (!node) continue;
-      node.state = DependencyNodeState.BLOCKED;
-      node.upstreamState = 'CYCLE';
-      node.diagnostics.push({
-        code: 'DEPENDENCY_CYCLE',
-        message: `Dependency-Zyklus erkannt: ${cycle.join(' → ')}.`
-      });
-    }
-  }
-
-  const projectEdge = edge => ({
-    ...edge,
-    reference: cloneRef(edge.reference),
-    diagnostics: (edge.diagnostics ?? []).map(cloneDiagnostic)
-  });
-
-  return {
-    nodes,
-    outgoing,
-    incoming,
-    cycles: cycles.map(cycle => [...cycle]),
-    hasCycles: cycles.length > 0,
-    dependentsOf(objectId) {
-      return (outgoing.get(objectId) ?? []).map(projectEdge);
-    },
-    dependenciesOf(objectId) {
-      return (incoming.get(objectId) ?? []).map(projectEdge);
-    },
-    nodeState(objectId) {
-      const node = nodes.get(objectId);
-      return node ? { ...node, diagnostics: node.diagnostics.map(cloneDiagnostic) } : null;
-    }
-  };
+  for(const dependency of declaredDependencies??[]){const dependentObjectId=dependency?.dependentObjectId,node=nodes.get(dependentObjectId),edge=createDependencyEdge(store,dependentObjectId,dependency?.reference,dependency?.kind);if(!node||!edge)continue;addEdge(outgoing,incoming,edge);if(edge.state!==ReferenceState.RESOLVED){node.state=DependencyNodeState.BLOCKED;node.upstreamState=edge.state;node.diagnostics.push({code:`UPSTREAM_${edge.state}`,message:`Abhängige Berechnung ist blockiert, weil die Quellreferenz ${edge.state} ist.`},...edge.diagnostics.map(cloneDiagnostic));}}
+  for(const edges of outgoing.values())edges.sort((a,b)=>a.dependentObjectId.localeCompare(b.dependentObjectId));
+  for(const edges of incoming.values())edges.sort((a,b)=>a.sourceObjectId.localeCompare(b.sourceObjectId));
+  const allEdges=[...outgoing.values()].flat(), cycleEdges=allEdges.map(edge=>edge.kind==='PLANE_REFERENCE_TO_DERIVED_WORK_PLANE'&&edge.state===ReferenceState.BLOCKED&&store?.getObject?.(edge.sourceObjectId)?{...edge,state:ReferenceState.RESOLVED}:edge), cycles=detectDependencyCycles(cycleEdges);
+  for(const cycle of cycles)for(const objectId of cycle){const node=nodes.get(objectId);if(!node)continue;node.state=DependencyNodeState.BLOCKED;node.upstreamState='CYCLE';node.diagnostics.push({code:'DEPENDENCY_CYCLE',message:`Dependency-Zyklus erkannt: ${cycle.join(' → ')}.`});}
+  const projectEdge=edge=>({...edge,reference:cloneRef(edge.reference),diagnostics:(edge.diagnostics??[]).map(cloneDiagnostic)});
+  return {nodes,outgoing,incoming,cycles:cycles.map(cycle=>[...cycle]),hasCycles:cycles.length>0,dependentsOf(objectId){return(outgoing.get(objectId)??[]).map(projectEdge);},dependenciesOf(objectId){return(incoming.get(objectId)??[]).map(projectEdge);},nodeState(objectId){const node=nodes.get(objectId);return node?{...node,diagnostics:node.diagnostics.map(cloneDiagnostic)}:null;}};
 }
 
 export function visitDependents(store, sourceObjectId, visitor, declaredDependencies = []) {
-  const graph = buildDependencyGraph(store, declaredDependencies);
-  const changed = [];
-  for (const edge of graph.dependentsOf(sourceObjectId)) {
-    if (edge.state !== ReferenceState.RESOLVED) continue;
-    if (graph.nodeState(edge.dependentObjectId)?.state === DependencyNodeState.BLOCKED) continue;
-    const dependent = store?.getObject?.(edge.dependentObjectId) ?? null;
-    if (!dependent) continue;
-    visitor(dependent, edge, graph);
-    changed.push(dependent.objectId);
-  }
+  const graph=buildDependencyGraph(store,declaredDependencies),changed=[];
+  for(const edge of graph.dependentsOf(sourceObjectId)){if(edge.state!==ReferenceState.RESOLVED)continue;if(graph.nodeState(edge.dependentObjectId)?.state===DependencyNodeState.BLOCKED)continue;const dependent=store?.getObject?.(edge.dependentObjectId)??null;if(!dependent)continue;visitor(dependent,edge,graph);changed.push(dependent.objectId);}
   return changed;
 }
 
 export function enforceBlockedDependencyState(store, declaredDependencies = []) {
-  const graph = buildDependencyGraph(store, declaredDependencies);
-  const blocked = [];
-  for (const [objectId, node] of graph.nodes) {
-    if (node.state !== DependencyNodeState.BLOCKED) continue;
-    const object = store?.getObject?.(objectId) ?? null;
-    if (object?.type !== 'feature.extrude') continue;
-    object.data ??= {};
-    object.extensions ??= {};
-    if (Array.isArray(object.data.sourceProfileRefs) && object.data.sourceProfileRefs.length) object.data.profiles = [];
-    else object.data.profile = null;
-    object.extensions.recomputeState = {
-      state: DependencyNodeState.BLOCKED,
-      upstreamState: node.upstreamState,
-      diagnostics: node.diagnostics.map(cloneDiagnostic)
-    };
-    blocked.push(objectId);
+  const graph=buildDependencyGraph(store,declaredDependencies),blocked=[];
+  for(const [objectId,node] of graph.nodes){
+    if(node.state!==DependencyNodeState.BLOCKED)continue;
+    const object=store?.getObject?.(objectId)??null;
+    if(!['feature.extrude','feature.thin-extrude'].includes(object?.type))continue;
+    object.data??={};object.extensions??={};
+    if(object.type==='feature.thin-extrude')object.data.contour=[];
+    else if(Array.isArray(object.data.sourceProfileRefs)&&object.data.sourceProfileRefs.length)object.data.profiles=[];
+    else object.data.profile=null;
+    object.extensions.recomputeState={state:DependencyNodeState.BLOCKED,upstreamState:node.upstreamState,diagnostics:node.diagnostics.map(cloneDiagnostic)};blocked.push(objectId);
   }
   return blocked.sort();
 }
