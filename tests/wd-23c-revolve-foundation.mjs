@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import { syncRevolveSourceReferences } from '../src/application/revolve.js';
+import { buildDependencyGraph } from '../src/application/dependency-graph.js';
+import { createStableReference, ReferenceState, ReferenceTargetKind } from '../src/application/stable-reference.js';
+import { SYSTEM_CONSTRUCTION_OWNER_ID, GlobalConstructionAxisId } from '../src/model/construction-reference.js';
+import { createProfileIdentity } from '../src/model/sketch-profile-path-identity.js';
+import { deriveSketchProfilesAndPaths } from '../src/model/sketch-profile-path-derivation.js';
+import { createProject, createSketchObject } from '../src/model/project.js';
+import { parseProjectFileText, serializeProjectFile } from '../src/persistence/project-file.js';
+
+const project=createProject('WD-23C Revolve');const sketch=createSketchObject(project,'Revolve Profile');project.scene.objects[sketch.objectId]=sketch;project.scene.rootObjectIds.push(sketch.objectId);
+const point=(id,x,y)=>{sketch.data.points[id]={pointId:id,x,y};};const line=(id,a,b)=>{sketch.data.lines[id]={lineId:id,startPointId:a,endPointId:b};};
+point('a',1,0);point('b',3,0);point('c',3,2);point('d',1,2);line('ab','a','b');line('bc','b','c');line('cd','c','d');line('da','d','a');
+const profile=deriveSketchProfilesAndPaths(sketch).profiles[0],identity=createProfileIdentity(profile,'profile_revolve');sketch.data.profileIdentities[identity.profileId]=structuredClone(identity);
+const sourceProfileRef=createStableReference(ReferenceTargetKind.PROFILE,sketch.objectId,identity.profileId);const axisRef=createStableReference(ReferenceTargetKind.CONSTRUCTION_AXIS,SYSTEM_CONSTRUCTION_OWNER_ID,GlobalConstructionAxisId.Y);
+const revolve={objectId:'revolve-1',type:'feature.revolve',name:'Revolve',parentId:null,order:1,transform:{position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1},scale:{x:1,y:1,z:1},pivot:{x:0,y:0,z:0}},data:{sourceProfileRef,axisRef,angleDeg:360,direction:'positive',profile:null,revolveProfile:[],axis:null},materialIds:[],flags:{visible:true,locked:false},extensions:{}};project.scene.objects[revolve.objectId]=revolve;project.scene.rootObjectIds.push(revolve.objectId);
+const store={project,getObject(id){return this.project.scene.objects[id]??null;}};
+let resolution=syncRevolveSourceReferences(store,revolve);assert.equal(resolution.state,ReferenceState.RESOLVED);assert.equal(revolve.extensions.recomputeState.state,'READY');assert.equal(revolve.data.revolveProfile.length,4);assert.ok(revolve.data.revolveProfile.every(point=>point.radius>=0));
+const before=structuredClone(revolve.data.revolveProfile);sketch.data.points.c.x=4;resolution=syncRevolveSourceReferences(store,revolve);assert.equal(resolution.state,ReferenceState.RESOLVED);assert.notDeepEqual(revolve.data.revolveProfile,before);
+const declared=[{dependentObjectId:revolve.objectId,reference:sourceProfileRef,kind:'PROFILE_TO_REVOLVE'},{dependentObjectId:revolve.objectId,reference:axisRef,kind:'AXIS_TO_REVOLVE'}];const graph=buildDependencyGraph(store,declared);assert.equal(graph.dependenciesOf(revolve.objectId).length,1);assert.equal(graph.dependenciesOf(revolve.objectId)[0].kind,'PROFILE_TO_REVOLVE');
+const saved=sketch.data.profileIdentities[identity.profileId];delete sketch.data.profileIdentities[identity.profileId];resolution=syncRevolveSourceReferences(store,revolve);assert.equal(resolution.state,ReferenceState.MISSING);assert.equal(revolve.extensions.recomputeState.state,ReferenceState.BLOCKED);assert.deepEqual(revolve.data.revolveProfile,[]);sketch.data.profileIdentities[identity.profileId]=saved;assert.equal(syncRevolveSourceReferences(store,revolve).state,ReferenceState.RESOLVED);
+const reloaded=parseProjectFileText(serializeProjectFile(project));const reloadedStore={project:reloaded,getObject(id){return this.project.scene.objects[id]??null;}};const reloadedRevolve=reloaded.scene.objects[revolve.objectId];assert.deepEqual(reloadedRevolve.data.sourceProfileRef,sourceProfileRef);assert.deepEqual(reloadedRevolve.data.axisRef,axisRef);assert.equal(syncRevolveSourceReferences(reloadedStore,reloadedRevolve).state,ReferenceState.RESOLVED);
+reloadedRevolve.data.angleDeg=180;reloadedRevolve.data.direction='negative';assert.equal(syncRevolveSourceReferences(reloadedStore,reloadedRevolve).state,ReferenceState.RESOLVED);assert.equal(reloadedRevolve.data.angleDeg,180);assert.equal(reloadedRevolve.data.direction,'negative');
+console.log('WD-23C Revolve Foundation regression: PASS');
