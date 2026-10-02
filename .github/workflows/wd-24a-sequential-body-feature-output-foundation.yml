@@ -1,0 +1,27 @@
+name: WD-24A Sequential Body Feature Output Foundation
+
+on:
+  push:
+    branches:
+      - feature/WD-24A-sequential-body-feature-output-foundation
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax stable reference
+        run: node --check src/application/stable-reference.js
+      - name: Syntax dependency graph
+        run: node --check src/application/dependency-graph.js
+      - name: Syntax feature output
+        run: node --check src/application/feature-output.js
+      - name: WD-23A regression
+        run: node tests/wd-23a-extrude-v2-foundation.mjs
+      - name: WD-23B regression
+        run: node tests/wd-23b-thin-extrude-foundation.mjs
+      - name: WD-23C regression
+        run: node tests/wd-23c-revolve-foundation.mjs
+      - name: WD-24A sequential output foundation
+        run: node tests/wd-24a-sequential-body-feature-output-foundation.mjs
