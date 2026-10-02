@@ -9,6 +9,7 @@ import { installSketchConnectivityCommands } from './application/sketch-connecti
 import { getSketchElement, getSketchPoint } from './model/sketch-topology.js';
 import { ThreeRuntime } from './runtime-three/runtime.js';
 import { installExtrudeRuntime } from './runtime-three/extrude.js';
+import { installRevolveRuntime } from './runtime-three/revolve.js';
 import { installGltfInterchange } from './runtime-three/gltf-interchange.js';
 import { installViewportReferenceSystem } from './runtime-three/viewport-reference-system.js';
 import { AppUI } from './ui/app.js';
@@ -43,6 +44,7 @@ const extrudeSourceReferenceSync = installExtrudeSourceReferenceSync(store);
 const viewport = document.querySelector('#viewport');
 const runtime = new ThreeRuntime(viewport, store);
 installExtrudeRuntime(runtime);
+installRevolveRuntime(runtime);
 const gltfInterchange = installGltfInterchange(runtime, store);
 const viewportReferenceSystem = installViewportReferenceSystem(runtime);
 const appUI = new AppUI(store);
