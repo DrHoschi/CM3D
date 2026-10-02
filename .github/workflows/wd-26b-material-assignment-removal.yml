@@ -1,0 +1,26 @@
+name: WD-26B Material Assignment Removal
+on:
+  push:
+    branches: [feature/wd-26b-material-assignment-removal]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: |
+          node --check src/application/material.js
+          node --check src/ui/material-panel.js
+          node --check tests/wd-26b-material-assignment-removal.mjs
+      - name: WD-25F regression
+        run: node tests/wd-25f-rb06-completion-recent-projects.mjs
+      - name: WD-26A regression
+        run: node tests/wd-26a-material-binding-local-variant-foundation.mjs
+      - name: WD-26B focused regression
+        run: node tests/wd-26b-material-assignment-removal.mjs
