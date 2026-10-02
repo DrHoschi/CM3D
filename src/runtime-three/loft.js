@@ -1,2 +1,35 @@
 import * as THREE from 'three';
-export function installLoftRuntime(runtime){const base=runtime.geometryFor.bind(runtime);runtime.geometryFor=o=>{if(o?.type!=='feature.loft')return base(o);const sections=o.data?.sections;if(!Array.isArray(sections)||sections.length<2)return null;const n=sections[0]?.points?.length;if(!Number.isInteger(n)||n<3||sections.some(s=>s.points?.length!==n))return null;const pos=[];for(const s of sections)for(const p of s.points)pos.push(Number(p.x),Number(p.y),Number(p.z));if(pos.some(v=>!Number.isFinite(v)))return null;const idx=[];for(let j=0;j<sections.length-1;j++)for(let i=0;i<n;i++){const a=j*n+i,b=j*n+(i+1)%n,c=(j+1)*n+(i+1)%n,d=(j+1)*n+i;idx.push(a,b,d,b,c,d);}const start=pos.length/3;for(const p of sections[0].points)pos.push(p.x,p.y,p.z);const end=pos.length/3;for(const p of sections.at(-1).points)pos.push(p.x,p.y,p.z);for(let i=1;i<n-1;i++){idx.push(start,start+i+1,start+i);idx.push(end,end+i,end+i+1);}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return g;};}
+import { installPrimitiveFamilyRuntime } from './primitive-family.js';
+
+export function installLoftRuntime(runtime){
+  const base=runtime.geometryFor.bind(runtime);
+  runtime.geometryFor=o=>{
+    if(o?.type!=='feature.loft')return base(o);
+    const sections=o.data?.sections;
+    if(!Array.isArray(sections)||sections.length<2)return null;
+    const n=sections[0]?.points?.length;
+    if(!Number.isInteger(n)||n<3||sections.some(s=>s.points?.length!==n))return null;
+    const pos=[];
+    for(const s of sections)for(const p of s.points)pos.push(Number(p.x),Number(p.y),Number(p.z));
+    if(pos.some(v=>!Number.isFinite(v)))return null;
+    const idx=[];
+    for(let j=0;j<sections.length-1;j++)for(let i=0;i<n;i++){
+      const a=j*n+i,b=j*n+(i+1)%n,c=(j+1)*n+(i+1)%n,d=(j+1)*n+i;
+      idx.push(a,b,d,b,c,d);
+    }
+    const start=pos.length/3;
+    for(const p of sections[0].points)pos.push(p.x,p.y,p.z);
+    const end=pos.length/3;
+    for(const p of sections.at(-1).points)pos.push(p.x,p.y,p.z);
+    for(let i=1;i<n-1;i++){
+      idx.push(start,start+i+1,start+i);
+      idx.push(end,end+i,end+i+1);
+    }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    return g;
+  };
+  installPrimitiveFamilyRuntime(runtime);
+}
