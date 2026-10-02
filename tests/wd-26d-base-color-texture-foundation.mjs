@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import { createProject, createBoxObject, createSphereObject, migrateAndValidateProject, validateProject } from '../src/model/project.js';
+import { createLocalMaterialVariant, importBaseColorTexture, removeBaseColorTexture } from '../src/application/material.js';
+
+const store={project:createProject('WD-26D'),history:[],events:[],snapshot(){return structuredClone(this.project);},pushHistory(before,label){this.history.push({before,after:this.snapshot(),label});},touch(){this.project.project.modifiedAt=new Date().toISOString();},emit(type,payload){this.events.push({type,payload});},getObject(id){return this.project.scene.objects[id]??null;}};
+const add=o=>{store.project.scene.objects[o.objectId]=o;store.project.scene.rootObjectIds.push(o.objectId);return o;};
+const a=add(createBoxObject(store.project,'A')),b=add(createSphereObject(store.project,'B')),sharedId=a.materialIds[0];b.materialIds=[sharedId];
+const png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+const before=store.history.length,imported=importBaseColorTexture(store,sharedId,{name:'pixel.png',mimeType:'image/png',dataUrl:png});assert.equal(imported.ok,true);assert.equal(store.history.length,before+1);assert.equal(store.project.materials[sharedId].textureRefs.baseColor,imported.assetId);assert.equal(store.project.assets.find(a=>a.assetId===imported.assetId)?.kind,'image.texture');assert.equal(validateProject(store.project).valid,true);
+const local=createLocalMaterialVariant(store,b.objectId);assert.equal(local.ok,true);assert.equal(store.project.materials[local.materialId].textureRefs.baseColor,imported.assetId,'local variant copies texture ref');assert.equal(removeBaseColorTexture(store,local.materialId).ok,true);assert.equal(store.project.materials[local.materialId].textureRefs.baseColor,undefined);assert.equal(store.project.materials[sharedId].textureRefs.baseColor,imported.assetId,'local removal must not mutate shared definition');
+const roundtrip=migrateAndValidateProject(JSON.parse(JSON.stringify(store.project))).project;assert.equal(roundtrip.materials[sharedId].textureRefs.baseColor,imported.assetId);assert.equal(roundtrip.assets.find(a=>a.assetId===imported.assetId)?.dataUrl,png);
+const broken=structuredClone(store.project);broken.materials[sharedId].textureRefs.baseColor='asset_missing';const brokenValidation=validateProject(broken);assert.equal(brokenValidation.valid,false);assert.ok(brokenValidation.errors.some(e=>e.includes('Textur-Asset asset_missing fehlt')));
+const wrong=structuredClone(store.project);wrong.assets.push({assetId:'asset_wrong',kind:'other'});wrong.materials[sharedId].textureRefs.baseColor='asset_wrong';assert.equal(validateProject(wrong).valid,false);
+assert.ok(store.history.find(h=>h.label==='Basisfarbtextur importieren')?.after);assert.ok(store.history.find(h=>h.label==='Basisfarbtextur entfernen')?.after);
+console.log('WD-26D Base Color Texture Foundation focused regression PASS');
