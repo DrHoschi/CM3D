@@ -1,0 +1,33 @@
+name: WD-24C Bevel Fillet Foundation
+
+on:
+  push:
+    branches:
+      - feature/WD-24C-bevel-fillet-foundation
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax stable reference
+        run: node --check src/application/stable-reference.js
+      - name: Syntax edge identity
+        run: node --check src/application/edge-identity.js
+      - name: Syntax bevel fillet application
+        run: node --check src/application/bevel-fillet.js
+      - name: Syntax application integration
+        run: node --check src/application/primitive-family.js
+      - name: Syntax bevel fillet kernel
+        run: node --check src/runtime-three/bevel-fillet-kernel.js
+      - name: Syntax bevel fillet runtime
+        run: node --check src/runtime-three/bevel-fillet.js
+      - name: Syntax runtime integration
+        run: node --check src/runtime-three/boolean.js
+      - name: WD-24A regression
+        run: node tests/wd-24a-sequential-body-feature-output-foundation.mjs
+      - name: WD-24B regression
+        run: node tests/wd-24b-boolean-foundation.mjs
+      - name: WD-24C focused regression
+        run: node tests/wd-24c-bevel-fillet-foundation.mjs
