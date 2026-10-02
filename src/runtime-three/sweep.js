@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { installLoftRuntime } from './loft.js';
 
 export function installSweepRuntime(runtime){
   const baseGeometryFor=runtime.geometryFor.bind(runtime);
@@ -12,4 +13,5 @@ export function installSweepRuntime(runtime){
     for(let i=1;i<n-1;i+=1){indices.push(start,start+i+1,start+i);indices.push(end,end+i,end+i+1);}
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setIndex(indices);geometry.computeVertexNormals();return geometry;
   };
+  installLoftRuntime(runtime);
 }
