@@ -105,13 +105,13 @@ assert.equal(resolveStableReference(store, lineRef).state, ReferenceState.MISSIN
 assert.ok(events.some(event => event.type === 'geometryChanged' && event.topologyMutation === true));
 assert.ok(events.some(event => event.type === 'selectionChanged'));
 
-// Bootstrap/build consistency: sketch editing is installed first, then the central contract becomes authoritative.
-// Compare semantic call positions rather than a formatting-sensitive declaration literal.
+// Bootstrap consistency: sketch editing is installed first, then the central contract becomes authoritative.
+// Compare semantic call positions rather than formatting-sensitive declaration literals.
+// BUILD_ID is intentionally not asserted here: it identifies the current product build and must advance independently
+// of this historical WD-21A.4 contract regression.
 const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 const editingInstall = main.search(/installSketchEditing\s*\(\s*store\s*,\s*runtime\s*,\s*appUI\s*\)\s*;/);
 const mutationInstall = main.search(/(?:const\s+sketchMutationContract\s*=\s*)?installSketchMutationContract\s*\(\s*store\s*\)\s*;/);
 assert.ok(editingInstall >= 0 && mutationInstall > editingInstall, 'central mutation contract must be the final sketch write owner after legacy UI installation');
-assert.match(main, /const BUILD_ID = 'WD-21A\.4'/);
-assert.doesNotMatch(main, /const BUILD_ID = 'WD-21A\.3'/);
 
 console.log('WD-21A.4 Foundation Integration & Contract Coverage Gate: PASS');
