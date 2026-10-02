@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { installBooleanRuntime } from './boolean.js';
+import { installMirrorRuntime } from './mirror.js';
 
 function tubeGeometry(data){
   const shape=new THREE.Shape();
@@ -24,5 +25,6 @@ export function installPrimitiveFamilyRuntime(runtime){
     return legacyGeometryFor(object);
   };
   installBooleanRuntime(runtime);
+  installMirrorRuntime(runtime);
   return runtime;
 }
