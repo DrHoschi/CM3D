@@ -1,4 +1,5 @@
 import { createSphereObject } from '../model/project.js';
+import { installBooleanFoundation } from './boolean.js';
 
 const positive=(value,fallback)=>{const n=Number(value);return Number.isFinite(n)&&n>0?n:fallback;};
 const segments=(value,fallback=32)=>Math.max(3,Math.round(positive(value,fallback)));
@@ -33,5 +34,6 @@ export function installPrimitiveFamily(store){
     store.touch();store.pushHistory(before,'Abmessungen ändern');store.emit('geometryChanged',{objectId:id});
   };
 
+  installBooleanFoundation(store);
   return {types:['primitive.sphere','primitive.cone','primitive.plane','primitive.tube','primitive.torus']};
 }
