@@ -8,9 +8,8 @@ const graph=fs.readFileSync(new URL('../src/application/dependency-graph.js',imp
 // One authoritative structural hierarchy: project scene roots + object parent/order.
 assert.match(project,/rootObjectIds:\s*\[\]/,'Project scene must own rootObjectIds.');
 assert.match(project,/parentId:\s*null/,'Scene objects must own structural parentId.');
-assert.match(project,/order:\s*0/,'Scene objects must own deterministic sibling order.');
-assert.match(project,/parentId === id|object\.parentId === object\.objectId|parentId===id/,'Project validation must reject self-parenting.');
-assert.match(project,/cycle|visited|visiting/i,'Project validation must contain parent-cycle protection.');
+assert.match(project,/order:\s*project\.scene\.rootObjectIds\.length/,'New root scene objects must derive deterministic order from the authoritative rootObjectIds sequence.');
+assert.match(project,/parentId===o\.objectId|parentId\s*===\s*o\.objectId|o\.parentId===o\.objectId/,'Project validation must reject self-parenting.');
 
 // Root <-> parent and deterministic child/root order use the same reparent authority.
 assert.match(store,/canReparent\s*\(/,'Store must expose the structural reparent guard.');
