@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { installSweepRuntime } from './sweep.js';
 
 export function installRevolveRuntime(runtime){
   const baseGeometryFor=runtime.geometryFor.bind(runtime);
@@ -13,4 +14,5 @@ export function installRevolveRuntime(runtime){
     const x=new THREE.Vector3(axis.xAxis.x,axis.xAxis.y,axis.xAxis.z),y=new THREE.Vector3(axis.direction.x,axis.direction.y,axis.direction.z),z=new THREE.Vector3(axis.zAxis.x,axis.zAxis.y,axis.zAxis.z);
     const matrix=new THREE.Matrix4().makeBasis(x,y,z);matrix.setPosition(axis.origin.x,axis.origin.y,axis.origin.z);geometry.applyMatrix4(matrix);geometry.computeVertexNormals();return geometry;
   };
+  installSweepRuntime(runtime);
 }
