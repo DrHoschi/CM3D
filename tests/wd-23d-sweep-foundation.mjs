@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { deriveSweepFrames, syncSweepSourceReferences } from '../src/application/sweep.js';
+import { sweepDeclaredDependencies } from '../src/application/sweep-dependency.js';
+import { buildDependencyGraph } from '../src/application/dependency-graph.js';
 import { createProfileIdentity, createPathIdentity } from '../src/model/sketch-profile-path-identity.js';
 import { deriveSketchProfilesAndPaths } from '../src/model/sketch-profile-path-derivation.js';
 import { createStableReference, ReferenceTargetKind, ReferenceState } from '../src/application/stable-reference.js';
@@ -12,4 +14,5 @@ const pd=deriveSketchProfilesAndPaths(profileSketch),rd=deriveSketchProfilesAndP
 const sweep={objectId:'sweep-1',type:'feature.sweep',parentId:null,order:2,transform:{position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1},scale:{x:1,y:1,z:1}},data:{sourceProfileRef:createStableReference(ReferenceTargetKind.PROFILE,profileSketch.objectId,pi.profileId),sourcePathRef:createStableReference(ReferenceTargetKind.PATH,pathSketch.objectId,ri.pathId)},materialIds:[],flags:{visible:true,locked:false},extensions:{}};
 const project={scene:{objects:{[profileSketch.objectId]:profileSketch,[pathSketch.objectId]:pathSketch,[sweep.objectId]:sweep},rootObjectIds:[profileSketch.objectId,pathSketch.objectId,sweep.objectId]},materials:{}};const store={project,getObject(id){return this.project.scene.objects[id]??null;}};
 let resolution=syncSweepSourceReferences(store,sweep);assert.equal(resolution.state,ReferenceState.RESOLVED);assert.equal(sweep.extensions.recomputeState.state,'READY');assert.ok(sweep.data.frames.length>=3);const before=structuredClone(sweep.data.frames);pathSketch.data.points.p2.x=5;resolution=syncSweepSourceReferences(store,sweep);assert.equal(resolution.state,ReferenceState.RESOLVED);assert.notDeepEqual(sweep.data.frames,before);
+const graph=buildDependencyGraph(store,sweepDeclaredDependencies(store));const deps=graph.dependenciesOf(sweep.objectId);assert.ok(deps.some(e=>e.kind==='PROFILE_TO_SWEEP'));assert.ok(deps.some(e=>e.kind==='PATH_TO_SWEEP'));
 console.log('WD-23D Sweep Foundation focused regression: PASS');
