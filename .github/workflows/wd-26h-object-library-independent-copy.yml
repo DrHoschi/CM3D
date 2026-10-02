@@ -1,0 +1,25 @@
+name: WD-26H Object Library Independent Copy
+on:
+  push:
+    branches: [ feature/WD-26H-object-library-independent-copy ]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exact head
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Syntax
+        run: |
+          node --check src/application/object-library.js
+          node --check src/ui/object-library-panel.js
+          node --check src/main.js
+          node --check tests/wd-26h-object-library-independent-copy.mjs
+      - name: A10 registry regression
+        run: node tests/wd-26e-library-registry-foundation.mjs
+      - name: Material library regression
+        run: node tests/wd-26f-material-presets-library.mjs
+      - name: Sketch library regression
+        run: node tests/wd-26g-sketch-template-independent-copy.mjs
+      - name: WD-26H focused regression
+        run: node tests/wd-26h-object-library-independent-copy.mjs
