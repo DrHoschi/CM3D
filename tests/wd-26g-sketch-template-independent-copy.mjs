@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict';
 import { createProject, createSketchObject, migrateAndValidateProject, validateProject } from '../src/model/project.js';
+import { validateSketchTopology } from '../src/model/sketch-topology.js';
 import { createSketchLibraryEntry, insertSketchLibraryEntry } from '../src/application/sketch-library.js';
 
+const canonicalIds=ids=>[...ids].sort((a,b)=>a.localeCompare(b));
 const project=createProject('WD-26G');const source=createSketchObject(project,'Template Source');project.scene.objects[source.objectId]=source;project.scene.rootObjectIds.push(source.objectId);
 source.data.planeRef={targetKind:'WORK_PLANE',ownerId:'foreign_object',targetId:'foreign_plane'};delete source.data.plane;
 source.data.points={pt_a:{pointId:'pt_a',x:0,y:0},pt_b:{pointId:'pt_b',x:1,y:0},pt_c:{pointId:'pt_c',x:1,y:1},pt_d:{pointId:'pt_d',x:0,y:1}};
 source.data.lines={ln_a:{lineId:'ln_a',startPointId:'pt_a',endPointId:'pt_b'},ln_b:{lineId:'ln_b',startPointId:'pt_b',endPointId:'pt_c'},ln_c:{lineId:'ln_c',startPointId:'pt_c',endPointId:'pt_d'},ln_d:{lineId:'ln_d',startPointId:'pt_d',endPointId:'pt_a'}};
 source.data.circles={circle_a:{circleId:'circle_a',center:{x:2,y:2},radius:0.5}};source.data.arcs={arc_a:{arcId:'arc_a',startPointId:'pt_a',endPointId:'pt_c',control:{x:1.2,y:-0.2}}};source.data.splines={spline_a:{splineId:'spline_a',startPointId:'pt_b',endPointId:'pt_d',controls:[{controlId:'ctrl_a',x:2,y:0.5}]}};
-source.data.profileIdentities={profile_a:{profileId:'profile_a',source:{outerElementIds:['ln_a','ln_b','ln_c','ln_d'],holeElementIdSets:[]}}};source.data.pathIdentities={path_a:{pathId:'path_a',source:{elementIds:['ln_a','ln_b']}}};
+source.data.profileIdentities={profile_a:{profileId:'profile_a',source:{outerElementIds:canonicalIds(['ln_a','ln_b','ln_c','ln_d']),holeElementIdSets:[]}}};source.data.pathIdentities={path_a:{pathId:'path_a',source:{elementIds:canonicalIds(['ln_a','ln_b'])}}};
+const sourceTopology=validateSketchTopology(source);assert.equal(sourceTopology.valid,true,`fixture must be valid before library export:\n${sourceTopology.errors.join('\n')}`);
 const store={project,history:[],events:[],selection:{activeObjectId:source.objectId},getObject(id){return this.project.scene.objects[id]??null;},snapshot(){return structuredClone(this.project);},pushHistory(before,label){this.history.push({before,after:this.snapshot(),label});},touch(){},emit(type,payload){this.events.push({type,payload});},select(id){this.selection.activeObjectId=id;}};
 const made=createSketchLibraryEntry(store,source.objectId,{name:'Rectangle Template',category:'QA'});assert.equal(made.ok,true);assert.equal(made.entry.entryKind,'sketch');assert.equal(made.entry.payload.sketchData.plane,'localXY');assert.equal('planeRef' in made.entry.payload.sketchData,false);assert.equal(JSON.stringify(made.entry).includes(source.objectId),false);
 const beforeHistory=store.history.length;const inserted=insertSketchLibraryEntry(store,made.entry);assert.equal(inserted.ok,true);assert.equal(store.history.length,beforeHistory+1,'insert must be one history operation');assert.notEqual(inserted.objectId,source.objectId);const copy=store.getObject(inserted.objectId);assert.equal(copy.data.plane,'localXY');assert.equal(copy.data.planeRef,undefined);
