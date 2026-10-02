@@ -1,109 +1,25 @@
 const uuid=prefix=>`${prefix}_${crypto.randomUUID()}`;
 const HEX=/^#[0-9a-fA-F]{6}$/;
 const PBR_NUMERIC_PROPERTIES=new Set(['metallic','roughness','opacity']);
+const IMAGE_MIME=/^image\/(png|jpeg|webp)$/;
 
 const cloneProperties=material=>structuredClone(material?.properties??{});
 const supportsSurfaceMaterial=object=>!!object&&!['sketch','group','assembly'].includes(object.type);
+const emitMaterialGeometry=(store,materialId)=>{store.emit('materialChanged',{materialId});for(const object of Object.values(store.project.scene.objects))if(materialBindingForObject(store,object.objectId)?.materialId===materialId)store.emit('geometryChanged',{objectId:object.objectId});};
 
-export function createMaterial(store,{name='Material',baseColor='#b8bcc2'}={}){
-  if(!store?.project?.materials)return {ok:false,message:'Material-Map fehlt.'};
-  if(!HEX.test(baseColor))return {ok:false,message:'Ungültige Basisfarbe.'};
-  const before=store.snapshot();
-  const materialId=uuid('mat');
-  store.project.materials[materialId]={materialId,name:String(name||'Material'),type:'pbr.standard',properties:{baseColor:baseColor.toLowerCase(),metallic:0,roughness:0.6,opacity:1},textureRefs:{},extensions:{}};
-  store.touch();store.pushHistory(before,'Material erzeugen');store.emit('materialChanged',{materialId});
-  return {ok:true,materialId};
-}
-
-export function materialBindingForObject(store,objectId){
-  const object=store?.getObject?.(objectId);
-  if(!object)return null;
-  const explicit=object.materialBinding;
-  if(explicit?.mode==='local'&&explicit.materialId&&store.project.materials?.[explicit.materialId])return explicit;
-  const materialId=explicit?.materialId??object.materialIds?.[0]??null;
-  return materialId?{mode:'shared',materialId}:null;
-}
-
-export function assignMaterialToObjects(store,objectIds,materialId){
-  const material=store?.project?.materials?.[materialId];
-  if(!material)return {ok:false,message:'Material fehlt.'};
-  const ids=[...new Set(Array.isArray(objectIds)?objectIds:[])];
-  const objects=ids.map(id=>store?.getObject?.(id)).filter(supportsSurfaceMaterial);
-  if(!objects.length)return {ok:false,message:'Keine materialfähigen Objekte ausgewählt.'};
-  const changed=objects.filter(object=>{
-    const binding=materialBindingForObject(store,object.objectId);
-    return binding?.mode!=='shared'||binding.materialId!==materialId||!!object.materialBinding;
-  });
-  if(!changed.length)return {ok:true,unchanged:true,changedObjectIds:[]};
-  const before=store.snapshot();
-  for(const object of changed){object.materialIds=[materialId];delete object.materialBinding;}
-  store.touch();store.pushHistory(before,changed.length>1?'Material mehreren Objekten zuweisen':'Material zuweisen');
-  store.emit('materialChanged',{objectIds:changed.map(o=>o.objectId),materialId,mode:'shared'});
-  for(const object of changed)store.emit('geometryChanged',{objectId:object.objectId});
-  return {ok:true,changedObjectIds:changed.map(o=>o.objectId)};
-}
-
-export function removeMaterialFromObjects(store,objectIds){
-  const ids=[...new Set(Array.isArray(objectIds)?objectIds:[])];
-  const objects=ids.map(id=>store?.getObject?.(id)).filter(supportsSurfaceMaterial);
-  if(!objects.length)return {ok:false,message:'Keine materialfähigen Objekte ausgewählt.'};
-  const changed=objects.filter(object=>(object.materialIds?.length??0)>0||object.materialBinding!=null);
-  if(!changed.length)return {ok:true,unchanged:true,changedObjectIds:[]};
-  const before=store.snapshot();
-  for(const object of changed){object.materialIds=[];delete object.materialBinding;}
-  store.touch();store.pushHistory(before,changed.length>1?'Material von mehreren Objekten entfernen':'Material entfernen');
-  store.emit('materialChanged',{objectIds:changed.map(o=>o.objectId),removed:true});
-  for(const object of changed)store.emit('geometryChanged',{objectId:object.objectId});
-  return {ok:true,changedObjectIds:changed.map(o=>o.objectId)};
-}
-
-export function assignMaterial(store,objectId,materialId){
-  const object=store?.getObject?.(objectId);
-  if(!object)return {ok:false,message:'Objekt fehlt.'};
-  if(!supportsSurfaceMaterial(object))return {ok:false,message:'Dieser Objekttyp erhält in WD-10A kein Oberflächenmaterial.'};
-  return assignMaterialToObjects(store,[objectId],materialId);
-}
-
-export function createLocalMaterialVariant(store,objectId){
-  const object=store?.getObject?.(objectId);
-  if(!object)return {ok:false,message:'Objekt fehlt.'};
-  const binding=materialBindingForObject(store,objectId);
-  const source=binding?.materialId?store.project.materials?.[binding.materialId]:null;
-  if(!source)return {ok:false,message:'Ausgangsmaterial fehlt.'};
-  if(binding.mode==='local')return {ok:true,unchanged:true,materialId:binding.materialId};
-  const before=store.snapshot();
-  const materialId=uuid('mat');
-  store.project.materials[materialId]={...structuredClone(source),materialId,name:`${source.name||'Material'} – Lokal`,properties:cloneProperties(source),extensions:{...(structuredClone(source.extensions??{})),localVariantOf:source.materialId}};
-  object.materialIds=[materialId];
-  object.materialBinding={mode:'local',materialId,sourceMaterialId:source.materialId};
-  store.touch();store.pushHistory(before,'Lokale Materialvariante erzeugen');store.emit('materialChanged',{objectId,materialId,mode:'local',sourceMaterialId:source.materialId});store.emit('geometryChanged',{objectId});
-  return {ok:true,materialId};
-}
-
-export function setMaterialBaseColor(store,materialId,baseColor){
-  const material=store?.project?.materials?.[materialId];
-  if(!material)return {ok:false,message:'Material fehlt.'};
-  if(!HEX.test(baseColor))return {ok:false,message:'Ungültige Basisfarbe.'};
-  const color=baseColor.toLowerCase();if(material.properties?.baseColor===color)return {ok:true,unchanged:true};
-  const before=store.snapshot();material.properties??={};material.properties.baseColor=color;store.touch();store.pushHistory(before,'Materialfarbe ändern');store.emit('materialChanged',{materialId});
-  for(const object of Object.values(store.project.scene.objects))if(materialBindingForObject(store,object.objectId)?.materialId===materialId)store.emit('geometryChanged',{objectId:object.objectId});
-  return {ok:true};
-}
-
-export function setMaterialNumericProperty(store,materialId,property,value){
-  const material=store?.project?.materials?.[materialId];
-  if(!material)return {ok:false,message:'Material fehlt.'};
-  if(!PBR_NUMERIC_PROPERTIES.has(property))return {ok:false,message:'Unbekannte PBR-Materialeigenschaft.'};
-  const numeric=Number(value);
-  if(!Number.isFinite(numeric)||numeric<0||numeric>1)return {ok:false,message:`${property} muss zwischen 0 und 1 liegen.`};
-  if(Number(material.properties?.[property])===numeric)return {ok:true,unchanged:true};
-  const before=store.snapshot();material.properties??={};material.properties[property]=numeric;store.touch();store.pushHistory(before,`Material ${property} ändern`);store.emit('materialChanged',{materialId,property,value:numeric});
-  for(const object of Object.values(store.project.scene.objects))if(materialBindingForObject(store,object.objectId)?.materialId===materialId)store.emit('geometryChanged',{objectId:object.objectId});
-  return {ok:true};
-}
-
+export function createMaterial(store,{name='Material',baseColor='#b8bcc2'}={}){if(!store?.project?.materials)return {ok:false,message:'Material-Map fehlt.'};if(!HEX.test(baseColor))return {ok:false,message:'Ungültige Basisfarbe.'};const before=store.snapshot(),materialId=uuid('mat');store.project.materials[materialId]={materialId,name:String(name||'Material'),type:'pbr.standard',properties:{baseColor:baseColor.toLowerCase(),metallic:0,roughness:0.6,opacity:1},textureRefs:{},extensions:{}};store.touch();store.pushHistory(before,'Material erzeugen');store.emit('materialChanged',{materialId});return {ok:true,materialId};}
+export function materialBindingForObject(store,objectId){const object=store?.getObject?.(objectId);if(!object)return null;const explicit=object.materialBinding;if(explicit?.mode==='local'&&explicit.materialId&&store.project.materials?.[explicit.materialId])return explicit;const materialId=explicit?.materialId??object.materialIds?.[0]??null;return materialId?{mode:'shared',materialId}:null;}
+export function assignMaterialToObjects(store,objectIds,materialId){const material=store?.project?.materials?.[materialId];if(!material)return {ok:false,message:'Material fehlt.'};const ids=[...new Set(Array.isArray(objectIds)?objectIds:[])],objects=ids.map(id=>store?.getObject?.(id)).filter(supportsSurfaceMaterial);if(!objects.length)return {ok:false,message:'Keine materialfähigen Objekte ausgewählt.'};const changed=objects.filter(object=>{const binding=materialBindingForObject(store,object.objectId);return binding?.mode!=='shared'||binding.materialId!==materialId||!!object.materialBinding;});if(!changed.length)return {ok:true,unchanged:true,changedObjectIds:[]};const before=store.snapshot();for(const object of changed){object.materialIds=[materialId];delete object.materialBinding;}store.touch();store.pushHistory(before,changed.length>1?'Material mehreren Objekten zuweisen':'Material zuweisen');store.emit('materialChanged',{objectIds:changed.map(o=>o.objectId),materialId,mode:'shared'});for(const object of changed)store.emit('geometryChanged',{objectId:object.objectId});return {ok:true,changedObjectIds:changed.map(o=>o.objectId)};}
+export function removeMaterialFromObjects(store,objectIds){const ids=[...new Set(Array.isArray(objectIds)?objectIds:[])],objects=ids.map(id=>store?.getObject?.(id)).filter(supportsSurfaceMaterial);if(!objects.length)return {ok:false,message:'Keine materialfähigen Objekte ausgewählt.'};const changed=objects.filter(object=>(object.materialIds?.length??0)>0||object.materialBinding!=null);if(!changed.length)return {ok:true,unchanged:true,changedObjectIds:[]};const before=store.snapshot();for(const object of changed){object.materialIds=[];delete object.materialBinding;}store.touch();store.pushHistory(before,changed.length>1?'Material von mehreren Objekten entfernen':'Material entfernen');store.emit('materialChanged',{objectIds:changed.map(o=>o.objectId),removed:true});for(const object of changed)store.emit('geometryChanged',{objectId:object.objectId});return {ok:true,changedObjectIds:changed.map(o=>o.objectId)};}
+export function assignMaterial(store,objectId,materialId){const object=store?.getObject?.(objectId);if(!object)return {ok:false,message:'Objekt fehlt.'};if(!supportsSurfaceMaterial(object))return {ok:false,message:'Dieser Objekttyp erhält in WD-10A kein Oberflächenmaterial.'};return assignMaterialToObjects(store,[objectId],materialId);}
+export function createLocalMaterialVariant(store,objectId){const object=store?.getObject?.(objectId);if(!object)return {ok:false,message:'Objekt fehlt.'};const binding=materialBindingForObject(store,objectId),source=binding?.materialId?store.project.materials?.[binding.materialId]:null;if(!source)return {ok:false,message:'Ausgangsmaterial fehlt.'};if(binding.mode==='local')return {ok:true,unchanged:true,materialId:binding.materialId};const before=store.snapshot(),materialId=uuid('mat');store.project.materials[materialId]={...structuredClone(source),materialId,name:`${source.name||'Material'} – Lokal`,properties:cloneProperties(source),extensions:{...(structuredClone(source.extensions??{})),localVariantOf:source.materialId}};object.materialIds=[materialId];object.materialBinding={mode:'local',materialId,sourceMaterialId:source.materialId};store.touch();store.pushHistory(before,'Lokale Materialvariante erzeugen');store.emit('materialChanged',{objectId,materialId,mode:'local',sourceMaterialId:source.materialId});store.emit('geometryChanged',{objectId});return {ok:true,materialId};}
+export function setMaterialBaseColor(store,materialId,baseColor){const material=store?.project?.materials?.[materialId];if(!material)return {ok:false,message:'Material fehlt.'};if(!HEX.test(baseColor))return {ok:false,message:'Ungültige Basisfarbe.'};const color=baseColor.toLowerCase();if(material.properties?.baseColor===color)return {ok:true,unchanged:true};const before=store.snapshot();material.properties??={};material.properties.baseColor=color;store.touch();store.pushHistory(before,'Materialfarbe ändern');emitMaterialGeometry(store,materialId);return {ok:true};}
+export function setMaterialNumericProperty(store,materialId,property,value){const material=store?.project?.materials?.[materialId];if(!material)return {ok:false,message:'Material fehlt.'};if(!PBR_NUMERIC_PROPERTIES.has(property))return {ok:false,message:'Unbekannte PBR-Materialeigenschaft.'};const numeric=Number(value);if(!Number.isFinite(numeric)||numeric<0||numeric>1)return {ok:false,message:`${property} muss zwischen 0 und 1 liegen.`};if(Number(material.properties?.[property])===numeric)return {ok:true,unchanged:true};const before=store.snapshot();material.properties??={};material.properties[property]=numeric;store.touch();store.pushHistory(before,`Material ${property} ändern`);emitMaterialGeometry(store,materialId);return {ok:true};}
 export function setMaterialMetallic(store,materialId,value){return setMaterialNumericProperty(store,materialId,'metallic',value);}
 export function setMaterialRoughness(store,materialId,value){return setMaterialNumericProperty(store,materialId,'roughness',value);}
 export function setMaterialOpacity(store,materialId,value){return setMaterialNumericProperty(store,materialId,'opacity',value);}
 
+export function importBaseColorTexture(store,materialId,{name='Textur',mimeType,dataUrl}={}){const material=store?.project?.materials?.[materialId];if(!material)return {ok:false,message:'Material fehlt.'};if(!IMAGE_MIME.test(String(mimeType||''))||typeof dataUrl!=='string'||!dataUrl.startsWith(`data:${mimeType};base64,`))return {ok:false,message:'Nur eingebettete PNG-, JPEG- oder WebP-Bilder sind zulässig.'};const before=store.snapshot(),assetId=uuid('asset');store.project.assets??=[];store.project.assets.push({assetId,kind:'image.texture',format:mimeType.split('/')[1],mimeType,name:String(name||'Textur'),dataUrl});material.textureRefs??={};material.textureRefs.baseColor=assetId;store.touch();store.pushHistory(before,'Basisfarbtextur importieren');emitMaterialGeometry(store,materialId);return {ok:true,assetId};}
+export function removeBaseColorTexture(store,materialId){const material=store?.project?.materials?.[materialId];if(!material)return {ok:false,message:'Material fehlt.'};if(!material.textureRefs?.baseColor)return {ok:true,unchanged:true};const before=store.snapshot();delete material.textureRefs.baseColor;store.touch();store.pushHistory(before,'Basisfarbtextur entfernen');emitMaterialGeometry(store,materialId);return {ok:true};}
+export function textureAssetForMaterial(store,materialId){const assetId=store?.project?.materials?.[materialId]?.textureRefs?.baseColor;return assetId?store.project.assets?.find(asset=>asset.assetId===assetId)??null:null;}
 export function materialForObject(store,objectId){const binding=materialBindingForObject(store,objectId);return binding?.materialId?store.project.materials?.[binding.materialId]??null:null;}
