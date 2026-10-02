@@ -17,6 +17,7 @@ export const ReferenceTargetKind = Object.freeze({
   SKETCH_POINT: 'SKETCH_POINT',
   FEATURE: 'FEATURE',
   FEATURE_OUTPUT: 'FEATURE_OUTPUT',
+  EDGE: 'EDGE',
   PROFILE: 'PROFILE',
   PATH: 'PATH',
   WORK_PLANE: 'WORK_PLANE',
@@ -106,6 +107,16 @@ export function resolveStableReference(store, reference) {
       ]);
     }
     return createReferenceResolution(reference, ReferenceState.RESOLVED);
+  }
+
+  if (reference.targetKind === ReferenceTargetKind.EDGE) {
+    if (reference.targetId !== 'body-output' || !String(owner.type ?? '').startsWith('feature.')) {
+      return createReferenceResolution(reference, ReferenceState.INVALID, [{ code:'EDGE_OWNER_INVALID', message:'Edge reference requires a feature body-output owner.' }]);
+    }
+    const recomputeState=owner.extensions?.recomputeState;
+    if(recomputeState?.state===ReferenceState.BLOCKED||recomputeState?.state==='BLOCKED')return createReferenceResolution(reference,ReferenceState.BLOCKED,[{code:'OWNER_BLOCKED',message:`Feature ${reference.ownerId} is blocked.`}]);
+    if(!reference.subTargetId||!owner.extensions?.edgeIdentities?.[reference.subTargetId])return createReferenceResolution(reference,ReferenceState.MISSING,[{code:'EDGE_IDENTITY_MISSING',message:`Edge identity missing: ${reference.subTargetId??''}`}]);
+    return createReferenceResolution(reference,ReferenceState.RESOLVED);
   }
 
   if (reference.targetKind === ReferenceTargetKind.OBJECT || reference.targetKind === ReferenceTargetKind.SKETCH || reference.targetKind === ReferenceTargetKind.FEATURE) {
