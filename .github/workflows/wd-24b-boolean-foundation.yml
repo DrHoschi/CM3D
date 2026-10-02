@@ -1,0 +1,27 @@
+name: WD-24B Boolean Foundation
+
+on:
+  push:
+    branches:
+      - feature/WD-24B-boolean-foundation
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax Boolean application
+        run: node --check src/application/boolean.js
+      - name: Syntax Boolean runtime
+        run: node --check src/runtime-three/boolean.js
+      - name: Syntax application integration
+        run: node --check src/application/primitive-family.js
+      - name: Syntax runtime integration
+        run: node --check src/runtime-three/primitive-family.js
+      - name: WD-23F regression
+        run: node tests/wd-23f-primitive-family-completion.mjs
+      - name: WD-24A regression
+        run: node tests/wd-24a-sequential-body-feature-output-foundation.mjs
+      - name: WD-24B focused regression
+        run: node tests/wd-24b-boolean-foundation.mjs
