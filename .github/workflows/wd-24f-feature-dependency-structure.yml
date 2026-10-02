@@ -1,0 +1,30 @@
+name: WD-24F Feature Dependency Structure
+on:
+  push:
+    branches: [ feature/WD-24F-feature-dependency-structure ]
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax and imports
+        run: |
+          node --check src/application/feature-dependency-structure.js
+          node --check src/ui/feature-dependency-structure.js
+          node --check src/main.js
+      - name: WD-24A regression
+        run: node tests/wd-24a-sequential-body-feature-output-foundation.mjs
+      - name: WD-24B regression
+        run: node tests/wd-24b-boolean-foundation.mjs
+      - name: WD-24C regression
+        run: node tests/wd-24c-bevel-fillet-foundation.mjs
+      - name: WD-24D regression
+        run: node tests/wd-24d-mirror-foundation.mjs
+      - name: WD-24E regression
+        run: node tests/wd-24e-pattern-foundation.mjs
+      - name: WD-24F focused regression
+        run: node tests/wd-24f-feature-dependency-structure.mjs
