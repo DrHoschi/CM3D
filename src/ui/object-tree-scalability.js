@@ -4,11 +4,66 @@ const STORAGE_PREFIX = 'cm3d.workspace.tree-collapsed.v1.';
 export function installObjectTreeScalability(store, ui) {
   const collapsed = new Set();
   const baseTreeNode = ui.treeNode.bind(ui);
+  const baseRenderTree = ui.renderTree.bind(ui);
+  let searchQuery = '';
+  let searchVisibleIds = null;
 
   const projectKey = () => `${STORAGE_PREFIX}${store.project?.project?.projectId || 'unsaved'}`;
   const directChildren = objectId => Object.values(store.project.scene.objects)
     .filter(object => object.parentId === objectId)
     .sort((a, b) => a.order - b.order);
+
+  const normalizeSearch = value => String(value ?? '').trim().toLocaleLowerCase();
+  const objectMatchesSearch = (object, query) => {
+    if (!query) return true;
+    return normalizeSearch(object?.name).includes(query) || normalizeSearch(object?.objectId).includes(query);
+  };
+  const deriveSearchVisibleIds = query => {
+    if (!query) return null;
+    const visible = new Set();
+    for (const object of Object.values(store.project.scene.objects)) {
+      if (!objectMatchesSearch(object, query)) continue;
+      let current = object;
+      while (current) {
+        if (visible.has(current.objectId)) break;
+        visible.add(current.objectId);
+        current = current.parentId ? store.getObject(current.parentId) : null;
+      }
+    }
+    return visible;
+  };
+  const refreshSearchProjection = () => {
+    searchVisibleIds = deriveSearchVisibleIds(searchQuery);
+  };
+
+  const searchHost = document.createElement('div');
+  searchHost.className = 'object-tree-search';
+  const searchInput = document.createElement('input');
+  searchInput.type = 'search';
+  searchInput.id = 'object-tree-search';
+  searchInput.placeholder = 'Objekte suchen…';
+  searchInput.setAttribute('aria-label', 'Objektbaum durchsuchen');
+  searchInput.autocomplete = 'off';
+  const searchSummary = document.createElement('div');
+  searchSummary.className = 'muted object-tree-search-summary';
+  searchHost.append(searchInput, searchSummary);
+  ui.tree.parentElement?.insertBefore(searchHost, ui.tree);
+
+  const updateSearchSummary = () => {
+    if (!searchQuery) {
+      searchSummary.textContent = '';
+      return;
+    }
+    const matches = Object.values(store.project.scene.objects).filter(object => objectMatchesSearch(object, searchQuery)).length;
+    searchSummary.textContent = `${matches} Treffer`;
+  };
+
+  searchInput.addEventListener('input', () => {
+    searchQuery = normalizeSearch(searchInput.value);
+    refreshSearchProjection();
+    updateSearchSummary();
+    ui.renderTree();
+  });
 
   const saveCollapsed = () => {
     try { localStorage.setItem(projectKey(), JSON.stringify([...collapsed])); }
@@ -97,7 +152,14 @@ export function installObjectTreeScalability(store, ui) {
     return changed;
   };
 
+  ui.renderTree = () => {
+    refreshSearchProjection();
+    updateSearchSummary();
+    baseRenderTree();
+  };
+
   ui.treeNode = (object, depth) => {
+    if (searchVisibleIds && !searchVisibleIds.has(object.objectId)) return document.createDocumentFragment();
     const wrap = baseTreeNode(object, depth);
     const row = wrap.querySelector(':scope > .tree-item');
     if (!row) return wrap;
@@ -106,7 +168,7 @@ export function installObjectTreeScalability(store, ui) {
     const children = directChildren(object.objectId);
     const isContainer = CONTAINER_TYPES.has(object.type);
     const canCollapse = isContainer && children.length > 0;
-    const isCollapsed = canCollapse && collapsed.has(object.objectId);
+    const isCollapsed = canCollapse && collapsed.has(object.objectId) && !searchQuery;
 
     const expander = document.createElement('button');
     expander.type = 'button';
@@ -138,15 +200,20 @@ export function installObjectTreeScalability(store, ui) {
 
   loadCollapsed();
   pruneCollapsed();
+  refreshSearchProjection();
 
   store.subscribe(event => {
     if (event.type === 'projectLoaded') {
       loadCollapsed();
       pruneCollapsed();
+      refreshSearchProjection();
       ui.renderTree();
       return;
     }
-    if (event.type === 'projectChanged') pruneCollapsed();
+    if (event.type === 'projectChanged') {
+      pruneCollapsed();
+      refreshSearchProjection();
+    }
     if (event.type === 'selectionChanged') {
       const sketchTarget = store.selection.sketchElement;
       if (sketchTarget) revealSketchTarget(sketchTarget);
@@ -159,6 +226,15 @@ export function installObjectTreeScalability(store, ui) {
     isCollapsed: objectId => collapsed.has(objectId),
     revealObject,
     revealSketchTarget,
+    getSearchQuery: () => searchQuery,
+    setSearchQuery(value) {
+      searchInput.value = String(value ?? '');
+      searchQuery = normalizeSearch(searchInput.value);
+      refreshSearchProjection();
+      updateSearchSummary();
+      ui.renderTree();
+    },
+    getSearchVisibleIds: () => searchVisibleIds ? new Set(searchVisibleIds) : null,
     expandAll() { collapsed.clear(); saveCollapsed(); ui.renderTree(); }
   };
 }
