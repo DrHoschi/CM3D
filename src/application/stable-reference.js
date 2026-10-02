@@ -16,6 +16,7 @@ export const ReferenceTargetKind = Object.freeze({
   SKETCH_ELEMENT: 'SKETCH_ELEMENT',
   SKETCH_POINT: 'SKETCH_POINT',
   FEATURE: 'FEATURE',
+  FEATURE_OUTPUT: 'FEATURE_OUTPUT',
   PROFILE: 'PROFILE',
   PATH: 'PATH',
   WORK_PLANE: 'WORK_PLANE',
@@ -85,6 +86,26 @@ export function resolveStableReference(store, reference) {
     return createReferenceResolution(reference, ReferenceState.MISSING, [
       { code: 'OWNER_MISSING', message: `Referenz-Eigentümer fehlt: ${reference.ownerId}` }
     ]);
+  }
+
+  if (reference.targetKind === ReferenceTargetKind.FEATURE_OUTPUT) {
+    if (reference.targetId !== 'body-output') {
+      return createReferenceResolution(reference, ReferenceState.MISSING, [
+        { code:'FEATURE_OUTPUT_MISSING', message:`Feature-Output fehlt: ${reference.targetId}` }
+      ]);
+    }
+    if (!String(owner.type ?? '').startsWith('feature.')) {
+      return createReferenceResolution(reference, ReferenceState.INVALID, [
+        { code:'OWNER_KIND_MISMATCH', message:`Referenz-Eigentümer ${reference.ownerId} ist kein Feature.` }
+      ]);
+    }
+    const recomputeState = owner.extensions?.recomputeState;
+    if (recomputeState?.state === ReferenceState.BLOCKED || recomputeState?.state === 'BLOCKED') {
+      return createReferenceResolution(reference, ReferenceState.BLOCKED, [
+        { code:'OWNER_BLOCKED', message:`Feature ${reference.ownerId} ist durch eine vorgelagerte Abhängigkeit blockiert.` }
+      ]);
+    }
+    return createReferenceResolution(reference, ReferenceState.RESOLVED);
   }
 
   if (reference.targetKind === ReferenceTargetKind.OBJECT || reference.targetKind === ReferenceTargetKind.SKETCH || reference.targetKind === ReferenceTargetKind.FEATURE) {
