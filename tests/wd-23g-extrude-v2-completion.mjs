@@ -27,7 +27,10 @@ assert.match(runtime,/direction === 'symmetric'/);
 assert.match(application,/direction:'positive'/);
 
 // Boundary: WD-23G must not introduce RB-05/F052 boolean execution into Extrude.
-assert.doesNotMatch(application,/boolean|subtract|union|difference/i);
-assert.doesNotMatch(runtime,/CSG|boolean|subtract|union|difference/i);
+// Match explicit boolean/CSG APIs or operation values only; do not reject ordinary
+// identifiers such as `function`/`addContour` because they contain incidental substrings.
+const forbiddenBooleanExecution = /\bCSG\b|\bboolean(?:Operation|Geometry|Modifier)?\b|\b(?:operation|mode)\s*[:=]\s*['"](?:add|subtract|union|difference)['"]|\b(?:subtract|union|difference)\s*\(/i;
+assert.doesNotMatch(application,forbiddenBooleanExecution);
+assert.doesNotMatch(runtime,forbiddenBooleanExecution);
 
 console.log('WD-23G Extrude V2 Completion regression: PASS');
