@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { ADDITION, SUBTRACTION, INTERSECTION, Brush, Evaluator } from 'https://esm.sh/three-bvh-csg@0.0.18?external=three&deps=three-mesh-bvh@0.9.15';
+import { installBevelFilletRuntime } from './bevel-fillet.js';
 
 const operationMap=Object.freeze({UNION:ADDITION,SUBTRACT:SUBTRACTION,INTERSECT:INTERSECTION});
 
@@ -50,5 +51,6 @@ export function installBooleanRuntime(runtime){
   };
 
   runtime.geometryFor=object=>object?.type==='feature.boolean'?geometryForBoolean(object):baseGeometryFor(object);
+  installBevelFilletRuntime(runtime);
   return runtime;
 }
