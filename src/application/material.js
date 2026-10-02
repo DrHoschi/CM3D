@@ -1,5 +1,6 @@
 const uuid=prefix=>`${prefix}_${crypto.randomUUID()}`;
 const HEX=/^#[0-9a-fA-F]{6}$/;
+const PBR_NUMERIC_PROPERTIES=new Set(['metallic','roughness','opacity']);
 
 const cloneProperties=material=>structuredClone(material?.properties??{});
 const supportsSurfaceMaterial=object=>!!object&&!['sketch','group','assembly'].includes(object.type);
@@ -88,5 +89,21 @@ export function setMaterialBaseColor(store,materialId,baseColor){
   for(const object of Object.values(store.project.scene.objects))if(materialBindingForObject(store,object.objectId)?.materialId===materialId)store.emit('geometryChanged',{objectId:object.objectId});
   return {ok:true};
 }
+
+export function setMaterialNumericProperty(store,materialId,property,value){
+  const material=store?.project?.materials?.[materialId];
+  if(!material)return {ok:false,message:'Material fehlt.'};
+  if(!PBR_NUMERIC_PROPERTIES.has(property))return {ok:false,message:'Unbekannte PBR-Materialeigenschaft.'};
+  const numeric=Number(value);
+  if(!Number.isFinite(numeric)||numeric<0||numeric>1)return {ok:false,message:`${property} muss zwischen 0 und 1 liegen.`};
+  if(Number(material.properties?.[property])===numeric)return {ok:true,unchanged:true};
+  const before=store.snapshot();material.properties??={};material.properties[property]=numeric;store.touch();store.pushHistory(before,`Material ${property} ändern`);store.emit('materialChanged',{materialId,property,value:numeric});
+  for(const object of Object.values(store.project.scene.objects))if(materialBindingForObject(store,object.objectId)?.materialId===materialId)store.emit('geometryChanged',{objectId:object.objectId});
+  return {ok:true};
+}
+
+export function setMaterialMetallic(store,materialId,value){return setMaterialNumericProperty(store,materialId,'metallic',value);}
+export function setMaterialRoughness(store,materialId,value){return setMaterialNumericProperty(store,materialId,'roughness',value);}
+export function setMaterialOpacity(store,materialId,value){return setMaterialNumericProperty(store,materialId,'opacity',value);}
 
 export function materialForObject(store,objectId){const binding=materialBindingForObject(store,objectId);return binding?.materialId?store.project.materials?.[binding.materialId]??null:null;}
