@@ -57,7 +57,12 @@ assert.match(runtimeSource,/UNION:ADDITION/);
 assert.match(runtimeSource,/SUBTRACT:SUBTRACTION/);
 assert.match(runtimeSource,/INTERSECT:INTERSECTION/);
 assert.match(runtimeSource,/evaluator\.evaluate\(targetBrush,toolBrush,operation\)/);
-assert.doesNotMatch(runtimeSource,/boundingBox|Box3|fallback/i);
+// Bounding-volume calculation on the finished CSG result is valid. What is forbidden
+// is using Box3/bounds as the implementation of the Boolean operation itself.
+assert.doesNotMatch(runtimeSource,/new\s+THREE\.Box3\s*\(/);
+assert.doesNotMatch(runtimeSource,/\.intersect\s*\(\s*(?:target|tool|a|b)?(?:Box|Bounds)/i);
+assert.doesNotMatch(runtimeSource,/\.union\s*\(\s*(?:target|tool|a|b)?(?:Box|Bounds)/i);
+assert.doesNotMatch(runtimeSource,/geometryFromBox|boxOfGeometry|bounding[- ]?box\s+(?:boolean|fallback|approx)/i);
 const runtimeChain=fs.readFileSync(new URL('../src/runtime-three/primitive-family.js',import.meta.url),'utf8');
 assert.match(runtimeChain,/installBooleanRuntime\(runtime\)/);
 const appChain=fs.readFileSync(new URL('../src/application/primitive-family.js',import.meta.url),'utf8');
