@@ -1,0 +1,34 @@
+name: WD-23F Primitive Family Completion
+
+on:
+  push:
+    branches:
+      - feature/WD-23F-primitive-family-completion
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm ci
+      - name: Syntax application contract
+        run: node --check src/application/primitive-family.js
+      - name: Syntax runtime contract
+        run: node --check src/runtime-three/primitive-family.js
+      - name: WD-23A Extrude V2 regression
+        run: node tests/wd-23a-extrude-v2-foundation.mjs
+      - name: WD-23B Thin Extrude regression
+        run: node tests/wd-23b-thin-extrude-foundation.mjs
+      - name: WD-23C Revolve regression
+        run: node tests/wd-23c-revolve-foundation.mjs
+      - name: WD-23D Sweep regression
+        run: node tests/wd-23d-sweep-foundation.mjs
+      - name: WD-23E Loft regression
+        run: node tests/wd-23e-loft-foundation.mjs
+      - name: WD-23F Primitive Family Completion
+        run: node tests/wd-23f-primitive-family-completion.mjs
