@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { projectFeatureDependencyStructure, installFeatureDependencyProjection } from '../src/application/feature-dependency-structure.js';
+import { createFeatureBodyOutputReference } from '../src/application/feature-output.js';
+import { declareBooleanDependencies } from '../src/application/boolean.js';
+
+const identity=()=>({position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1},scale:{x:1,y:1,z:1},pivot:{x:0,y:0,z:0}});
+const object=(id,type,name,data={},state='READY')=>({objectId:id,type,name,parentId:null,order:0,transform:identity(),data,materialIds:[],flags:{visible:true,locked:false},extensions:{recomputeState:{state,diagnostics:[]}}});
+const source=object('a','feature.extrude','Source');
+const tool=object('b','feature.extrude','Tool');
+const boolean=object('c','feature.boolean','Boolean',{targetRef:createFeatureBodyOutputReference('a'),toolRef:createFeatureBodyOutputReference('b'),operation:'UNION'});
+const mirror=object('d','feature.mirror','Mirror',{sourceRef:createFeatureBodyOutputReference('c')},'BLOCKED');
+const objects={a:source,b:tool,c:boolean,d:mirror};
+const store={project:{scene:{objects,rootObjectIds:Object.keys(objects)}},selection:{activeObjectId:'c'},getObject(id){return this.project.scene.objects[id]??null;}};
+const declared=[...declareBooleanDependencies(boolean),{dependentObjectId:'d',reference:mirror.data.sourceRef,kind:'SOURCE_BODY_TO_MIRROR'}];
+let view=projectFeatureDependencyStructure(store,'c',declared);
+assert.equal(view.center.objectId,'c');assert.equal(view.sources.length,2);assert.deepEqual(view.sources.map(e=>e.source.objectId),['a','b']);assert.deepEqual(view.sources.map(e=>e.kind),['BOOLEAN_TARGET','BOOLEAN_TOOL']);assert.equal(view.dependents.length,1);assert.equal(view.dependents[0].dependent.objectId,'d');assert.equal(view.dependents[0].dependent.state,'BLOCKED');
+mirror.extensions.recomputeState={state:'READY',diagnostics:[]};view=projectFeatureDependencyStructure(store,'c',declared);assert.equal(view.dependents[0].dependent.state,'READY');
+const before=JSON.stringify(store.project);installFeatureDependencyProjection(store);const projected=store.featureDependencyStructure('c',declared);assert.equal(projected.center.name,'Boolean');assert.equal(JSON.stringify(store.project),before,'F105 projection must be read-only');
+const ui=fs.readFileSync(new URL('../src/ui/feature-dependency-structure.js',import.meta.url),'utf8');assert.match(ui,/←/);assert.match(ui,/→/);assert.match(ui,/Abhängigkeiten/);assert.doesNotMatch(ui,/pushHistory|touch\(|setObject|addObject|deleteObject/);
+const main=fs.readFileSync(new URL('../src/main.js',import.meta.url),'utf8');assert.equal((main.match(/installFeatureDependencyProjection\(store\)/g)||[]).length,1);assert.equal((main.match(/installFeatureDependencyStructureUI\(store,appUI\)/g)||[]).length,1);
+console.log('WD-24F Feature Dependency Structure: PASS');
