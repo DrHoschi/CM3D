@@ -11,8 +11,7 @@ function matrixForObject(object){
   return matrix;
 }
 
-function brushFor(runtime,object){
-  const geometry=runtime.geometryFor(object);
+function brushFromGeometry(object,geometry){
   if(!geometry)return null;
   const brush=new Brush(geometry);
   brush.matrix.copy(matrixForObject(object));
@@ -24,24 +23,32 @@ function brushFor(runtime,object){
 export function installBooleanRuntime(runtime){
   const baseGeometryFor=runtime.geometryFor.bind(runtime);
   const evaluator=new Evaluator();
-  runtime.geometryFor=object=>{
-    if(object?.type!=='feature.boolean')return baseGeometryFor(object);
-    const operation=operationMap[object.data?.operation];
-    const target=runtime.store.getObject(object.data?.targetRef?.ownerId);
-    const tool=runtime.store.getObject(object.data?.toolRef?.ownerId);
-    if(!operation||!target||!tool)return null;
-    const targetBrush=brushFor({...runtime,geometryFor:baseGeometryFor},target);
-    const toolBrush=brushFor({...runtime,geometryFor:baseGeometryFor},tool);
-    if(!targetBrush||!toolBrush){targetBrush?.geometry?.dispose?.();toolBrush?.geometry?.dispose?.();return null;}
+  const evaluating=new Set();
+
+  const geometryForBoolean=object=>{
+    if(evaluating.has(object.objectId))return null;
+    evaluating.add(object.objectId);
     try{
-      const result=evaluator.evaluate(targetBrush,toolBrush,operation);
-      const geometry=result?.geometry?.clone?.()??null;
-      if(geometry){geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();}
-      return geometry;
-    } finally {
-      targetBrush.geometry?.dispose?.();
-      toolBrush.geometry?.dispose?.();
-    }
+      const operation=operationMap[object.data?.operation];
+      const target=runtime.store.getObject(object.data?.targetRef?.ownerId);
+      const tool=runtime.store.getObject(object.data?.toolRef?.ownerId);
+      if(!operation||!target||!tool)return null;
+      const targetGeometry=target.type==='feature.boolean'?geometryForBoolean(target):baseGeometryFor(target);
+      const toolGeometry=tool.type==='feature.boolean'?geometryForBoolean(tool):baseGeometryFor(tool);
+      const targetBrush=brushFromGeometry(target,targetGeometry),toolBrush=brushFromGeometry(tool,toolGeometry);
+      if(!targetBrush||!toolBrush){targetGeometry?.dispose?.();toolGeometry?.dispose?.();return null;}
+      try{
+        const result=evaluator.evaluate(targetBrush,toolBrush,operation);
+        const geometry=result?.geometry?.clone?.()??null;
+        if(geometry){geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();}
+        return geometry;
+      } finally {
+        targetBrush.geometry?.dispose?.();
+        toolBrush.geometry?.dispose?.();
+      }
+    } finally { evaluating.delete(object.objectId); }
   };
+
+  runtime.geometryFor=object=>object?.type==='feature.boolean'?geometryForBoolean(object):baseGeometryFor(object);
   return runtime;
 }
