@@ -47,6 +47,28 @@ function filletStageWidths(radius,segments){
   }
   return widths;
 }
+function edgeMidpoint(topology,edge){const [a,b]=topology.edgeVertices(edge).map(vertex=>topology.vertexPosition(vertex));return{x:(a.x+b.x)/2,y:(a.y+b.y)/2,z:(a.z+b.z)/2};}
+function distanceSquared(a,b){const x=a.x-b.x,y=a.y-b.y,z=a.z-b.z;return x*x+y*y+z*z;}
+function deterministicSuccessorRefs(topology,selection,nextTopology,refs){
+  const selected=selection.edges();
+  if(selected.length!==refs.length)throw new RangeError('F102 selected EDGE set is not uniquely recognized.');
+  const prior=new Set(topology.edges().map(edge=>topologyEdgeIdentity(topology,edge)));
+  const generated=nextTopology.edges().filter(edge=>!prior.has(topologyEdgeIdentity(nextTopology,edge)));
+  const remaining=new Set(generated);
+  const orderedSelected=[...selected].sort((a,b)=>topologyEdgeIdentity(topology,a).localeCompare(topologyEdgeIdentity(topology,b)));
+  const byId=new Map(refs.map(ref=>[ref.subTargetId,ref]));
+  const nextRefs=[];
+  for(const edge of orderedSelected){
+    const originalId=topologyEdgeIdentity(topology,edge),origin=edgeMidpoint(topology,edge);
+    const candidates=[...remaining].map(candidate=>({edge:candidate,id:topologyEdgeIdentity(nextTopology,candidate),distance:distanceSquared(origin,edgeMidpoint(nextTopology,candidate))})).sort((a,b)=>a.distance-b.distance||a.id.localeCompare(b.id));
+    if(!candidates.length)throw new RangeError(`Fillet stage did not create a new tangent ridge from ${originalId}.`);
+    if(candidates.length>1&&Math.abs(candidates[0].distance-candidates[1].distance)<=1e-12)throw new RangeError(`Fillet successor EDGE is ambiguous for ${originalId}.`);
+    const chosen=candidates[0];remaining.delete(chosen.edge);
+    const sourceRef=byId.get(originalId);if(!sourceRef)throw new RangeError(`Stable EDGE identity could not be recognized: ${originalId}`);
+    nextRefs.push({...sourceRef,subTargetId:chosen.id});
+  }
+  return nextRefs;
+}
 export function filletGeometryByStableEdges(geometry,edgeRefs,radius,segments=FILLET_SEGMENTS,materialIndex=0){
   if(!Number.isFinite(Number(radius))||Number(radius)<=0)throw new RangeError('Fillet radius must be positive and finite.');
   if(!Number.isInteger(segments)||segments<2)throw new RangeError('Fillet requires at least two deterministic round segments.');
@@ -56,16 +78,8 @@ export function filletGeometryByStableEdges(geometry,edgeRefs,radius,segments=FI
     for(const width of filletStageWidths(Number(radius),segments)){
       const topology=validatedTopology(current),selection=selectStableEdges(topology,refs);
       const next=selection.beveledGeometry(width,materialIndex);
-      const selected=selection.edges();
-      if(selected.length!==1){next.dispose?.();throw new RangeError('F102 foundation supports exactly one stable EDGE per fillet feature.');}
-      const original=topologyEdgeIdentity(topology,selected[0]);
       const nextTopology=validatedTopology(next);
-      const candidates=nextTopology.edges().map(edge=>({edge,id:topologyEdgeIdentity(nextTopology,edge)}));
-      const prior=new Set(topology.edges().map(edge=>topologyEdgeIdentity(topology,edge)));
-      const generated=candidates.filter(candidate=>!prior.has(candidate.id));
-      if(!generated.length){next.dispose?.();throw new RangeError(`Fillet stage did not create a new tangent ridge from ${original}.`);}
-      generated.sort((a,b)=>a.id.localeCompare(b.id));
-      refs=[{...refs[0],subTargetId:generated[0].id}];
+      refs=deterministicSuccessorRefs(topology,selection,nextTopology,refs);
       current.dispose?.();current=next;
     }
     validatedTopology(current);
