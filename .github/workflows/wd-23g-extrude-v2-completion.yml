@@ -1,0 +1,26 @@
+name: WD-23G Extrude V2 Completion
+
+on:
+  push:
+    branches:
+      - feature/WD-23G-extrude-v2-completion
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax Extrude application
+        run: node --check src/application/extrude.js
+      - name: Syntax Extrude runtime
+        run: node --check src/runtime-three/extrude.js
+      - name: Syntax Extrude inspector
+        run: node --check src/ui/feature-parameters-inspector.js
+      - name: WD-23A Extrude V2 regression
+        run: node tests/wd-23a-extrude-v2-foundation.mjs
+      - name: WD-23G Extrude V2 Completion
+        run: node tests/wd-23g-extrude-v2-completion.mjs
