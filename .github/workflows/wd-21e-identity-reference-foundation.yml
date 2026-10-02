@@ -1,4 +1,4 @@
-name: WD-23B Thin Extrude Foundation
+name: WD-23C Revolve Foundation
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
       - feature/WD-22I-reference-aware-align-foundation
       - feature/WD-23A-extrude-v2-foundation
       - feature/WD-23B-thin-extrude-foundation
+      - feature/WD-23C-revolve-foundation
   workflow_dispatch:
 
 jobs:
@@ -101,3 +102,5 @@ jobs:
         run: node tests/wd-23a-extrude-v2-foundation.mjs
       - name: Run WD-23B thin extrude foundation regression
         run: node tests/wd-23b-thin-extrude-foundation.mjs
+      - name: Run WD-23C revolve foundation regression
+        run: node tests/wd-23c-revolve-foundation.mjs
