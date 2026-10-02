@@ -1,0 +1,40 @@
+name: WD-25B Layers Foundation
+on:
+  push:
+    branches: [feature/WD-25B-layers-foundation]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: |
+          node --check src/model/project.js
+          node --check src/application/layers.js
+          node --check src/ui/layers.js
+          node --check src/ui/object-locking.js
+          node --check tests/wd-25b-layers-foundation.mjs
+      - name: WD-24A regression
+        run: node tests/wd-24a-sequential-body-feature-output-foundation.mjs
+      - name: WD-24B regression
+        run: node tests/wd-24b-boolean-foundation.mjs
+      - name: WD-24C regression
+        run: node tests/wd-24c-bevel-fillet-foundation.mjs
+      - name: WD-24D regression
+        run: node tests/wd-24d-mirror-foundation.mjs
+      - name: WD-24E regression
+        run: node tests/wd-24e-pattern-foundation.mjs
+      - name: WD-24F regression
+        run: node tests/wd-24f-feature-dependency-structure.mjs
+      - name: WD-24G regression
+        run: node tests/wd-24g-f102-multi-edge-fillet-completion.mjs
+      - name: WD-25A regression
+        run: node tests/wd-25a-scene-hierarchy-parent-foundation.mjs
+      - name: WD-25B focused regression
+        run: node tests/wd-25b-layers-foundation.mjs
