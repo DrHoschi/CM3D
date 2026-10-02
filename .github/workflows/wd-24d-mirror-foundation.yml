@@ -1,0 +1,27 @@
+name: WD-24D Mirror Foundation
+on:
+  push:
+    branches: [ feature/WD-24D-mirror-foundation ]
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax and imports
+        run: |
+          node --check src/application/mirror.js
+          node --check src/runtime-three/mirror.js
+          node --check src/application/primitive-family.js
+          node --check src/runtime-three/primitive-family.js
+      - name: WD-24A regression
+        run: node tests/wd-24a-sequential-body-feature-output-foundation.mjs
+      - name: WD-24B regression
+        run: node tests/wd-24b-boolean-foundation.mjs
+      - name: WD-24C regression
+        run: node tests/wd-24c-bevel-fillet-foundation.mjs
+      - name: WD-24D focused regression
+        run: node tests/wd-24d-mirror-foundation.mjs
