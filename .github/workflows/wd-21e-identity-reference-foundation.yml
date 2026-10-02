@@ -1,4 +1,4 @@
-name: WD-23C Revolve Foundation
+name: WD-23D Sweep Foundation
 
 on:
   push:
@@ -12,6 +12,7 @@ on:
       - feature/WD-23A-extrude-v2-foundation
       - feature/WD-23B-thin-extrude-foundation
       - feature/WD-23C-revolve-foundation
+      - feature/WD-23D-sweep-foundation
   workflow_dispatch:
 
 jobs:
@@ -104,3 +105,5 @@ jobs:
         run: node tests/wd-23b-thin-extrude-foundation.mjs
       - name: Run WD-23C revolve foundation regression
         run: node tests/wd-23c-revolve-foundation.mjs
+      - name: Run WD-23D sweep foundation regression
+        run: node tests/wd-23d-sweep-foundation.mjs
