@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { installBooleanRuntime } from './boolean.js';
 
 function tubeGeometry(data){
   const shape=new THREE.Shape();
@@ -22,5 +23,6 @@ export function installPrimitiveFamilyRuntime(runtime){
     if(object?.type==='primitive.torus')return new THREE.TorusGeometry(data.majorRadius,data.tubeRadius,data.radialSegments??16,data.tubularSegments??48);
     return legacyGeometryFor(object);
   };
+  installBooleanRuntime(runtime);
   return runtime;
 }
