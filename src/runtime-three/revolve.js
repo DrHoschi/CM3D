@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { installSweepRuntime } from './sweep.js';
+import { installPrimitiveFamilyRuntime } from './primitive-family.js';
 
 export function installRevolveRuntime(runtime){
   const baseGeometryFor=runtime.geometryFor.bind(runtime);
@@ -15,4 +16,5 @@ export function installRevolveRuntime(runtime){
     const matrix=new THREE.Matrix4().makeBasis(x,y,z);matrix.setPosition(axis.origin.x,axis.origin.y,axis.origin.z);geometry.applyMatrix4(matrix);geometry.computeVertexNormals();return geometry;
   };
   installSweepRuntime(runtime);
+  installPrimitiveFamilyRuntime(runtime);
 }
