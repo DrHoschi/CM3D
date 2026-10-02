@@ -4,6 +4,8 @@ import { validateSketchTopology } from '../model/sketch-topology.js';
 
 const id=prefix=>`${prefix}_${crypto.randomUUID()}`;
 const values=map=>Object.values(map??{});
+const canonicalIds=ids=>[...ids].sort((a,b)=>a.localeCompare(b));
+const canonicalHoleSets=sets=>sets.map(canonicalIds).sort((a,b)=>a.join('|').localeCompare(b.join('|')));
 
 export function createSketchLibraryEntry(store,sketchId,{name=null,category='Sketch'}={}){
   const sketch=store?.getObject?.(sketchId)??store?.project?.scene?.objects?.[sketchId];
@@ -28,8 +30,8 @@ function remapData(source){
   const circles={};for(const e of values(source.circles)){const circleId=circle.get(e.circleId);circles[circleId]={...structuredClone(e),circleId};}
   const arcs={};for(const e of values(source.arcs)){const arcId=arc.get(e.arcId);arcs[arcId]={...structuredClone(e),arcId,startPointId:point.get(e.startPointId),endPointId:point.get(e.endPointId)};}
   const splines={};for(const e of values(source.splines)){const splineId=spline.get(e.splineId);splines[splineId]={...structuredClone(e),splineId,startPointId:point.get(e.startPointId),endPointId:point.get(e.endPointId),controls:(e.controls??[]).map(c=>({...structuredClone(c),controlId:id('ctrl')}))};}
-  const profileIdentities={};for(const e of values(source.profileIdentities)){const profileId=profile.get(e.profileId);profileIdentities[profileId]={...structuredClone(e),profileId,source:{...structuredClone(e.source),outerElementIds:(e.source?.outerElementIds??[]).map(x=>element.get(x)),holeElementIdSets:(e.source?.holeElementIdSets??[]).map(set=>set.map(x=>element.get(x)))}};}
-  const pathIdentities={};for(const e of values(source.pathIdentities)){const pathId=path.get(e.pathId);pathIdentities[pathId]={...structuredClone(e),pathId,source:{...structuredClone(e.source),elementIds:(e.source?.elementIds??[]).map(x=>element.get(x))}};}
+  const profileIdentities={};for(const e of values(source.profileIdentities)){const profileId=profile.get(e.profileId);profileIdentities[profileId]={...structuredClone(e),profileId,source:{...structuredClone(e.source),outerElementIds:canonicalIds((e.source?.outerElementIds??[]).map(x=>element.get(x))),holeElementIdSets:canonicalHoleSets((e.source?.holeElementIdSets??[]).map(set=>set.map(x=>element.get(x))))}};}
+  const pathIdentities={};for(const e of values(source.pathIdentities)){const pathId=path.get(e.pathId);pathIdentities[pathId]={...structuredClone(e),pathId,source:{...structuredClone(e.source),elementIds:canonicalIds((e.source?.elementIds??[]).map(x=>element.get(x)))}};}
   return {plane:'localXY',points,lines,circles,arcs,splines,profileIdentities,pathIdentities};
 }
 
