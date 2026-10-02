@@ -1,0 +1,1 @@
+export function loftDeclaredDependencies(store){const out=[];for(const o of Object.values(store?.project?.scene?.objects??{})){if(o?.type!=='feature.loft')continue;for(const ref of o.data?.sourceProfileRefs??[])out.push({dependentObjectId:o.objectId,reference:ref,kind:'PROFILE_TO_LOFT'});}return out;}
