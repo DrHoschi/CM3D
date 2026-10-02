@@ -27,9 +27,10 @@ assert.match(runtime,/direction === 'symmetric'/);
 assert.match(application,/direction:'positive'/);
 
 // Boundary: WD-23G must not introduce RB-05/F052 boolean execution into Extrude.
-// Match explicit boolean/CSG APIs or operation values only; do not reject ordinary
-// identifiers such as `function`/`addContour` because they contain incidental substrings.
-const forbiddenBooleanExecution = /\bCSG\b|\bboolean(?:Operation|Geometry|Modifier)?\b|\b(?:operation|mode)\s*[:=]\s*['"](?:add|subtract|union|difference)['"]|\b(?:subtract|union|difference)\s*\(/i;
+// Only explicit CSG/boolean-geometry API names, operation/mode values, or concrete
+// subtract/union/difference calls are forbidden here. Native JavaScript `Boolean`
+// (for example `.filter(Boolean)`) is intentionally not a geometry-operation signal.
+const forbiddenBooleanExecution = /\bCSG(?:Operation|Geometry|Evaluator|Brush)?\b|\bBoolean(?:Operation|Geometry|Modifier)\b|\b(?:operation|mode)\s*[:=]\s*['"](?:add|subtract|union|difference)['"]|\b(?:subtract|union|difference)\s*\(/;
 assert.doesNotMatch(application,forbiddenBooleanExecution);
 assert.doesNotMatch(runtime,forbiddenBooleanExecution);
 
