@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { createLargeSceneFixture } from './fixtures/wd-25d-large-scene-fixture.mjs';
 
 const recent = fs.readFileSync('src/ui/recent-projects.js', 'utf8');
 const storage = fs.readFileSync('src/persistence/storage.js', 'utf8');
@@ -7,7 +8,6 @@ const main = fs.readFileSync('src/main.js', 'utf8');
 const app = fs.readFileSync('src/ui/app.js', 'utf8');
 const tree = fs.readFileSync('src/ui/object-tree-scalability.js', 'utf8');
 const hierarchyTest = fs.readFileSync('tests/wd-25a-scene-hierarchy-parent-foundation.mjs', 'utf8');
-const largeScene = fs.readFileSync('tests/fixtures/wd-25d-large-scene-fixture.mjs', 'utf8');
 
 // F003: Recent Projects is a projection over the existing storage index and quick reopen
 // delegates to the existing load authority, which migrates + validates before replacement.
@@ -30,7 +30,10 @@ assert.match(tree, /collapsed/);
 assert.doesNotMatch(tree, /selectedObjectIds\s*=(?!=)/, 'Tree/search must not create a second selection authority');
 assert.match(hierarchyTest, /parentId/);
 assert.match(hierarchyTest, /rootObjectIds/);
-assert.match(largeScene, /expectedObjectCount/);
-assert.match(largeScene, /1020/);
+
+const largeScene = createLargeSceneFixture();
+assert.equal(largeScene.expectedObjectCount, 1020, 'Deterministic F086 large-scene fixture must retain 1,020 objects');
+assert.equal(Object.keys(largeScene.scene.objects).length, largeScene.expectedObjectCount, 'Large-scene expected count must match generated scene semantics');
+assert.equal(largeScene.scene.rootObjectIds.length, 20, 'Large-scene fixture must retain its 20 deterministic root groups');
 
 console.log('WD-25F RB-06 completion / Recent Projects focused regression PASS');
