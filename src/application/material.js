@@ -2,6 +2,7 @@ const uuid=prefix=>`${prefix}_${crypto.randomUUID()}`;
 const HEX=/^#[0-9a-fA-F]{6}$/;
 
 const cloneProperties=material=>structuredClone(material?.properties??{});
+const supportsSurfaceMaterial=object=>!!object&&!['sketch','group','assembly'].includes(object.type);
 
 export function createMaterial(store,{name='Material',baseColor='#b8bcc2'}={}){
   if(!store?.project?.materials)return {ok:false,message:'Material-Map fehlt.'};
@@ -22,18 +23,44 @@ export function materialBindingForObject(store,objectId){
   return materialId?{mode:'shared',materialId}:null;
 }
 
-export function assignMaterial(store,objectId,materialId){
-  const object=store?.getObject?.(objectId),material=store?.project?.materials?.[materialId];
-  if(!object)return {ok:false,message:'Objekt fehlt.'};
+export function assignMaterialToObjects(store,objectIds,materialId){
+  const material=store?.project?.materials?.[materialId];
   if(!material)return {ok:false,message:'Material fehlt.'};
-  if(object.type==='sketch'||object.type==='group'||object.type==='assembly')return {ok:false,message:'Dieser Objekttyp erhält in WD-10A kein Oberflächenmaterial.'};
-  const binding=materialBindingForObject(store,objectId);
-  if(binding?.mode==='shared'&&binding.materialId===materialId&&!object.materialBinding)return {ok:true,unchanged:true};
+  const ids=[...new Set(Array.isArray(objectIds)?objectIds:[])];
+  const objects=ids.map(id=>store?.getObject?.(id)).filter(supportsSurfaceMaterial);
+  if(!objects.length)return {ok:false,message:'Keine materialfähigen Objekte ausgewählt.'};
+  const changed=objects.filter(object=>{
+    const binding=materialBindingForObject(store,object.objectId);
+    return binding?.mode!=='shared'||binding.materialId!==materialId||!!object.materialBinding;
+  });
+  if(!changed.length)return {ok:true,unchanged:true,changedObjectIds:[]};
   const before=store.snapshot();
-  object.materialIds=[materialId];
-  delete object.materialBinding;
-  store.touch();store.pushHistory(before,'Material zuweisen');store.emit('materialChanged',{objectId,materialId,mode:'shared'});store.emit('geometryChanged',{objectId});
-  return {ok:true};
+  for(const object of changed){object.materialIds=[materialId];delete object.materialBinding;}
+  store.touch();store.pushHistory(before,changed.length>1?'Material mehreren Objekten zuweisen':'Material zuweisen');
+  store.emit('materialChanged',{objectIds:changed.map(o=>o.objectId),materialId,mode:'shared'});
+  for(const object of changed)store.emit('geometryChanged',{objectId:object.objectId});
+  return {ok:true,changedObjectIds:changed.map(o=>o.objectId)};
+}
+
+export function removeMaterialFromObjects(store,objectIds){
+  const ids=[...new Set(Array.isArray(objectIds)?objectIds:[])];
+  const objects=ids.map(id=>store?.getObject?.(id)).filter(supportsSurfaceMaterial);
+  if(!objects.length)return {ok:false,message:'Keine materialfähigen Objekte ausgewählt.'};
+  const changed=objects.filter(object=>(object.materialIds?.length??0)>0||object.materialBinding!=null);
+  if(!changed.length)return {ok:true,unchanged:true,changedObjectIds:[]};
+  const before=store.snapshot();
+  for(const object of changed){object.materialIds=[];delete object.materialBinding;}
+  store.touch();store.pushHistory(before,changed.length>1?'Material von mehreren Objekten entfernen':'Material entfernen');
+  store.emit('materialChanged',{objectIds:changed.map(o=>o.objectId),removed:true});
+  for(const object of changed)store.emit('geometryChanged',{objectId:object.objectId});
+  return {ok:true,changedObjectIds:changed.map(o=>o.objectId)};
+}
+
+export function assignMaterial(store,objectId,materialId){
+  const object=store?.getObject?.(objectId);
+  if(!object)return {ok:false,message:'Objekt fehlt.'};
+  if(!supportsSurfaceMaterial(object))return {ok:false,message:'Dieser Objekttyp erhält in WD-10A kein Oberflächenmaterial.'};
+  return assignMaterialToObjects(store,[objectId],materialId);
 }
 
 export function createLocalMaterialVariant(store,objectId){
