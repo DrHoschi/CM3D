@@ -21,7 +21,7 @@ jobs:
       - name: A10 registry regression
         run: node tests/wd-26e-library-registry-foundation.mjs
       - name: Material library regression
-        run: node tests/wd-26f-material-presets-library.mjs
+        run: node tests/wd-26f-material-presets-library-application.mjs
       - name: Sketch library regression
         run: node tests/wd-26g-sketch-template-independent-copy.mjs
       - name: Object library regression
