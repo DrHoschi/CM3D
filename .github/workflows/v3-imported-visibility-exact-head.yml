@@ -14,8 +14,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install dependencies
-        run: npm ci
       - name: V3 imported visibility override contract
         run: node tests/v3-imported-element-visibility-overrides.mjs
       - name: V3 imported structure regression
