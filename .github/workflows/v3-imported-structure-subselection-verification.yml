@@ -1,0 +1,33 @@
+name: V3 Imported Structure & Subselection Verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/v3-imported-structure-subselection
+    paths:
+      - '.github/workflows/v3-imported-structure-subselection-verification.yml'
+
+jobs:
+  exact-head-verification:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: V3 Imported Structure & Subselection
+        run: node tests/v3-imported-structure-subselection.mjs
+
+      - name: V2 Scene Hierarchy Regression
+        run: node tests/wd-25a-scene-hierarchy-parent-foundation.mjs
+
+      - name: V2 Object Tree Regression
+        run: node tests/wd-25c-object-tree-search-filter.mjs
+
+      - name: V2 Central Export Regression
+        run: node tests/wd-27a-central-export-workflow.mjs
+
+      - name: V2 OBJ STL Interchange Regression
+        run: node tests/wd-27b-obj-stl-interchange.mjs
