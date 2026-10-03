@@ -1,0 +1,29 @@
+name: WD-27A Central Export Workflow
+
+on:
+  push:
+    branches:
+      - feature/WD-27A-central-export-workflow-descriptor
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Exact head
+        run: test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+      - name: Syntax
+        run: |
+          node --check src/ui/gltf-panel.js
+          node --check src/runtime-three/gltf-interchange.js
+          node --check tests/wd-27a-central-export-workflow.mjs
+      - name: GLB GLTF regression
+        run: node tests/wd-11-gltf-interchange.mjs
+      - name: WD-27A focused regression
+        run: node tests/wd-27a-central-export-workflow.mjs
