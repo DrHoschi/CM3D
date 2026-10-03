@@ -79,7 +79,11 @@ export function installImportedStructureUI(store, runtime, ui) {
     ui.fields.name.disabled = false;
     for (const field of [ui.fields.px,ui.fields.py,ui.fields.pz,ui.fields.rx,ui.fields.ry,ui.fields.rz,ui.fields.sx,ui.fields.sy,ui.fields.sz,ui.fields.pvx,ui.fields.pvy,ui.fields.pvz,ui.fields.dx,ui.fields.dy,ui.fields.dz,ui.fields.radius,ui.fields.height]) field.disabled = false;
   };
-  store.subscribe(event => { if (event.type === 'selectionChanged') restoreInspectorEditability(); });
+  store.subscribe(event => {
+    if (event.type === 'selectionChanged') restoreInspectorEditability();
+    if (event.type === 'externalImportedStructure') register(event.objectId, event.descriptors || []);
+    if (event.type === 'projectLoaded') structures.clear();
+  });
 
   const onPointer = event => {
     const rect = runtime.renderer.domElement.getBoundingClientRect();
