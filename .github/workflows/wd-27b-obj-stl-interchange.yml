@@ -1,0 +1,31 @@
+name: WD-27B OBJ STL Interchange
+
+on:
+  push:
+    branches:
+      - feature/WD-27B-obj-stl-interchange
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Exact head
+        run: test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+      - name: Syntax
+        run: |
+          node --check src/model/project.js
+          node --check src/runtime-three/gltf-interchange.js
+          node --check src/ui/gltf-panel.js
+          node --check tests/wd-27a-central-export-workflow.mjs
+          node --check tests/wd-27b-obj-stl-interchange.mjs
+      - name: WD-27A central export regression
+        run: node tests/wd-27a-central-export-workflow.mjs
+      - name: WD-27B focused OBJ STL regression
+        run: node tests/wd-27b-obj-stl-interchange.mjs
