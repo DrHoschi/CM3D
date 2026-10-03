@@ -1,0 +1,24 @@
+name: WD-29D F124 Exact-Head Verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/wd-29d-f124-diagnostics-export
+    paths:
+      - '.github/workflows/wd-29d-f124-exact-head-verification.yml'
+
+jobs:
+  exact-head-verification:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: F124 focused diagnostics export contract
+        run: node tests/wd-29d-f124-diagnostics-export.mjs
+      - name: WD-20E reference diagnostics regression
+        run: node tests/wd-20e-reference-diagnostics.mjs
+      - name: WD-25D performance and large-scene regression
+        run: node tests/wd-25d-performance-large-scene-instrumentation.mjs
