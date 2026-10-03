@@ -15,7 +15,9 @@ assert.match(ui, /id="model-export-format"/);
 assert.match(ui, /kein natives CM3D-Projektbackup/);
 assert.match(ui, /transformPolicy\s*:\s*'preserve-world-root-transform'/);
 assert.match(ui, /hierarchyPolicy\s*:\s*'preserve-descendants'/);
-assert.match(ui, /materialPolicy\s*:\s*['"]adapter-supported['"]/);
+// WD-27A freezes adapter-supported for the GLB/GLTF path, but later format
+// adapters may specialize the descriptor policy (for example geometry-only).
+assert.match(ui, /materialPolicy\s*:\s*[^,}]*['"]adapter-supported['"]/);
 assert.match(ui, /interchange\.exportWithDescriptor\(descriptor\)/);
 
 assert.match(interchange, /function normalizeExportDescriptor/);
