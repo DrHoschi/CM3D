@@ -1,0 +1,68 @@
+name: RB-09 V2 Integration Regression
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/rb-09-v2-integration-regression.yml'
+
+jobs:
+  v2-integration-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Migration / Save Reload / Reference Diagnostics
+        run: |
+          node tests/wd-20a-project-schema.mjs
+          node tests/wd-20b-selection-ref.mjs
+          node tests/wd-20c-stable-reference.mjs
+          node tests/wd-20d-dependency-graph.mjs
+          node tests/wd-20e-domain-transaction.mjs
+          node tests/wd-20e-reference-diagnostics.mjs
+
+      - name: Sketch / Profile / Path derivation
+        run: |
+          node tests/wd-21d1-generic-sketch-curve-derivation.mjs
+          node tests/wd-21d2-deterministic-path-graph-derivation.mjs
+          node tests/wd-21d3-profile-region-nesting-derivation.mjs
+          node tests/wd-21d4-mixed-analytic-geometry-validation.mjs
+          node tests/wd-21d5-generic-profile-open-path-derivation-api.mjs
+
+      - name: Feature / Modifier / Dependency / Recovery
+        run: |
+          node tests/wd-24a-sequential-body-feature-output-foundation.mjs
+          node tests/wd-24b-boolean-foundation.mjs
+          node tests/wd-24c-bevel-fillet-foundation.mjs
+          node tests/wd-24d-mirror-foundation.mjs
+          node tests/wd-24e-pattern-foundation.mjs
+          node tests/wd-24f-feature-dependency-structure.mjs
+
+      - name: Scene / Hierarchy / Large Scene / Performance
+        run: |
+          node tests/wd-25a-scene-hierarchy-parent-foundation.mjs
+          node tests/wd-25b-layers-foundation.mjs
+          node tests/wd-25c-object-tree-search-filter.mjs
+          node tests/wd-25d-performance-large-scene-instrumentation.mjs
+          node tests/wd-25e-f089-large-world-small-objects-qa.mjs
+
+      - name: Material / Library
+        run: |
+          node tests/wd-26a-material-binding-local-variant-foundation.mjs
+          node tests/wd-26b-material-assignment-removal.mjs
+          node tests/wd-26c-pbr-numeric-properties.mjs
+          node tests/wd-26d-base-color-texture-foundation.mjs
+          node tests/wd-26e-library-registry-foundation.mjs
+          node tests/wd-26f-material-presets-library-application.mjs
+          node tests/wd-26h-object-library-independent-copy.mjs
+          node tests/wd-26j-shared-library-registry-runtime-authority.mjs
+
+      - name: Central Import Export
+        run: |
+          node tests/wd-27a-central-export-workflow.mjs
+          node tests/wd-27b-obj-stl-interchange.mjs
