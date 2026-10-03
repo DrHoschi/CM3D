@@ -26,6 +26,7 @@ const listeners = new Set();
 const store = {
   project:{ scene:{ objects } },
   getObject(id){ return this.project.scene.objects[id] ?? null; },
+  setGeometry(){},
   subscribe(fn){ listeners.add(fn); return () => listeners.delete(fn); },
   emit(type){ for (const fn of listeners) fn({ type }); }
 };
