@@ -6,7 +6,7 @@ const locking=fs.readFileSync(new URL('../src/ui/object-locking.js',import.meta.
 const graph=fs.readFileSync(new URL('../src/application/dependency-graph.js',import.meta.url),'utf8');
 assert.match(project,/scene:\{rootObjectIds:\[\],objects:\{\},layers:\{\}\}/,'Project must own one layer map.');
 assert.match(project,/layerId:null/,'New objects must have explicit unassigned layerId.');
-assert.match(project,/scene\.layers \?\?= \{\}/,'Current projects without layers must normalize compatibly.');
+assert.match(project,/scene\.layers\s*\?\?=\s*\{\}/,'Current projects without layers must normalize compatibly.');
 assert.match(project,/Object\.hasOwn\(object,'layerId'\)/,'Objects without layerId must normalize to unassigned.');
 assert.match(project,/Layer .* fehlt/,'Validation must reject dangling layer references.');
 assert.match(layers,/createLayer/);assert.match(layers,/setObjectLayer/);assert.match(layers,/setLayerVisible/);assert.match(layers,/setLayerLocked/);
