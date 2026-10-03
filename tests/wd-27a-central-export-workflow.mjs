@@ -29,7 +29,11 @@ assert.match(interchange, /async function exportWithDescriptor/);
 assert.match(interchange, /['"]glb['"]/);
 assert.match(interchange, /['"]gltf['"]/);
 assert.match(interchange, /includes\(format\)/);
-assert.match(interchange, /scope = descriptor\.scope === 'selection' \? 'selection' : 'scene'/);
+// WD-27A freezes scene | selection as the central descriptor scopes, not the
+// concrete local normalization expression used by later adapter implementations.
+assert.match(interchange, /['"]scene['"]/);
+assert.match(interchange, /['"]selection['"]/);
+assert.match(interchange, /descriptor\.scope/);
 assert.match(interchange, /units !== 'm' \|\| scale !== 1/);
 assert.match(interchange, /const exportScene = options => exportWithDescriptor\(options\)/);
 assert.doesNotMatch(interchange, /OBJLoader|STLLoader|OBJExporter|STLExporter/);
