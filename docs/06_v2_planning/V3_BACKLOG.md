@@ -1,7 +1,7 @@
 # CM3D – V3 Backlog
 
 **Stand:** 2026-10-03  
-**Status:** V3 ACTIVE / FIRST PRODUCT BLOCK FROZEN  
+**Status:** V3 ACTIVE / IMPORTED STRUCTURE + VISIBILITY FROZEN  
 **Basis:** CM3D-V2 / Freeze Head `10c2def74668b6b17d14c2e6d3232d1de2f71159`
 
 ## Zweck
@@ -74,11 +74,61 @@ Bestätigte Checks:
 
 **Freeze-Entscheidung:** PASS / 0 BLOCKER. Der Scope Imported Structure & Subselection ist damit funktional eingefroren. Weitere Fähigkeiten werden nicht in diesen Block aufgenommen.
 
+### 2026-10-03 – Imported Element Visibility Overrides
+
+**Status:** PASS / FROZEN / 0 BLOCKER
+
+**Basis / vorheriger V3-Freeze:** `2ec3574dd886c401de0e3aa5a810d0b7cceac066`  
+**Functional Head:** `f7fba05b8e0e6b57e4164e857cd6080a238507d2`  
+**Evidence Head:** `1614bf92839544d0d117daaf51a1817b8b093169`  
+**Exact-Head Evidence:** GitHub Actions Run `37157656084`
+
+#### Scope
+
+Dieser Block ist die erste persistente Mutation adressierter importierter Unterelemente. Das `external.gltf`-Root bleibt die einzige persistente CM3D-Objektidentität; einzelne Imported Elements werden weiterhin nicht zu `scene.objects`, Bodies oder Features.
+
+Der eingefrorene Vertrag umfasst:
+
+- sparse Visibility-Overrides am vorhandenen `external.gltf`-Root unter `data.importedOverrides.visibility[sourceKey]`;
+- Source-Key-basierte Anwendung auf die rekonstruierte Imported Runtime Structure;
+- Save → Reload / Re-Hydration stellt den Visibility-Zustand über denselben Source-Key wieder her;
+- Visibility-Mutation läuft als persistente Domain-Mutation über die bestehende History und ist damit Undo-/Redo-fähig;
+- GLB/glTF-/Exportprojektion respektiert den angewandten Runtime-Visibility-Zustand;
+- verwaiste bzw. nicht mehr auflösbare Source-Keys bleiben non-blocking und führen nicht zu `INVALID`/`BLOCKED`-Recompute;
+- keine Änderung von `SCHEMA_VERSION`;
+- keine neuen `scene.objects`;
+- keine Transform-, Material-, Textur-, UV- oder Mesh-Mutation.
+
+#### Implementierter Produkt-Scope
+
+- `src/ui/imported-structure.js`
+- `tests/v3-imported-element-visibility-overrides.mjs`
+
+Evidence-Infrastruktur:
+
+- `.github/workflows/v3-imported-visibility-exact-head.yml`
+
+Der erste Evidence-Lauf scheiterte ausschließlich am Runner-Schritt `npm ci`, weil das Repository keinen passenden Lockfile-Vertrag besitzt. Dieser Infrastrukturfehler erforderte keine Produktkorrektur. Der Runner wurde anschließend ausschließlich durch Entfernen dieses unnötigen Schritts korrigiert.
+
+#### Verification / Regression
+
+Run `37157656084` wurde gegen den Evidence Head `1614bf92839544d0d117daaf51a1817b8b093169` ausgeführt und ist vollständig erfolgreich abgeschlossen.
+
+Bestätigte Checks:
+
+- V3 Imported Element Visibility Override Contract – PASS;
+- V3 Imported Structure Regression – PASS;
+- V2 GLTF Regression – PASS;
+- V2 OBJ/STL Interchange Regression – PASS;
+- V2 Scene Hierarchy / Selection Regression – PASS;
+- V2 Object Tree Regression – PASS.
+
+**Freeze-Entscheidung:** PASS / 0 BLOCKER. Imported Element Visibility Overrides sind damit funktional eingefroren. Der Runner-Infrastrukturfehler ist geschlossen und stellt keinen Produktblocker dar.
+
 #### Ausdrücklich getrennte Folgeblöcke
 
 Folgende Erweiterungen bleiben außerhalb dieses Freeze und benötigen jeweils einen eigenen V3-Scope:
 
-- persistente Visibility-Overrides für importierte Unterelemente;
 - Transform-Editing / Pivot-/Origin-Korrektur;
 - Material-/Textur-Overrides;
 - UV-/Materialbezug;
@@ -89,9 +139,9 @@ Folgende Erweiterungen bleiben außerhalb dieses Freeze und benötigen jeweils e
 
 ### Game Asset Editing / Materials / Optimization
 
-**Status:** V3-KANDIDAT / NUR TEILWEISE BEGONNEN
+**Status:** V3-KANDIDAT / FOUNDATION + VISIBILITY BEGONNEN
 
-CyberMotion soll langfristig die eigentliche 3D-Bearbeitungsautorität für importierte Game Assets sein. Der erste Foundation-Schritt – adressierbare Imported Structure & Subselection – ist eingefroren. Die mutierenden Bearbeitungsfähigkeiten bleiben getrennte Folgeblöcke.
+CyberMotion soll langfristig die eigentliche 3D-Bearbeitungsautorität für importierte Game Assets sein. Adressierbare Imported Structure & Subselection sowie persistente Visibility-Overrides sind eingefroren. Die weiteren mutierenden Bearbeitungsfähigkeiten bleiben getrennte Folgeblöcke.
 
 Kandidaten:
 
