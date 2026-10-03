@@ -66,7 +66,8 @@ function packageAsProject(partial) {
   const project = createProject('Teilprojektprüfung');
   project.scene = {
     rootObjectIds: [...partial.roots],
-    objects: structuredClone(partial.objects)
+    objects: structuredClone(partial.objects),
+    layers: {}
   };
   project.materials = structuredClone(partial.materials || {});
   project.assets = structuredClone(partial.assets || []);
