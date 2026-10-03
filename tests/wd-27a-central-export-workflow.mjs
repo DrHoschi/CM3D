@@ -24,7 +24,11 @@ assert.match(ui, /interchange\.exportWithDescriptor\s*\(/);
 
 assert.match(interchange, /function normalizeExportDescriptor/);
 assert.match(interchange, /async function exportWithDescriptor/);
-assert.match(interchange, /\['glb', 'gltf'\]\.includes\(format\)/);
+// WD-27A requires GLB and GLTF to remain accepted by the central descriptor;
+// later interchange blocks may add further formats without breaking that contract.
+assert.match(interchange, /['"]glb['"]/);
+assert.match(interchange, /['"]gltf['"]/);
+assert.match(interchange, /includes\(format\)/);
 assert.match(interchange, /scope = descriptor\.scope === 'selection' \? 'selection' : 'scene'/);
 assert.match(interchange, /units !== 'm' \|\| scale !== 1/);
 assert.match(interchange, /const exportScene = options => exportWithDescriptor\(options\)/);
