@@ -39,7 +39,9 @@ assert.match(interchange, /descriptor\.scope/);
 assert.match(interchange, /descriptor\.units\s*\|\|\s*['"]m['"]/);
 assert.match(interchange, /descriptor\.scale\s*\?\?\s*1/);
 assert.match(interchange, /units\s*,\s*scale/);
-assert.match(interchange, /const exportScene = options => exportWithDescriptor\(options\)/);
+// WD-27A freezes exportScene as a compatibility delegation to the central
+// exportWithDescriptor(...) authority, not a particular whitespace style.
+assert.match(interchange, /const\s+exportScene\s*=\s*options\s*=>\s*exportWithDescriptor\s*\(\s*options\s*\)/);
 assert.doesNotMatch(interchange, /OBJLoader|STLLoader|OBJExporter|STLExporter/);
 
 console.log('WD-27A central export workflow regression PASS');
