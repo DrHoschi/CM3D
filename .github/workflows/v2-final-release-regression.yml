@@ -1,0 +1,22 @@
+name: V2 Final Release Regression
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/v2-final-release-regression.yml'
+
+jobs:
+  final-release-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: F112 Object Tree Drag-and-Drop Reparenting
+        run: node tests/wd-29c-f112-object-tree-reparent-dnd.mjs
+      - name: F124 Diagnostics Export
+        run: node tests/wd-29d-f124-diagnostics-export.mjs
