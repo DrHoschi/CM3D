@@ -2,6 +2,7 @@ import { installPerformanceInstrumentation } from '../runtime-three/performance-
 
 const MAX_MESSAGES = 40;
 const MAX_EVENTS = 60;
+const DIAGNOSTIC_EXPORT_VERSION = 1;
 
 function pretty(value) {
   try { return JSON.stringify(value, null, 2); }
@@ -30,6 +31,74 @@ export function projectReferenceDiagnostics(store) {
   }));
 }
 
+function selectionSnapshot(store) {
+  const activeId = store.selection?.activeObjectId ?? null;
+  const activeObject = activeId ? store.getObject(activeId) : null;
+  return {
+    selectedObjectIds: [...(store.selection?.selectedObjectIds ?? [])],
+    activeObjectId: activeId,
+    hoveredObjectId: store.selection?.hoveredObjectId ?? null,
+    activeObject: activeObject ? {
+      objectId: activeObject.objectId,
+      type: activeObject.type,
+      name: activeObject.name,
+      parentId: activeObject.parentId,
+      visible: activeObject.flags?.visible !== false,
+      locked: activeObject.flags?.locked === true
+    } : null
+  };
+}
+
+function sceneSummary(store, runtime) {
+  return {
+    objectCount: Object.keys(store.project?.scene?.objects ?? {}).length,
+    rootCount: store.project?.scene?.rootObjectIds?.length ?? 0,
+    assetCount: store.project?.assets?.length ?? 0,
+    materialCount: Object.keys(store.project?.materials ?? {}).length,
+    undoDepth: store.undoStack?.length ?? 0,
+    redoDepth: store.redoStack?.length ?? 0,
+    runtimeNodes: runtime?.objectMap?.size ?? 0,
+    pickables: runtime?.pickables?.length ?? 0,
+    toolMode: store.toolMode,
+    coordinateSpace: store.coordinateSpace,
+    snap: store.snap
+  };
+}
+
+export function createDiagnosticSnapshot({ store, runtime, ui, performanceInstrumentation, messages = [], events = [], exportedAt = new Date().toISOString() }) {
+  return {
+    diagnosticExportVersion: DIAGNOSTIC_EXPORT_VERSION,
+    exportedAt,
+    project: {
+      projectId: store.project?.project?.projectId ?? null,
+      schemaVersion: store.project?.schemaVersion ?? null
+    },
+    diagnostics: {
+      currentStatus: ui.status?.textContent || '',
+      messages: messages.map(entry => ({ ...entry })),
+      references: projectReferenceDiagnostics(store)
+    },
+    performance: performanceInstrumentation?.snapshot?.() ?? null,
+    selection: selectionSnapshot(store),
+    sceneSummary: sceneSummary(store, runtime),
+    events: events.map(entry => ({ ...entry }))
+  };
+}
+
+function diagnosticFilename(date = new Date()) {
+  return `cybermotion-diagnostics-${date.toISOString().replace(/[:.]/g, '-')}.json`;
+}
+
+export function downloadDiagnosticSnapshot(snapshot, date = new Date()) {
+  const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = diagnosticFilename(date);
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function createPanel() {
   const host = document.querySelector('.inspector-panel');
   if (!host) return null;
@@ -39,6 +108,7 @@ function createPanel() {
   panel.innerHTML = `
     <div class="diagnostics-head">
       <strong>Diagnose</strong>
+      <button id="diagnostics-export" type="button">Diagnose exportieren</button>
       <button id="diagnostics-close" type="button">Schließen</button>
     </div>
     <details open>
@@ -102,6 +172,7 @@ export function installInspectorDiagnostics(store, runtime, ui) {
   const selectionOut = panel.querySelector('#diagnostics-selection');
   const sceneOut = panel.querySelector('#diagnostics-scene');
   const consoleOut = panel.querySelector('#diagnostics-console');
+  const exportButton = panel.querySelector('#diagnostics-export');
   const closeButton = panel.querySelector('#diagnostics-close');
   const messages = [];
   const events = [];
@@ -136,21 +207,7 @@ export function installInspectorDiagnostics(store, runtime, ui) {
   };
 
   const renderSelection = () => {
-    const activeId = store.selection?.activeObjectId ?? null;
-    const activeObject = activeId ? store.getObject(activeId) : null;
-    selectionOut.textContent = pretty({
-      selectedObjectIds: [...(store.selection?.selectedObjectIds ?? [])],
-      activeObjectId: activeId,
-      hoveredObjectId: store.selection?.hoveredObjectId ?? null,
-      activeObject: activeObject ? {
-        objectId: activeObject.objectId,
-        type: activeObject.type,
-        name: activeObject.name,
-        parentId: activeObject.parentId,
-        visible: activeObject.flags?.visible !== false,
-        locked: activeObject.flags?.locked === true
-      } : null
-    });
+    selectionOut.textContent = pretty(selectionSnapshot(store));
   };
 
   const renderScene = () => {
@@ -158,23 +215,9 @@ export function installInspectorDiagnostics(store, runtime, ui) {
   };
 
   const renderConsole = () => {
-    const summary = {
-      projectId: store.project?.project?.projectId ?? null,
-      schemaVersion: store.project?.schemaVersion ?? null,
-      objectCount: Object.keys(store.project?.scene?.objects ?? {}).length,
-      rootCount: store.project?.scene?.rootObjectIds?.length ?? 0,
-      assetCount: store.project?.assets?.length ?? 0,
-      materialCount: Object.keys(store.project?.materials ?? {}).length,
-      undoDepth: store.undoStack?.length ?? 0,
-      redoDepth: store.redoStack?.length ?? 0,
-      runtimeNodes: runtime?.objectMap?.size ?? 0,
-      pickables: runtime?.pickables?.length ?? 0,
-      toolMode: store.toolMode,
-      coordinateSpace: store.coordinateSpace,
-      snap: store.snap
-    };
+    const summary = sceneSummary(store, runtime);
     const eventText = events.map(entry => `[${entry.time}] ${entry.type}${entry.objectId ? ` · ${entry.objectId}` : ''}`).join('\n');
-    consoleOut.textContent = `${pretty(summary)}${eventText ? `\n\nLetzte Store-Ereignisse\n${eventText}` : ''}`;
+    consoleOut.textContent = `${pretty({ projectId: store.project?.project?.projectId ?? null, schemaVersion: store.project?.schemaVersion ?? null, ...summary })}${eventText ? `\n\nLetzte Store-Ereignisse\n${eventText}` : ''}`;
   };
 
   const renderAll = () => {
@@ -213,7 +256,14 @@ export function installInspectorDiagnostics(store, runtime, ui) {
     ui.render?.();
   };
 
+  const exportDiagnostics = () => {
+    const now = new Date();
+    const snapshot = createDiagnosticSnapshot({ store, runtime, ui, performanceInstrumentation, messages, events, exportedAt: now.toISOString() });
+    downloadDiagnosticSnapshot(snapshot, now);
+  };
+
   button.addEventListener('click', () => panel.hidden ? open() : close());
+  exportButton.addEventListener('click', exportDiagnostics);
   closeButton.addEventListener('click', close);
 
   const baseSetStatus = ui.setStatus.bind(ui);
@@ -253,6 +303,8 @@ export function installInspectorDiagnostics(store, runtime, ui) {
     renderAll,
     renderReferences,
     renderPerformance,
+    createDiagnosticSnapshot: () => createDiagnosticSnapshot({ store, runtime, ui, performanceInstrumentation, messages, events }),
+    exportDiagnostics,
     performanceInstrumentation,
     unsubscribe,
     dispose() {
