@@ -13,9 +13,9 @@ assert.match(ui, /value="scene"/);
 assert.match(ui, /value="selection"/);
 assert.match(ui, /id="model-export-format"/);
 assert.match(ui, /kein natives CM3D-Projektbackup/);
-assert.match(ui, /transformPolicy: 'preserve-world-root-transform'/);
-assert.match(ui, /hierarchyPolicy: 'preserve-descendants'/);
-assert.match(ui, /materialPolicy: 'adapter-supported'/);
+assert.match(ui, /transformPolicy\s*:\s*'preserve-world-root-transform'/);
+assert.match(ui, /hierarchyPolicy\s*:\s*'preserve-descendants'/);
+assert.match(ui, /materialPolicy\s*:\s*['"]adapter-supported['"]/);
 assert.match(ui, /interchange\.exportWithDescriptor\(descriptor\)/);
 
 assert.match(interchange, /function normalizeExportDescriptor/);
