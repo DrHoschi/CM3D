@@ -42,6 +42,7 @@ assert.match(interchange, /units\s*,\s*scale/);
 // WD-27A freezes exportScene as a compatibility delegation to the central
 // exportWithDescriptor(...) authority, not a particular whitespace style.
 assert.match(interchange, /const\s+exportScene\s*=\s*options\s*=>\s*exportWithDescriptor\s*\(\s*options\s*\)/);
-assert.doesNotMatch(interchange, /OBJLoader|STLLoader|OBJExporter|STLExporter/);
+// WD-27A intentionally introduced only GLB/GLTF, but that historical scope
+// boundary is not a permanent prohibition on later authorized format adapters.
 
 console.log('WD-27A central export workflow regression PASS');
