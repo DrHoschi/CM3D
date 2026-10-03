@@ -7,6 +7,7 @@ import { installSketchArcCreationContract } from './application/sketch-arc-creat
 import { installSketchSplineCreationContract } from './application/sketch-spline-creation.js';
 import { installGenericEndpointConnectivityContract } from './application/sketch-endpoint-connectivity-extension.js';
 import { installSketchConnectivityCommands } from './application/sketch-connectivity-commands.js';
+import { sharedLibraryRegistry } from './application/library-runtime.js';
 import { getSketchElement, getSketchPoint } from './model/sketch-topology.js';
 import { ThreeRuntime } from './runtime-three/runtime.js';
 import { installExtrudeRuntime } from './runtime-three/extrude.js';
@@ -55,7 +56,7 @@ installRevolveRuntime(runtime);
 const gltfInterchange = installGltfInterchange(runtime, store);
 const viewportReferenceSystem = installViewportReferenceSystem(runtime);
 const appUI = new AppUI(store);
-installMaterialPanel(store);
+const materialPanel=installMaterialPanel(store);
 const sketchLibraryPanel=installSketchLibraryPanel(store);
 const objectLibraryPanel=installObjectLibraryPanel(store);
 const assemblyLibraryPanel=installAssemblyLibraryPanel(store);
@@ -80,4 +81,4 @@ const profilePathSelection=installProfilePathSelectionProjection(store,runtime,a
 const sketchConnectivityCommands=installSketchConnectivityCommands(store); const sketchConnectivityActions=installSketchConnectivityActions(store); const sketchGizmo=installSketchGizmo(store,runtime); const featureOperationsTree=installFeatureOperationsTree(store,appUI); const featureDependencyStructureUI=installFeatureDependencyStructureUI(store,appUI); const featureParametersInspector=installFeatureParametersInspector(store,appUI); const objectVisibility=installObjectVisibility(store,runtime,appUI); const objectLocking=installObjectLocking(store,runtime,appUI); const objectTreeScalability=installObjectTreeScalability(store,appUI); const projectLifecycle=installProjectLifecycle(store,appUI); const recentProjects=installRecentProjects(store,appUI); const projectSettings=installProjectSettings(store,appUI); const cameraObjectPreview=installCameraObjectPreview(store,runtime,appUI); const inspectorDiagnostics=installInspectorDiagnostics(store,runtime,appUI);
 applyBuildIdentity();
 const focusButton=document.querySelector('#focus-selection'); const syncFocusButton=()=>{if(focusButton)focusButton.disabled=!store.getObject(store.selection.activeObjectId);}; if(focusButton){focusButton.onclick=null;focusButton.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();if(!store.getObject(store.selection.activeObjectId))return;runtime.focusSelection();});} store.subscribe(event=>{if(['selectionChanged','projectChanged','projectLoaded','objectCreated'].includes(event.type))syncFocusButton();}); syncFocusButton();
-window.cm3d={store,runtime,gltfInterchange,viewportReferenceSystem,extrudeSourceReferenceSync,featureDependencyProjection,sketchMutationContract,genericSketchElementMutationContract,sketchArcCreationContract,sketchSplineCreationContract,genericEndpointConnectivityContract,sketchCircleIntegration,sketchArcIntegration,sketchSplineIntegration,sketchMultiSelection,profilePathIdentityRegistrationLifecycle,profilePathSelection,sketchConnectivityCommands,sketchConnectivityActions,sketchGizmo,featureOperationsTree,featureDependencyStructureUI,featureParametersInspector,objectVisibility,objectLocking,objectTreeScalability,projectLifecycle,recentProjects,projectSettings,cameraObjectPreview,inspectorDiagnostics,sketchLibraryPanel,objectLibraryPanel,assemblyLibraryPanel,buildId:BUILD_ID};
+window.cm3d={store,runtime,gltfInterchange,viewportReferenceSystem,extrudeSourceReferenceSync,featureDependencyProjection,sketchMutationContract,genericSketchElementMutationContract,sketchArcCreationContract,sketchSplineCreationContract,genericEndpointConnectivityContract,sketchCircleIntegration,sketchArcIntegration,sketchSplineIntegration,sketchMultiSelection,profilePathIdentityRegistrationLifecycle,profilePathSelection,sketchConnectivityCommands,sketchConnectivityActions,sketchGizmo,featureOperationsTree,featureDependencyStructureUI,featureParametersInspector,objectVisibility,objectLocking,objectTreeScalability,projectLifecycle,recentProjects,projectSettings,cameraObjectPreview,inspectorDiagnostics,materialPanel,sketchLibraryPanel,objectLibraryPanel,assemblyLibraryPanel,libraryRegistry:sharedLibraryRegistry,buildId:BUILD_ID};
