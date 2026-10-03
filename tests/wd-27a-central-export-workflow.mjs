@@ -34,7 +34,11 @@ assert.match(interchange, /includes\(format\)/);
 assert.match(interchange, /['"]scene['"]/);
 assert.match(interchange, /['"]selection['"]/);
 assert.match(interchange, /descriptor\.scope/);
-assert.match(interchange, /units !== 'm' \|\| scale !== 1/);
+// WD-27A freezes meters and scale 1 for the GLB/GLTF descriptor contract, not
+// the exact boolean expression used to validate those values.
+assert.match(interchange, /descriptor\.units\s*\|\|\s*['"]m['"]/);
+assert.match(interchange, /descriptor\.scale\s*\?\?\s*1/);
+assert.match(interchange, /units\s*,\s*scale/);
 assert.match(interchange, /const exportScene = options => exportWithDescriptor\(options\)/);
 assert.doesNotMatch(interchange, /OBJLoader|STLLoader|OBJExporter|STLExporter/);
 
