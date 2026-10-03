@@ -18,7 +18,9 @@ assert.match(ui, /hierarchyPolicy\s*:\s*'preserve-descendants'/);
 // WD-27A freezes adapter-supported for the GLB/GLTF path, but later format
 // adapters may specialize the descriptor policy (for example geometry-only).
 assert.match(ui, /materialPolicy\s*:\s*[^,}]*['"]adapter-supported['"]/);
-assert.match(ui, /interchange\.exportWithDescriptor\(descriptor\)/);
+// WD-27A freezes exportWithDescriptor(...) as the central export authority;
+// the caller may pass a local descriptor variable or create it inline.
+assert.match(ui, /interchange\.exportWithDescriptor\s*\(/);
 
 assert.match(interchange, /function normalizeExportDescriptor/);
 assert.match(interchange, /async function exportWithDescriptor/);
