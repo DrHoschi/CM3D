@@ -1,0 +1,24 @@
+name: WD-29C F112 Exact-Head Verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/wd-29c-f112-object-tree-reparent-dnd
+    paths:
+      - '.github/workflows/wd-29c-f112-exact-head-verification.yml'
+
+jobs:
+  exact-head-verification:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: F112 focused contract
+        run: node tests/wd-29c-f112-object-tree-reparent-dnd.mjs
+      - name: WD-25A hierarchy regression
+        run: node tests/wd-25a-scene-hierarchy-parent-foundation.mjs
+      - name: WD-25C object-tree regression
+        run: node tests/wd-25c-object-tree-search-filter.mjs
