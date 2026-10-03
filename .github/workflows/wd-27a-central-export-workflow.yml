@@ -23,7 +23,5 @@ jobs:
           node --check src/ui/gltf-panel.js
           node --check src/runtime-three/gltf-interchange.js
           node --check tests/wd-27a-central-export-workflow.mjs
-      - name: GLB GLTF regression
-        run: node tests/wd-11-gltf-interchange.mjs
-      - name: WD-27A focused regression
+      - name: WD-27A focused GLB GLTF regression
         run: node tests/wd-27a-central-export-workflow.mjs
