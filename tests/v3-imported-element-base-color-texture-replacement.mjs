@@ -38,7 +38,8 @@ assert.match(uiSource, /IMAGE_MIME = \/\^image\\\/\(png\|jpeg\|webp\)\$\//, 'onl
 assert.match(uiSource, /!Array\.isArray\(node\.material\)/, 'only single-material imported meshes are editable');
 assert.match(uiSource, /ensureLocalMaterial/, 'texture replacement must share the existing clone-on-override material boundary');
 assert.match(uiSource, /node\.material === base\) node\.material = base\.clone\(\)/, 'shared GLTF material must be cloned before local texture mutation');
-assert.match(uiSource, /texture\.colorSpace = THREE\.SRGBColorSpace/, 'base-color replacement must hydrate as sRGB');
+assert.match(uiSource, /texture\.colorSpace = .*THREE\.SRGBColorSpace/, 'base-color replacement must hydrate as sRGB');
+assert.match(uiSource, /THREE\.NoColorSpace/, 'normal-map data must remain non-color texture data');
 assert.match(uiSource, /material\.map = texture \|\| base\?\.map \|\| null/, 'runtime projection must target material.map and fall back to the original GLTF map');
 assert.match(uiSource, /node\.material\.map = base\.map \|\| null/, 'removing or losing an override must restore the original GLTF base map');
 assert.match(uiSource, /store\.pushHistory\(before, 'Importierte Basisfarbtextur ersetzen'\)/, 'texture replacement must create undo history');
@@ -47,7 +48,7 @@ assert.match(uiSource, /FileReader/, 'existing inspector file input must feed th
 assert.match(uiSource, /readAsDataURL\(file\)/, 'replacement image must persist through the embedded data-url asset contract');
 assert.match(uiSource, /importedTextureDiagnostics/, 'missing source keys/assets must be diagnosed non-blockingly');
 assert.match(uiSource, /applyTextures\(rootObjectId\)/, 'texture overrides must reapply after imported structure hydration');
-assert.doesNotMatch(uiSource, /normalMap\s*=|roughnessMap\s*=|metalnessMap\s*=|aoMap\s*=|emissiveMap\s*=/, 'no additional texture slots may be opened');
+assert.doesNotMatch(uiSource, /roughnessMap\s*=|metalnessMap\s*=|aoMap\s*=|emissiveMap\s*=/, 'roughness, metalness, AO and emissive slots remain outside this scope');
 assert.doesNotMatch(uiSource, /INVALID|BLOCKED/, 'missing texture overrides must not enter reference invalidation/recompute');
 assert.doesNotMatch(modelSource, /importedOverrides/, 'texture block must not change schema/model foundation');
 assert.match(interchangeSource, /new GLTFExporter\(\)/, 'GLTF export continues from the hydrated runtime material state');
