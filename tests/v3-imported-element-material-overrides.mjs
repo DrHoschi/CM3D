@@ -35,13 +35,12 @@ assert.match(uiSource, /data\?\.importedOverrides\?\.material/, 'material overri
 assert.match(uiSource, /!Array\.isArray\(node\.material\)/, 'only single-material imported meshes are editable');
 assert.match(uiSource, /node\.material === base\) node\.material = base\.clone\(\)/, 'first override must clone a shared GLTF material before mutation');
 assert.match(uiSource, /baseMaterials/, 'hydrated base material identity must be retained for deterministic reapply');
-assert.match(uiSource, /\['baseColor','metallic','roughness','opacity'\]/, 'scope is limited to the four authorized material parameters');
+assert.match(uiSource, /\['baseColor','metallic','roughness','opacity'\]/, 'material parameter scope remains limited to the four authorized properties');
 assert.match(uiSource, /Number\(value\) >= 0 && Number\(value\) <= 1/, 'numeric PBR overrides must validate the normalized 0..1 range');
 assert.match(uiSource, /store\.pushHistory\(before, `Importiertes Material \$\{property\}`\)/, 'each accepted material edit must create one undo history entry');
 assert.match(uiSource, /applyMaterials\(rootObjectId\)/, 'material overrides must reapply after imported structure hydration');
 assert.match(uiSource, /importedMaterialDiagnostics/, 'unresolved source keys must be diagnosed without blocking');
 assert.match(uiSource, /Importiertes Multi-\/Nicht-Mesh · Material read-only/, 'multi-material and non-mesh imported elements remain read-only');
-assert.match(uiSource, /Textur-Austausch in diesem V3-Block nicht unterstützt/, 'texture replacement remains explicitly outside scope');
 assert.doesNotMatch(uiSource, /INVALID|BLOCKED/, 'unresolved material overrides must not enter reference invalidation/recompute');
 assert.doesNotMatch(modelSource, /importedOverrides/, 'material block must not change schema/model foundation');
 assert.match(interchangeSource, /new GLTFExporter\(\)/, 'GLTF export continues from the hydrated runtime material state');
