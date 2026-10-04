@@ -1,7 +1,7 @@
 # CM3D – V3 Backlog
 
 **Stand:** 2026-10-04  
-**Status:** V3 ACTIVE / IMPORTED STRUCTURE + VISIBILITY + TRANSFORM FROZEN  
+**Status:** V3 ACTIVE / IMPORTED STRUCTURE + VISIBILITY + TRANSFORM + MATERIAL PARAMETERS FROZEN  
 **Basis:** CM3D-V2 / Freeze Head `10c2def74668b6b17d14c2e6d3232d1de2f71159`
 
 ## Zweck
@@ -33,19 +33,7 @@ GLB/GLTF-Hierarchie-Auflösung ist mit dem ersten V3-Produktblock begonnen. Drag
 **Evidence Head:** `218a80f20c5994a91aa60a73b5ef59bd0a77d2ba`  
 **Exact-Head Evidence:** GitHub Actions Run `37151097743`
 
-#### Scope
-
-Der erste V3-Produktblock etabliert eine adressierbare, abgeleitete Struktur für importierte GLB/glTF-Unterelemente, ohne importierte Nodes oder Meshes in native `scene.objects`, Bodies oder Features umzudeuten.
-
-Der eingefrorene Vertrag umfasst:
-
-- deterministische Imported-Element-Identität aus dem vorhandenen GLTF-Runtime-Baum;
-- das persistente `external.gltf`-Root bleibt die echte CM3D-Objektidentität;
-- importierte Unterelemente bleiben Runtime-/UI-Projektion und erzeugen keine zweite Scene-/Hierarchy-Autorität;
-- Viewer und Object Tree verwenden dieselbe Imported-Subselection;
-- der Inspector projiziert Imported-Element-Information read-only;
-- keine zusätzliche Persistenz der importierten Hierarchie;
-- keine Änderung von `SCHEMA_VERSION`.
+Der erste V3-Produktblock etabliert eine adressierbare, abgeleitete Struktur für importierte GLB/glTF-Unterelemente, ohne importierte Nodes oder Meshes in native `scene.objects`, Bodies oder Features umzudeuten. Deterministische Imported-Element-Identität, gemeinsame Viewer-/Object-Tree-Subselection und read-only Inspector-Projektion sind eingefroren. Das persistente `external.gltf`-Root bleibt die echte CM3D-Objektidentität; `SCHEMA_VERSION` bleibt unverändert.
 
 **Freeze-Entscheidung:** PASS / 0 BLOCKER.
 
@@ -71,75 +59,90 @@ Der eingefrorene Vertrag umfasst sparse Source-Key-basierte Visibility-Overrides
 **Evidence Head:** `4bf69733905717589e6db74cff66bd118ae71b1e`  
 **Exact-Head Evidence:** GitHub Actions Run `37181770916`
 
+Der eingefrorene Vertrag umfasst sparse Source-Key-basierte lokale Position-/Quaternion-Rotation-/Scale-Overrides, Parent-/Child-Semantik über die vorhandene GLTF-Hierarchie, TransformControls-Anbindung, Undo/Redo, Save→Reload/Re-Hydration und Exportprojektion. Verwaiste Source-Keys bleiben non-blocking. Pivot/Origin ist ausdrücklich nicht Teil dieses Blocks.
+
+**Freeze-Entscheidung:** PASS / 0 BLOCKER.
+
+### 2026-10-04 – Imported Element Material Parameter Overrides
+
+**Status:** PASS / FROZEN / 0 BLOCKER
+
+**Basis / vorheriger V3-Freeze:** `1e851f98dda2f3175a0592079ed47ecfe3bcef0c`  
+**Functional Head:** `d2c5efae6bec59d700205ba14bdfff596f137819`  
+**Evidence Head:** `0a0d87e14c74b3a2fbf683f7990bd6d761a17f7f`  
+**Exact-Head Evidence:** GitHub Actions Run `37184813866`
+
 #### Scope
 
-Dieser Block erweitert die bereits adressierbaren und persistent sichtbarkeitssteuerbaren Imported Elements um persistente lokale Position-/Rotation-/Scale-Overrides. Das `external.gltf`-Root bleibt die einzige persistente CM3D-Objektidentität; Imported Elements werden weiterhin nicht zu nativen `scene.objects`, Bodies oder Features.
+Dieser Block erweitert adressierbare Imported Single-Material Meshes um sparse persistente Materialparameter-Overrides, ohne Imported Elements in native MaterialDefinitions, `materialIds`, `scene.objects`, Bodies oder Features umzudeuten.
 
 Der eingefrorene Vertrag umfasst:
 
-- sparse Source-Key-basierte lokale Transform-Overrides am vorhandenen `external.gltf`-Root;
-- Position, Quaternion-Rotation und Scale werden relativ zur vorhandenen GLTF-Parent-Hierarchie behandelt;
-- Parent-Transformationen wirken über die bestehende Runtime-Hierarchie auf Children; Child-Overrides bleiben lokal und erzeugen keine persistente Transform-Kaskade;
-- TransformControls können an die Imported-Subselection angebunden werden, ohne den Transform des `external.gltf`-Roots als Ersatz für den Subelement-Transform zu verändern;
-- ein abgeschlossener Gizmo-Drag bildet eine persistente Mutation mit genau einem History-Vertrag und bleibt Undo-/Redo-fähig;
-- Save → Reload / Re-Hydration stellt die Overrides über dieselben deterministischen Source-Keys wieder her;
-- der resultierende Runtime-Transform ist die Grundlage für GLB/glTF- sowie OBJ/STL-Export; es wird kein zweiter Exportpfad eingeführt;
-- verwaiste bzw. nicht mehr auflösbare Source-Keys bleiben non-blocking und führen nicht zu `INVALID`/`BLOCKED`-Recompute;
-- bestehende Visibility-Overrides bleiben unverändert kompatibel;
-- keine Änderung von `SCHEMA_VERSION`, Persistence-Foundation oder GLTF-Interchange-Vertrag;
-- keine neuen `scene.objects`.
+- Source-Key-basierte sparse Materialparameter-Overrides am vorhandenen `external.gltf`-Root;
+- ausschließlich Base Color, Metallic, Roughness und Opacity;
+- Clone-on-Override für Single-Material Imported Meshes, sodass ursprünglich geteilte GLTF-Materialinstanzen nicht unbeabsichtigt gemeinsam mutiert werden;
+- Wertevalidierung für Metallic, Roughness und Opacity im Bereich `0..1`;
+- Wiederverwendung der vorhandenen Inspector-Materialcontrols für die Imported-Subselection;
+- Undo/Redo und History über den bestehenden Store-Vertrag;
+- Save → Reload / Re-Hydration und deterministisches Reapply über denselben Source-Key;
+- unresolved/verwaiste Source-Keys bleiben non-blocking und lösen keinen `INVALID`/`BLOCKED`-Recompute aus;
+- bestehende Imported Structure-, Visibility- und Transform-Verträge bleiben unverändert kompatibel;
+- keine Änderung an `SCHEMA_VERSION`, GLTF-Interchange, Exportarchitektur oder nativer Materialbibliothek.
 
 #### Implementierter Produkt-Scope
 
 - `src/ui/imported-structure.js`
-- `tests/v3-imported-element-transform-overrides.mjs`
-
-Die zuvor autorisierte `src/runtime-three/runtime.js` musste nach der konkreten Integration nicht geändert werden; der vorhandene Runtime-/TransformControls-Vertrag konnte wiederverwendet werden.
+- `tests/v3-imported-element-material-overrides.mjs`
 
 Evidence-Infrastruktur:
 
-- `.github/workflows/v3-imported-transform-exact-head.yml`
+- `.github/workflows/v3-imported-material-exact-head.yml`
 
 #### Verification / Regression
 
-Run `37181770916` wurde gegen den Evidence Head `4bf69733905717589e6db74cff66bd118ae71b1e` ausgeführt und ist vollständig erfolgreich abgeschlossen.
+Run `37184813866` wurde gegen Evidence Head `0a0d87e14c74b3a2fbf683f7990bd6d761a17f7f` ausgeführt und vollständig erfolgreich abgeschlossen.
 
 Bestätigte Checks:
 
-- V3 Imported Transform Override Contract – PASS;
+- V3 Imported Material Override Contract – PASS;
 - V3 Imported Structure Regression – PASS;
 - V3 Imported Visibility Regression – PASS;
-- V2 Scene Hierarchy Regression – PASS;
-- V2 Object Tree Regression – PASS;
-- V2 GLTF Export Regression – PASS;
-- V2 OBJ/STL Interchange Regression – PASS.
+- V3 Imported Transform Regression – PASS;
+- V2 Material Binding Regression – PASS;
+- V2 PBR Numeric Properties Regression – PASS;
+- V2 GLTF Export Regression – PASS.
 
-**Freeze-Entscheidung:** PASS / 0 BLOCKER. Imported Element Transform Overrides sind damit funktional eingefroren.
+Der erste Evidence-Lauf war ausschließlich durch einen falschen Testdateinamen im Runner blockiert. Die Korrektur beschränkte sich auf `.github/workflows/v3-imported-material-exact-head.yml`; Produkt- und Testdateien blieben unverändert. Der korrigierte Exact-Head-Lauf ist grün.
 
-#### Ausdrücklich ausgeschlossen / Folgeblöcke
+**Freeze-Entscheidung:** PASS / 0 BLOCKER. Imported Element Material Parameter Overrides sind damit funktional eingefroren.
 
-Pivot/Origin ist ausdrücklich **nicht** Teil des Transform-Override-Blocks. Pivot-/Origin-Korrektur besitzt eine eigene Geometrie-/Bezugspunktsemantik und benötigt einen separaten V3-Scope.
+#### Ausdrücklich ausgeschlossen / deferred
 
-Weiterhin getrennt bleiben:
+Nicht Teil dieses Blocks sind:
 
-- Pivot-/Origin-Korrektur;
-- Material-/Textur-Overrides;
+- Multi-Material-/Material-Slot-Editing;
+- Texture Replacement oder neue Texture-Asset-Persistenz;
+- Normal-/Roughness-/Metalness-Map-Austausch;
 - UV-/Materialbezug;
+- Pivot-/Origin-Korrektur;
 - Mesh-Simplification / Decimation;
 - LOD- und Collision-Aufbereitung.
+
+Multi-Material bleibt read-only/deferred. Pivot/Origin bleibt nach separater Gate-1-Reconciliation deferred, da ein sauberer Vertrag eine zusätzliche Runtime-Hierarchie-/Geometrie-/Export-Semantik erfordern würde.
 
 ## Weitere V3-Kandidaten
 
 ### Game Asset Editing / Materials / Optimization
 
-**Status:** V3-KANDIDAT / FOUNDATION + VISIBILITY + TRANSFORM FROZEN
+**Status:** V3-KANDIDAT / STRUCTURE + VISIBILITY + TRANSFORM + MATERIAL PARAMETERS FROZEN
 
-CyberMotion soll langfristig die eigentliche 3D-Bearbeitungsautorität für importierte Game Assets sein. Adressierbare Imported Structure & Subselection, persistente Visibility-Overrides und persistente Position-/Rotation-/Scale-Overrides sind eingefroren. Die weiteren mutierenden Bearbeitungsfähigkeiten bleiben getrennte Folgeblöcke.
+CyberMotion soll langfristig die eigentliche 3D-Bearbeitungsautorität für importierte Game Assets sein. Adressierbare Imported Structure & Subselection, persistente Visibility-, Position-/Rotation-/Scale- und Single-Material-PBR-Parameter-Overrides sind eingefroren.
 
-Kandidaten:
+Offene Kandidaten:
 
-- Materialien und Texturen zuweisen, austauschen und nachkorrigieren;
-- UV-/Materialbezug kontrollierbar machen;
+- Texture Replacement und Textur-Asset-Persistenz;
+- UV-/Materialbezug;
+- Multi-Material-/Material-Slot-Editing;
 - Pivot/Origin und Maße feinjustieren;
 - Mesh-Simplification / Decimation zur Polygonreduktion bei möglichst erhaltener sichtbarer Hülle/Silhouette;
 - LOD-Stufen und optional vereinfachte Collision-Geometrie vorbereiten;
