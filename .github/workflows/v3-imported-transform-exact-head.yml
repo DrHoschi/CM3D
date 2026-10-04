@@ -1,0 +1,30 @@
+name: V3 Imported Transform Exact-Head Verification
+
+on:
+  push:
+    branches:
+      - feature/v3-imported-element-transform-overrides
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: V3 imported transform override contract
+        run: node tests/v3-imported-element-transform-overrides.mjs
+      - name: V3 imported structure regression
+        run: node tests/v3-imported-structure-subselection.mjs
+      - name: V3 imported visibility regression
+        run: node tests/v3-imported-element-visibility-overrides.mjs
+      - name: V2 scene hierarchy regression
+        run: node tests/wd-25a-scene-hierarchy-parent-foundation.mjs
+      - name: V2 object tree regression
+        run: node tests/wd-25c-object-tree-search-filter.mjs
+      - name: V2 GLTF export regression
+        run: node tests/wd-27a-central-export-workflow.mjs
+      - name: V2 OBJ STL interchange regression
+        run: node tests/wd-27b-obj-stl-interchange.mjs
