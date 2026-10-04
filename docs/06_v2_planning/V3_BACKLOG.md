@@ -1,7 +1,7 @@
 # CM3D – V3 Backlog
 
-**Stand:** 2026-10-03  
-**Status:** V3 ACTIVE / IMPORTED STRUCTURE + VISIBILITY FROZEN  
+**Stand:** 2026-10-04  
+**Status:** V3 ACTIVE / IMPORTED STRUCTURE + VISIBILITY + TRANSFORM FROZEN  
 **Basis:** CM3D-V2 / Freeze Head `10c2def74668b6b17d14c2e6d3232d1de2f71159`
 
 ## Zweck
@@ -45,34 +45,9 @@ Der eingefrorene Vertrag umfasst:
 - Viewer und Object Tree verwenden dieselbe Imported-Subselection;
 - der Inspector projiziert Imported-Element-Information read-only;
 - keine zusätzliche Persistenz der importierten Hierarchie;
-- keine Änderung von `SCHEMA_VERSION`;
-- keine Visibility-, Transform- oder Material-Overrides in diesem Block.
+- keine Änderung von `SCHEMA_VERSION`.
 
-#### Implementierter Produkt-Scope
-
-- `src/runtime-three/imported-structure.js`
-- `src/runtime-three/gltf-interchange.js`
-- `src/ui/imported-structure.js`
-- `src/main.js`
-- `tests/v3-imported-structure-subselection.mjs`
-
-Die Evidence-Infrastruktur liegt separat in:
-
-- `.github/workflows/v3-imported-structure-subselection-verification.yml`
-
-#### Verification / Regression
-
-Run `37151097743` wurde gegen den Evidence Head `218a80f20c5994a91aa60a73b5ef59bd0a77d2ba` ausgeführt und ist vollständig erfolgreich abgeschlossen.
-
-Bestätigte Checks:
-
-- V3 Imported Structure & Subselection – PASS;
-- V2 Scene Hierarchy Regression (`wd-25a`) – PASS;
-- V2 Object Tree Regression (`wd-25c`) – PASS;
-- V2 Central Export Regression (`wd-27a`) – PASS;
-- V2 OBJ/STL Interchange Regression (`wd-27b`) – PASS.
-
-**Freeze-Entscheidung:** PASS / 0 BLOCKER. Der Scope Imported Structure & Subselection ist damit funktional eingefroren. Weitere Fähigkeiten werden nicht in diesen Block aufgenommen.
+**Freeze-Entscheidung:** PASS / 0 BLOCKER.
 
 ### 2026-10-03 – Imported Element Visibility Overrides
 
@@ -83,53 +58,71 @@ Bestätigte Checks:
 **Evidence Head:** `1614bf92839544d0d117daaf51a1817b8b093169`  
 **Exact-Head Evidence:** GitHub Actions Run `37157656084`
 
+Der eingefrorene Vertrag umfasst sparse Source-Key-basierte Visibility-Overrides am `external.gltf`-Root, Save→Reload/Re-Hydration, Undo/Redo, Exportprojektion und non-blocking Behandlung verwaister Source-Keys ohne `INVALID`/`BLOCKED`-Recompute.
+
+**Freeze-Entscheidung:** PASS / 0 BLOCKER.
+
+### 2026-10-04 – Imported Element Transform Overrides
+
+**Status:** PASS / FROZEN / 0 BLOCKER
+
+**Basis / vorheriger V3-Freeze:** `8fdf0e5551afda4953da9313c63cd06196806145`  
+**Functional Head:** `621e91969a378380177ba86c890cf1f15347947b`  
+**Evidence Head:** `4bf69733905717589e6db74cff66bd118ae71b1e`  
+**Exact-Head Evidence:** GitHub Actions Run `37181770916`
+
 #### Scope
 
-Dieser Block ist die erste persistente Mutation adressierter importierter Unterelemente. Das `external.gltf`-Root bleibt die einzige persistente CM3D-Objektidentität; einzelne Imported Elements werden weiterhin nicht zu `scene.objects`, Bodies oder Features.
+Dieser Block erweitert die bereits adressierbaren und persistent sichtbarkeitssteuerbaren Imported Elements um persistente lokale Position-/Rotation-/Scale-Overrides. Das `external.gltf`-Root bleibt die einzige persistente CM3D-Objektidentität; Imported Elements werden weiterhin nicht zu nativen `scene.objects`, Bodies oder Features.
 
 Der eingefrorene Vertrag umfasst:
 
-- sparse Visibility-Overrides am vorhandenen `external.gltf`-Root unter `data.importedOverrides.visibility[sourceKey]`;
-- Source-Key-basierte Anwendung auf die rekonstruierte Imported Runtime Structure;
-- Save → Reload / Re-Hydration stellt den Visibility-Zustand über denselben Source-Key wieder her;
-- Visibility-Mutation läuft als persistente Domain-Mutation über die bestehende History und ist damit Undo-/Redo-fähig;
-- GLB/glTF-/Exportprojektion respektiert den angewandten Runtime-Visibility-Zustand;
+- sparse Source-Key-basierte lokale Transform-Overrides am vorhandenen `external.gltf`-Root;
+- Position, Quaternion-Rotation und Scale werden relativ zur vorhandenen GLTF-Parent-Hierarchie behandelt;
+- Parent-Transformationen wirken über die bestehende Runtime-Hierarchie auf Children; Child-Overrides bleiben lokal und erzeugen keine persistente Transform-Kaskade;
+- TransformControls können an die Imported-Subselection angebunden werden, ohne den Transform des `external.gltf`-Roots als Ersatz für den Subelement-Transform zu verändern;
+- ein abgeschlossener Gizmo-Drag bildet eine persistente Mutation mit genau einem History-Vertrag und bleibt Undo-/Redo-fähig;
+- Save → Reload / Re-Hydration stellt die Overrides über dieselben deterministischen Source-Keys wieder her;
+- der resultierende Runtime-Transform ist die Grundlage für GLB/glTF- sowie OBJ/STL-Export; es wird kein zweiter Exportpfad eingeführt;
 - verwaiste bzw. nicht mehr auflösbare Source-Keys bleiben non-blocking und führen nicht zu `INVALID`/`BLOCKED`-Recompute;
-- keine Änderung von `SCHEMA_VERSION`;
-- keine neuen `scene.objects`;
-- keine Transform-, Material-, Textur-, UV- oder Mesh-Mutation.
+- bestehende Visibility-Overrides bleiben unverändert kompatibel;
+- keine Änderung von `SCHEMA_VERSION`, Persistence-Foundation oder GLTF-Interchange-Vertrag;
+- keine neuen `scene.objects`.
 
 #### Implementierter Produkt-Scope
 
 - `src/ui/imported-structure.js`
-- `tests/v3-imported-element-visibility-overrides.mjs`
+- `tests/v3-imported-element-transform-overrides.mjs`
+
+Die zuvor autorisierte `src/runtime-three/runtime.js` musste nach der konkreten Integration nicht geändert werden; der vorhandene Runtime-/TransformControls-Vertrag konnte wiederverwendet werden.
 
 Evidence-Infrastruktur:
 
-- `.github/workflows/v3-imported-visibility-exact-head.yml`
-
-Der erste Evidence-Lauf scheiterte ausschließlich am Runner-Schritt `npm ci`, weil das Repository keinen passenden Lockfile-Vertrag besitzt. Dieser Infrastrukturfehler erforderte keine Produktkorrektur. Der Runner wurde anschließend ausschließlich durch Entfernen dieses unnötigen Schritts korrigiert.
+- `.github/workflows/v3-imported-transform-exact-head.yml`
 
 #### Verification / Regression
 
-Run `37157656084` wurde gegen den Evidence Head `1614bf92839544d0d117daaf51a1817b8b093169` ausgeführt und ist vollständig erfolgreich abgeschlossen.
+Run `37181770916` wurde gegen den Evidence Head `4bf69733905717589e6db74cff66bd118ae71b1e` ausgeführt und ist vollständig erfolgreich abgeschlossen.
 
 Bestätigte Checks:
 
-- V3 Imported Element Visibility Override Contract – PASS;
+- V3 Imported Transform Override Contract – PASS;
 - V3 Imported Structure Regression – PASS;
-- V2 GLTF Regression – PASS;
-- V2 OBJ/STL Interchange Regression – PASS;
-- V2 Scene Hierarchy / Selection Regression – PASS;
-- V2 Object Tree Regression – PASS.
+- V3 Imported Visibility Regression – PASS;
+- V2 Scene Hierarchy Regression – PASS;
+- V2 Object Tree Regression – PASS;
+- V2 GLTF Export Regression – PASS;
+- V2 OBJ/STL Interchange Regression – PASS.
 
-**Freeze-Entscheidung:** PASS / 0 BLOCKER. Imported Element Visibility Overrides sind damit funktional eingefroren. Der Runner-Infrastrukturfehler ist geschlossen und stellt keinen Produktblocker dar.
+**Freeze-Entscheidung:** PASS / 0 BLOCKER. Imported Element Transform Overrides sind damit funktional eingefroren.
 
-#### Ausdrücklich getrennte Folgeblöcke
+#### Ausdrücklich ausgeschlossen / Folgeblöcke
 
-Folgende Erweiterungen bleiben außerhalb dieses Freeze und benötigen jeweils einen eigenen V3-Scope:
+Pivot/Origin ist ausdrücklich **nicht** Teil des Transform-Override-Blocks. Pivot-/Origin-Korrektur besitzt eine eigene Geometrie-/Bezugspunktsemantik und benötigt einen separaten V3-Scope.
 
-- Transform-Editing / Pivot-/Origin-Korrektur;
+Weiterhin getrennt bleiben:
+
+- Pivot-/Origin-Korrektur;
 - Material-/Textur-Overrides;
 - UV-/Materialbezug;
 - Mesh-Simplification / Decimation;
@@ -139,15 +132,15 @@ Folgende Erweiterungen bleiben außerhalb dieses Freeze und benötigen jeweils e
 
 ### Game Asset Editing / Materials / Optimization
 
-**Status:** V3-KANDIDAT / FOUNDATION + VISIBILITY BEGONNEN
+**Status:** V3-KANDIDAT / FOUNDATION + VISIBILITY + TRANSFORM FROZEN
 
-CyberMotion soll langfristig die eigentliche 3D-Bearbeitungsautorität für importierte Game Assets sein. Adressierbare Imported Structure & Subselection sowie persistente Visibility-Overrides sind eingefroren. Die weiteren mutierenden Bearbeitungsfähigkeiten bleiben getrennte Folgeblöcke.
+CyberMotion soll langfristig die eigentliche 3D-Bearbeitungsautorität für importierte Game Assets sein. Adressierbare Imported Structure & Subselection, persistente Visibility-Overrides und persistente Position-/Rotation-/Scale-Overrides sind eingefroren. Die weiteren mutierenden Bearbeitungsfähigkeiten bleiben getrennte Folgeblöcke.
 
 Kandidaten:
 
 - Materialien und Texturen zuweisen, austauschen und nachkorrigieren;
 - UV-/Materialbezug kontrollierbar machen;
-- Pivot/Origin, Maße und Transformationsdaten feinjustieren;
+- Pivot/Origin und Maße feinjustieren;
 - Mesh-Simplification / Decimation zur Polygonreduktion bei möglichst erhaltener sichtbarer Hülle/Silhouette;
 - LOD-Stufen und optional vereinfachte Collision-Geometrie vorbereiten;
 - Original und optimierte Fassung technisch/visuell vergleichbar halten;
