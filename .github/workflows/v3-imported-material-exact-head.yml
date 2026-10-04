@@ -22,7 +22,9 @@ jobs:
         run: node tests/v3-imported-element-visibility-overrides.mjs
       - name: V3 imported transform regression
         run: node tests/v3-imported-element-transform-overrides.mjs
-      - name: V2 material regression
-        run: node tests/wd-26a-pbr-material-core.mjs
+      - name: V2 material binding regression
+        run: node tests/wd-26a-material-binding-local-variant-foundation.mjs
+      - name: V2 PBR numeric properties regression
+        run: node tests/wd-26c-pbr-numeric-properties.mjs
       - name: V2 GLTF export regression
         run: node tests/wd-27a-central-export-workflow.mjs
