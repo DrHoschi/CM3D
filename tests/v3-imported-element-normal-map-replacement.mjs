@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createProject, createExternalGltfObject, validateProject, SCHEMA_VERSION } from '../src/model/project.js';
+import { installImportedStructureUI } from '../src/ui/imported-structure.js';
 
 const project = createProject('Imported normal-map replacement');
 const modelAssetId = 'asset_model_normal_test';
@@ -49,4 +50,50 @@ assert.doesNotMatch(modelSource, /importedOverrides/, 'model schema remains unch
 assert.match(interchangeSource, /new GLTFExporter\(\)/);
 assert.match(interchangeSource, /new OBJExporter\(\)/);
 assert.match(interchangeSource, /new STLExporter\(\)/);
+const runtimeProject = { assets: [] };
+const runtimeRoot = { type: 'external.gltf', data: {}, objectId: 'obj_runtime' };
+const importedNode = {
+  isMesh: true,
+  userData: { cm3dImportedElement: { sourceKey: 'imported:obj_runtime:node:0' } },
+  material: { map: 'base-color', normalMap: 'gltf-normal', clone() { return { ...this }; } }
+};
+const importedRoot = { traverse(callback) { callback(this); callback(importedNode); } };
+const runtimeStore = {
+  project: runtimeProject,
+  selection: {},
+  events: [],
+  history: [],
+  getObject(id) { return id === runtimeRoot.objectId ? runtimeRoot : null; },
+  snapshot() { return structuredClone(this.project); },
+  touch() {},
+  pushHistory(before, label) { this.history.push({ before, label }); },
+  emit(type, payload) { this.events.push({ type, payload }); },
+  subscribe() {},
+  select() {}
+};
+const runtime = {
+  objectMap: new Map([[runtimeRoot.objectId, importedRoot]]),
+  transform: { object: null, attach() {} },
+  commitTransform() {},
+  renderer: { domElement: { addEventListener() {} } },
+  pointer: {}, raycaster: {}, camera: {}, pickables: [], dragBefore: null
+};
+const ui = { treeNode() { return {}; }, renderInspector() {}, render() {} };
+installImportedStructureUI(runtimeStore, runtime, ui);
+const replacement = runtimeStore.setImportedNormalMapTexture(runtimeRoot.objectId, importedNode.userData.cm3dImportedElement.sourceKey, {
+  name: 'replacement.png', mimeType: 'image/png', dataUrl: 'data:image/png;base64,AA=='
+});
+assert.equal(replacement.ok, true, 'valid image must create a normal-map override');
+assert.equal(runtimeRoot.data.importedOverrides.texture[importedNode.userData.cm3dImportedElement.sourceKey].normalMap, replacement.assetId);
+assert.equal(runtimeProject.assets[0].kind, 'image.texture');
+assert.equal(runtimeStore.history.at(-1).label, 'Importierte Normal Map ersetzen');
+assert.equal(runtimeStore.events.at(-1).type, 'importedNormalMapChanged');
+const rejected = runtimeStore.setImportedNormalMapTexture(runtimeRoot.objectId, importedNode.userData.cm3dImportedElement.sourceKey, {
+  name: 'wrong.txt', mimeType: 'text/plain', dataUrl: 'data:text/plain;base64,AA=='
+});
+assert.equal(rejected.ok, false, 'unsupported image mime types must be rejected');
+assert.equal(runtimeProject.assets.length, 1, 'rejected images must not add assets');
+assert.equal(runtimeStore.removeImportedNormalMapTexture(runtimeRoot.objectId, importedNode.userData.cm3dImportedElement.sourceKey).ok, true);
+assert.equal(runtimeRoot.data.importedOverrides, undefined, 'removal cleans up empty override containers');
+assert.equal(runtimeStore.history.at(-1).label, 'Importierte Normal Map entfernen');
 console.log('PASS v3 imported element normal-map replacement contract');
