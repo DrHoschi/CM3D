@@ -24,7 +24,7 @@ jobs:
         run: node tests/v3-imported-element-transform-overrides.mjs
       - name: V3 imported material parameter regression
         run: node tests/v3-imported-element-material-overrides.mjs
-      - name: V2 material texture persistence regression
-        run: node tests/wd-26b-material-texture-persistence.mjs
+      - name: V2 base-color texture foundation regression
+        run: node tests/wd-26d-base-color-texture-foundation.mjs
       - name: V2 GLTF export regression
         run: node tests/wd-27a-central-export-workflow.mjs
