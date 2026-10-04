@@ -1,9 +1,11 @@
 const iconFor = kind => kind === 'mesh' ? '◇' : kind === 'line' ? '╱' : kind === 'points' ? '⋯' : '›';
+const IMAGE_MIME = /^image\/(png|jpeg|webp)$/;
 
 export function installImportedStructureUI(store, runtime, ui) {
   store.selection.importedElement ??= null;
   const structures = new Map();
   const baseMaterials = new Map();
+  const textureLoads = new Map();
 
   const rootObject = rootObjectId => {
     const object = store.getObject(rootObjectId);
@@ -12,6 +14,7 @@ export function installImportedStructureUI(store, runtime, ui) {
   const visibilityMap = rootObjectId => rootObject(rootObjectId)?.data?.importedOverrides?.visibility || {};
   const transformMap = rootObjectId => rootObject(rootObjectId)?.data?.importedOverrides?.transform || {};
   const materialMap = rootObjectId => rootObject(rootObjectId)?.data?.importedOverrides?.material || {};
+  const textureMap = rootObjectId => rootObject(rootObjectId)?.data?.importedOverrides?.texture || {};
   const isVisible = (rootObjectId, sourceKey) => visibilityMap(rootObjectId)[sourceKey] !== false;
   const runtimeNode = (rootObjectId, sourceKey) => {
     const root = runtime.objectMap.get(rootObjectId);
@@ -65,6 +68,12 @@ export function installImportedStructureUI(store, runtime, ui) {
     if (!baseMaterials.has(key) && node?.material && !Array.isArray(node.material)) baseMaterials.set(key, node.material);
     return baseMaterials.get(key) || null;
   };
+  const ensureLocalMaterial = (rootObjectId, sourceKey, node) => {
+    const base = rememberBaseMaterial(rootObjectId, sourceKey, node);
+    if (!base) return null;
+    if (node.material === base) node.material = base.clone();
+    return node.material;
+  };
   const applyMaterialValue = (material, value = {}) => {
     if (value.baseColor != null && material.color?.set) material.color.set(value.baseColor);
     if (value.metallic != null && 'metalness' in material) material.metalness = Number(value.metallic);
@@ -83,14 +92,57 @@ export function installImportedStructureUI(store, runtime, ui) {
       if (!resolved.has(sourceKey)) continue;
       const node = singleMaterialNode(rootObjectId, sourceKey);
       if (!node) continue;
-      const base = rememberBaseMaterial(rootObjectId, sourceKey, node);
-      if (!base) continue;
-      if (node.material === base) node.material = base.clone();
-      applyMaterialValue(node.material, value);
+      const material = ensureLocalMaterial(rootObjectId, sourceKey, node);
+      if (material) applyMaterialValue(material, value);
     }
     const unresolved = Object.keys(materialMap(rootObjectId)).filter(sourceKey => !resolved.has(sourceKey));
     store.emit('importedMaterialDiagnostics', { rootObjectId, unresolvedSourceKeys: unresolved });
     return unresolved;
+  };
+  const textureAsset = assetId => store.project.assets?.find(asset => asset.assetId === assetId && asset.kind === 'image.texture') || null;
+  const loadTexture = asset => {
+    if (!asset?.dataUrl) return Promise.resolve(null);
+    const cached = textureLoads.get(asset.assetId);
+    if (cached?.dataUrl === asset.dataUrl) return cached.promise;
+    const promise = import('three').then(THREE => new Promise(resolve => {
+      new THREE.TextureLoader().load(asset.dataUrl, texture => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.needsUpdate = true;
+        resolve(texture);
+      }, undefined, () => resolve(null));
+    }));
+    textureLoads.set(asset.assetId, { dataUrl: asset.dataUrl, promise });
+    return promise;
+  };
+  const applyTextures = rootObjectId => {
+    const descriptors = structures.get(rootObjectId) || [];
+    const resolved = new Set(descriptors.map(item => item.sourceKey));
+    const missingAssetIds = [];
+    for (const descriptor of descriptors) {
+      const sourceKey = descriptor.sourceKey;
+      const node = singleMaterialNode(rootObjectId, sourceKey);
+      if (!node) continue;
+      const base = rememberBaseMaterial(rootObjectId, sourceKey, node);
+      const assetId = textureMap(rootObjectId)[sourceKey]?.baseColor;
+      if (!assetId) {
+        if (base && node.material !== base) { node.material.map = base.map || null; node.material.needsUpdate = true; }
+        continue;
+      }
+      const asset = textureAsset(assetId);
+      if (!asset) { missingAssetIds.push(assetId); if (base && node.material !== base) { node.material.map = base.map || null; node.material.needsUpdate = true; } continue; }
+      const material = ensureLocalMaterial(rootObjectId, sourceKey, node);
+      if (!material) continue;
+      loadTexture(asset).then(texture => {
+        if (textureMap(rootObjectId)[sourceKey]?.baseColor !== assetId) return;
+        material.map = texture || base?.map || null;
+        material.needsUpdate = true;
+        store.emit('importedTextureHydrated', { rootObjectId, sourceKey, assetId, ok: !!texture });
+        ui.render();
+      });
+    }
+    const unresolvedSourceKeys = Object.keys(textureMap(rootObjectId)).filter(sourceKey => !resolved.has(sourceKey));
+    store.emit('importedTextureDiagnostics', { rootObjectId, unresolvedSourceKeys, missingAssetIds: [...new Set(missingAssetIds)] });
+    return { unresolvedSourceKeys, missingAssetIds: [...new Set(missingAssetIds)] };
   };
   const validColor = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
   const validUnit = value => Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1;
@@ -109,6 +161,41 @@ export function installImportedStructureUI(store, runtime, ui) {
     store.pushHistory(before, `Importiertes Material ${property}`);
     applyMaterials(rootObjectId);
     store.emit('importedMaterialChanged', { rootObjectId, sourceKey, property, value: next });
+    ui.render();
+    return { ok: true };
+  };
+  store.setImportedBaseColorTexture = (rootObjectId, sourceKey, { name = 'Textur', mimeType, dataUrl } = {}) => {
+    const object = rootObject(rootObjectId);
+    const node = singleMaterialNode(rootObjectId, sourceKey);
+    if (!object || !node) return { ok: false, message: 'Nur importierte Single-Material-Meshes werden unterstützt.' };
+    if (!IMAGE_MIME.test(String(mimeType || '')) || typeof dataUrl !== 'string' || !dataUrl.startsWith(`data:${mimeType};base64,`)) return { ok: false, message: 'Nur eingebettete PNG-, JPEG- oder WebP-Bilder sind zulässig.' };
+    const before = store.snapshot();
+    const assetId = `asset_${crypto.randomUUID()}`;
+    store.project.assets ??= [];
+    store.project.assets.push({ assetId, kind: 'image.texture', format: mimeType.split('/')[1], mimeType, name: String(name || 'Textur'), dataUrl });
+    object.data ??= {}; object.data.importedOverrides ??= {}; object.data.importedOverrides.texture ??= {};
+    object.data.importedOverrides.texture[sourceKey] ??= {};
+    object.data.importedOverrides.texture[sourceKey].baseColor = assetId;
+    store.touch();
+    store.pushHistory(before, 'Importierte Basisfarbtextur ersetzen');
+    applyTextures(rootObjectId);
+    store.emit('importedTextureChanged', { rootObjectId, sourceKey, assetId });
+    ui.render();
+    return { ok: true, assetId };
+  };
+  store.removeImportedBaseColorTexture = (rootObjectId, sourceKey) => {
+    const object = rootObject(rootObjectId);
+    const entry = object?.data?.importedOverrides?.texture?.[sourceKey];
+    if (!object || !entry?.baseColor) return { ok: true, unchanged: true };
+    const before = store.snapshot();
+    delete entry.baseColor;
+    if (!Object.keys(entry).length) delete object.data.importedOverrides.texture[sourceKey];
+    if (!Object.keys(object.data.importedOverrides.texture).length) delete object.data.importedOverrides.texture;
+    if (!Object.keys(object.data.importedOverrides).length) delete object.data.importedOverrides;
+    store.touch();
+    store.pushHistory(before, 'Importierte Basisfarbtextur entfernen');
+    applyTextures(rootObjectId);
+    store.emit('importedTextureChanged', { rootObjectId, sourceKey, assetId: null });
     ui.render();
     return { ok: true };
   };
@@ -183,6 +270,7 @@ export function installImportedStructureUI(store, runtime, ui) {
     applyTransforms(rootObjectId);
     applyVisibility(rootObjectId);
     applyMaterials(rootObjectId);
+    applyTextures(rootObjectId);
     store.emit('importedStructureChanged', { rootObjectId });
     ui.render();
   };
@@ -249,10 +337,12 @@ export function installImportedStructureUI(store, runtime, ui) {
     const node = singleMaterialNode(selected.rootObjectId, selected.sourceKey);
     panel.hidden = false;
     const editable = !!node;
-    for (const control of [controls.color,controls.metallic,controls.roughness,controls.opacity]) if (control) control.disabled = !editable;
-    for (const control of [controls.select,controls.preset,controls.presetApply,controls.library,controls.librarySave,controls.libraryApply,controls.textureFile,controls.textureRemove,controls.assign,controls.remove,controls.create]) if (control) control.disabled = true;
-    if (controls.state) controls.state.textContent = editable ? 'Importiertes Single-Material-Mesh · lokale Parameter-Overrides' : 'Importiertes Multi-/Nicht-Mesh · Material read-only';
-    if (controls.textureState) controls.textureState.textContent = 'Textur-Austausch in diesem V3-Block nicht unterstützt';
+    for (const control of [controls.color,controls.metallic,controls.roughness,controls.opacity,controls.textureFile]) if (control) control.disabled = !editable;
+    for (const control of [controls.select,controls.preset,controls.presetApply,controls.library,controls.librarySave,controls.libraryApply,controls.assign,controls.remove,controls.create]) if (control) control.disabled = true;
+    const textureAssetId = textureMap(selected.rootObjectId)[selected.sourceKey]?.baseColor || null;
+    if (controls.textureRemove) controls.textureRemove.disabled = !editable || !textureAssetId;
+    if (controls.state) controls.state.textContent = editable ? 'Importiertes Single-Material-Mesh · lokale Parameter-/Textur-Overrides' : 'Importiertes Multi-/Nicht-Mesh · Material read-only';
+    if (controls.textureState) controls.textureState.textContent = textureAssetId ? `Importierte Basisfarbtextur · ${textureAsset(textureAssetId)?.name || 'Asset fehlt'}` : 'GLTF-Basistextur · kein Override';
     if (!editable) return;
     const material = node.material;
     if (controls.color && material.color?.getHexString) controls.color.value = `#${material.color.getHexString()}`;
@@ -271,6 +361,33 @@ export function installImportedStructureUI(store, runtime, ui) {
       if (!input || input.dataset.importedMaterialBound) continue;
       input.dataset.importedMaterialBound = '1';
       input.addEventListener('change', event => { if (!store.selection.importedElement) return; event.stopImmediatePropagation(); commit(property, input); }, true);
+    }
+    if (controls.textureFile && !controls.textureFile.dataset.importedTextureBound) {
+      controls.textureFile.dataset.importedTextureBound = '1';
+      controls.textureFile.addEventListener('change', event => {
+        const selected = store.selection.importedElement;
+        if (!selected) return;
+        event.stopImmediatePropagation();
+        const file = controls.textureFile.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = store.setImportedBaseColorTexture(selected.rootObjectId, selected.sourceKey, { name: file.name, mimeType: file.type, dataUrl: String(reader.result || '') });
+          if (!result.ok) alert(result.message);
+          controls.textureFile.value = '';
+          ui.render();
+        };
+        reader.readAsDataURL(file);
+      }, true);
+    }
+    if (controls.textureRemove && !controls.textureRemove.dataset.importedTextureBound) {
+      controls.textureRemove.dataset.importedTextureBound = '1';
+      controls.textureRemove.addEventListener('click', event => {
+        const selected = store.selection.importedElement;
+        if (!selected) return;
+        event.stopImmediatePropagation();
+        store.removeImportedBaseColorTexture(selected.rootObjectId, selected.sourceKey);
+      }, true);
     }
   };
 
@@ -302,8 +419,8 @@ export function installImportedStructureUI(store, runtime, ui) {
   store.subscribe(event => {
     if (event.type === 'selectionChanged') { restoreInspectorEditability(); queueMicrotask(syncImportedTransformSelection); }
     if (event.type === 'externalImportedStructure') register(event.objectId, event.descriptors || []);
-    if (event.type === 'projectLoaded') { structures.clear(); baseMaterials.clear(); }
-    if (['projectChanged','projectLoaded'].includes(event.type)) queueMicrotask(() => { for (const rootObjectId of structures.keys()) { applyTransforms(rootObjectId); applyVisibility(rootObjectId); applyMaterials(rootObjectId); } syncImportedTransformSelection(); ui.render(); });
+    if (event.type === 'projectLoaded') { structures.clear(); baseMaterials.clear(); textureLoads.clear(); }
+    if (['projectChanged','projectLoaded'].includes(event.type)) queueMicrotask(() => { for (const rootObjectId of structures.keys()) { applyTransforms(rootObjectId); applyVisibility(rootObjectId); applyMaterials(rootObjectId); applyTextures(rootObjectId); } syncImportedTransformSelection(); ui.render(); });
   });
 
   const onPointer = event => {
@@ -317,5 +434,5 @@ export function installImportedStructureUI(store, runtime, ui) {
   };
   runtime.renderer.domElement.addEventListener('pointerdown', onPointer, true);
 
-  return { register, clearForRoot, select, isVisible, applyVisibility, applyTransforms, applyMaterials, runtimeNode, get: rootObjectId => (structures.get(rootObjectId) || []).map(item => ({ ...item })) };
+  return { register, clearForRoot, select, isVisible, applyVisibility, applyTransforms, applyMaterials, applyTextures, runtimeNode, get: rootObjectId => (structures.get(rootObjectId) || []).map(item => ({ ...item })) };
 }
