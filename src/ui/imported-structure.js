@@ -100,18 +100,19 @@ export function installImportedStructureUI(store, runtime, ui) {
     return unresolved;
   };
   const textureAsset = assetId => store.project.assets?.find(asset => asset.assetId === assetId && asset.kind === 'image.texture') || null;
-  const loadTexture = asset => {
+  const loadTexture = (asset, slot = 'baseColor') => {
     if (!asset?.dataUrl) return Promise.resolve(null);
-    const cached = textureLoads.get(asset.assetId);
+    const cacheKey = `${asset.assetId}:${slot}`;
+    const cached = textureLoads.get(cacheKey);
     if (cached?.dataUrl === asset.dataUrl) return cached.promise;
     const promise = import('three').then(THREE => new Promise(resolve => {
       new THREE.TextureLoader().load(asset.dataUrl, texture => {
-        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.colorSpace = slot === 'baseColor' ? THREE.SRGBColorSpace : THREE.NoColorSpace;
         texture.needsUpdate = true;
         resolve(texture);
       }, undefined, () => resolve(null));
     }));
-    textureLoads.set(asset.assetId, { dataUrl: asset.dataUrl, promise });
+    textureLoads.set(cacheKey, { dataUrl: asset.dataUrl, promise });
     return promise;
   };
   const applyTextures = rootObjectId => {
@@ -143,6 +144,41 @@ export function installImportedStructureUI(store, runtime, ui) {
     const unresolvedSourceKeys = Object.keys(textureMap(rootObjectId)).filter(sourceKey => !resolved.has(sourceKey));
     store.emit('importedTextureDiagnostics', { rootObjectId, unresolvedSourceKeys, missingAssetIds: [...new Set(missingAssetIds)] });
     return { unresolvedSourceKeys, missingAssetIds: [...new Set(missingAssetIds)] };
+  };
+  const applyNormalMaps = rootObjectId => {
+    const descriptors = structures.get(rootObjectId) || [];
+    const resolved = new Set(descriptors.map(item => item.sourceKey));
+    const missingAssetIds = [];
+    for (const descriptor of descriptors) {
+      const sourceKey = descriptor.sourceKey;
+      const node = singleMaterialNode(rootObjectId, sourceKey);
+      if (!node) continue;
+      const base = rememberBaseMaterial(rootObjectId, sourceKey, node);
+      const assetId = textureMap(rootObjectId)[sourceKey]?.normalMap;
+      if (!assetId) {
+        if (base && node.material !== base) { node.material.normalMap = base.normalMap || null; node.material.needsUpdate = true; }
+        continue;
+      }
+      const asset = textureAsset(assetId);
+      if (!asset) {
+        missingAssetIds.push(assetId);
+        if (base && node.material !== base) { node.material.normalMap = base.normalMap || null; node.material.needsUpdate = true; }
+        continue;
+      }
+      const material = ensureLocalMaterial(rootObjectId, sourceKey, node);
+      if (!material) continue;
+      loadTexture(asset, 'normalMap').then(texture => {
+        if (textureMap(rootObjectId)[sourceKey]?.normalMap !== assetId) return;
+        material.normalMap = texture || base?.normalMap || null;
+        material.needsUpdate = true;
+        store.emit('importedNormalMapHydrated', { rootObjectId, sourceKey, assetId, ok: !!texture });
+        ui.render();
+      });
+    }
+    const unresolvedSourceKeys = Object.keys(textureMap(rootObjectId)).filter(sourceKey => !resolved.has(sourceKey));
+    const result = { unresolvedSourceKeys, missingAssetIds: [...new Set(missingAssetIds)] };
+    store.emit('importedNormalMapDiagnostics', { rootObjectId, ...result });
+    return result;
   };
   const validColor = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
   const validUnit = value => Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1;
@@ -196,6 +232,42 @@ export function installImportedStructureUI(store, runtime, ui) {
     store.pushHistory(before, 'Importierte Basisfarbtextur entfernen');
     applyTextures(rootObjectId);
     store.emit('importedTextureChanged', { rootObjectId, sourceKey, assetId: null });
+    ui.render();
+    return { ok: true };
+  };
+
+  store.setImportedNormalMapTexture = (rootObjectId, sourceKey, { name = 'Normal Map', mimeType, dataUrl } = {}) => {
+    const object = rootObject(rootObjectId);
+    const node = singleMaterialNode(rootObjectId, sourceKey);
+    if (!object || !node) return { ok: false, message: 'Nur importierte Single-Material-Meshes werden unterstützt.' };
+    if (!IMAGE_MIME.test(String(mimeType || '')) || typeof dataUrl !== 'string' || !dataUrl.startsWith(`data:${mimeType};base64,`)) return { ok: false, message: 'Nur eingebettete PNG-, JPEG- oder WebP-Bilder sind zulässig.' };
+    const before = store.snapshot();
+    const assetId = `asset_${crypto.randomUUID()}`;
+    store.project.assets ??= [];
+    store.project.assets.push({ assetId, kind: 'image.texture', format: mimeType.split('/')[1], mimeType, name: String(name || 'Normal Map'), dataUrl });
+    object.data ??= {}; object.data.importedOverrides ??= {}; object.data.importedOverrides.texture ??= {};
+    object.data.importedOverrides.texture[sourceKey] ??= {};
+    object.data.importedOverrides.texture[sourceKey].normalMap = assetId;
+    store.touch();
+    store.pushHistory(before, 'Importierte Normal Map ersetzen');
+    applyNormalMaps(rootObjectId);
+    store.emit('importedNormalMapChanged', { rootObjectId, sourceKey, assetId });
+    ui.render();
+    return { ok: true, assetId };
+  };
+  store.removeImportedNormalMapTexture = (rootObjectId, sourceKey) => {
+    const object = rootObject(rootObjectId);
+    const entry = object?.data?.importedOverrides?.texture?.[sourceKey];
+    if (!object || !entry?.normalMap) return { ok: true, unchanged: true };
+    const before = store.snapshot();
+    delete entry.normalMap;
+    if (!Object.keys(entry).length) delete object.data.importedOverrides.texture[sourceKey];
+    if (!Object.keys(object.data.importedOverrides.texture).length) delete object.data.importedOverrides.texture;
+    if (!Object.keys(object.data.importedOverrides).length) delete object.data.importedOverrides;
+    store.touch();
+    store.pushHistory(before, 'Importierte Normal Map entfernen');
+    applyNormalMaps(rootObjectId);
+    store.emit('importedNormalMapChanged', { rootObjectId, sourceKey, assetId: null });
     ui.render();
     return { ok: true };
   };
@@ -271,6 +343,7 @@ export function installImportedStructureUI(store, runtime, ui) {
     applyVisibility(rootObjectId);
     applyMaterials(rootObjectId);
     applyTextures(rootObjectId);
+    applyNormalMaps(rootObjectId);
     store.emit('importedStructureChanged', { rootObjectId });
     ui.render();
   };
@@ -331,9 +404,25 @@ export function installImportedStructureUI(store, runtime, ui) {
     color: document.querySelector('#material-color'), metallic: document.querySelector('#material-metallic'), roughness: document.querySelector('#material-roughness'), opacity: document.querySelector('#material-opacity'),
     select: document.querySelector('#material-select'), preset: document.querySelector('#material-preset'), presetApply: document.querySelector('#material-preset-apply'), library: document.querySelector('#material-library'), librarySave: document.querySelector('#material-library-save'), libraryApply: document.querySelector('#material-library-apply'), textureFile: document.querySelector('#material-texture-file'), textureRemove: document.querySelector('#material-texture-remove'), assign: document.querySelector('#material-assign'), remove: document.querySelector('#material-remove'), create: document.querySelector('#material-new'), state: document.querySelector('#material-selection-state'), textureState: document.querySelector('#material-texture-state')
   });
+  const ensureNormalMapControls = () => {
+    const panel = materialPanel();
+    if (!panel) return {};
+    let box = panel.querySelector('#imported-normal-map-controls');
+    if (!box) {
+      box = document.createElement('div'); box.id = 'imported-normal-map-controls';
+      const label = document.createElement('label'); label.textContent = 'Importierte Normal Map ersetzen';
+      const file = document.createElement('input'); file.type = 'file'; file.id = 'material-normal-map-file'; file.accept = 'image/png,image/jpeg,image/webp';
+      label.appendChild(file);
+      const status = document.createElement('span'); status.id = 'material-normal-map-state';
+      const remove = document.createElement('button'); remove.type = 'button'; remove.id = 'material-normal-map-remove'; remove.textContent = 'Normal Map entfernen';
+      box.append(label, status, remove); panel.appendChild(box);
+    }
+    return { box, file: box.querySelector('#material-normal-map-file'), status: box.querySelector('#material-normal-map-state'), remove: box.querySelector('#material-normal-map-remove') };
+  };
   const renderImportedMaterial = selected => {
     const panel = materialPanel(); if (!panel) return;
     const controls = materialControls();
+    const normalControls = ensureNormalMapControls();
     const node = singleMaterialNode(selected.rootObjectId, selected.sourceKey);
     panel.hidden = false;
     const editable = !!node;
@@ -341,6 +430,11 @@ export function installImportedStructureUI(store, runtime, ui) {
     for (const control of [controls.select,controls.preset,controls.presetApply,controls.library,controls.librarySave,controls.libraryApply,controls.assign,controls.remove,controls.create]) if (control) control.disabled = true;
     const textureAssetId = textureMap(selected.rootObjectId)[selected.sourceKey]?.baseColor || null;
     if (controls.textureRemove) controls.textureRemove.disabled = !editable || !textureAssetId;
+    const normalMapAssetId = textureMap(selected.rootObjectId)[selected.sourceKey]?.normalMap || null;
+    if (normalControls.box) normalControls.box.hidden = !editable;
+    if (normalControls.file) normalControls.file.disabled = !editable;
+    if (normalControls.remove) normalControls.remove.disabled = !editable || !normalMapAssetId;
+    if (normalControls.status) normalControls.status.textContent = normalMapAssetId ? `Importierte Normal Map · ${textureAsset(normalMapAssetId)?.name || 'Asset fehlt'}` : 'GLTF-Normal-Map · kein Override';
     if (controls.state) controls.state.textContent = editable ? 'Importiertes Single-Material-Mesh · lokale Parameter-/Textur-Overrides' : 'Importiertes Multi-/Nicht-Mesh · Material read-only';
     if (controls.textureState) controls.textureState.textContent = textureAssetId ? `Importierte Basisfarbtextur · ${textureAsset(textureAssetId)?.name || 'Asset fehlt'}` : 'GLTF-Basistextur · kein Override';
     if (!editable) return;
@@ -389,6 +483,34 @@ export function installImportedStructureUI(store, runtime, ui) {
         store.removeImportedBaseColorTexture(selected.rootObjectId, selected.sourceKey);
       }, true);
     }
+    const normalControls = ensureNormalMapControls();
+    if (normalControls.file && !normalControls.file.dataset.importedNormalMapBound) {
+      normalControls.file.dataset.importedNormalMapBound = '1';
+      normalControls.file.addEventListener('change', event => {
+        const selected = store.selection.importedElement;
+        if (!selected) return;
+        event.stopImmediatePropagation();
+        const file = normalControls.file.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = store.setImportedNormalMapTexture(selected.rootObjectId, selected.sourceKey, { name: file.name, mimeType: file.type, dataUrl: String(reader.result || '') });
+          if (!result.ok) alert(result.message);
+          normalControls.file.value = '';
+          ui.render();
+        };
+        reader.readAsDataURL(file);
+      }, true);
+    }
+    if (normalControls.remove && !normalControls.remove.dataset.importedNormalMapBound) {
+      normalControls.remove.dataset.importedNormalMapBound = '1';
+      normalControls.remove.addEventListener('click', event => {
+        const selected = store.selection.importedElement;
+        if (!selected) return;
+        event.stopImmediatePropagation();
+        store.removeImportedNormalMapTexture(selected.rootObjectId, selected.sourceKey);
+      }, true);
+    }
   };
 
   const baseRenderInspector = ui.renderInspector.bind(ui);
@@ -413,6 +535,8 @@ export function installImportedStructureUI(store, runtime, ui) {
 
   const restoreInspectorEditability = () => {
     if (store.selection.importedElement) return;
+    const normalMapControls = document.querySelector('#imported-normal-map-controls');
+    if (normalMapControls) normalMapControls.hidden = true;
     ui.fields.name.disabled = false;
     for (const field of [ui.fields.px,ui.fields.py,ui.fields.pz,ui.fields.rx,ui.fields.ry,ui.fields.rz,ui.fields.sx,ui.fields.sy,ui.fields.sz,ui.fields.pvx,ui.fields.pvy,ui.fields.pvz,ui.fields.dx,ui.fields.dy,ui.fields.dz,ui.fields.radius,ui.fields.height]) field.disabled = false;
   };
@@ -420,7 +544,7 @@ export function installImportedStructureUI(store, runtime, ui) {
     if (event.type === 'selectionChanged') { restoreInspectorEditability(); queueMicrotask(syncImportedTransformSelection); }
     if (event.type === 'externalImportedStructure') register(event.objectId, event.descriptors || []);
     if (event.type === 'projectLoaded') { structures.clear(); baseMaterials.clear(); textureLoads.clear(); }
-    if (['projectChanged','projectLoaded'].includes(event.type)) queueMicrotask(() => { for (const rootObjectId of structures.keys()) { applyTransforms(rootObjectId); applyVisibility(rootObjectId); applyMaterials(rootObjectId); applyTextures(rootObjectId); } syncImportedTransformSelection(); ui.render(); });
+    if (['projectChanged','projectLoaded'].includes(event.type)) queueMicrotask(() => { for (const rootObjectId of structures.keys()) { applyTransforms(rootObjectId); applyVisibility(rootObjectId); applyMaterials(rootObjectId); applyTextures(rootObjectId); applyNormalMaps(rootObjectId); } syncImportedTransformSelection(); ui.render(); });
   });
 
   const onPointer = event => {
