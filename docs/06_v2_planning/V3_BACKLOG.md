@@ -1,7 +1,7 @@
 # CM3D – V3 Backlog
 
 **Stand:** 2026-10-04  
-**Status:** V3 ACTIVE / IMPORTED STRUCTURE + VISIBILITY + TRANSFORM + MATERIAL PARAMETERS FROZEN  
+**Status:** V3 ACTIVE / IMPORTED STRUCTURE + VISIBILITY + TRANSFORM + MATERIAL PARAMETERS + BASE-COLOR TEXTURE FROZEN  
 **Basis:** CM3D-V2 / Freeze Head `10c2def74668b6b17d14c2e6d3232d1de2f71159`
 
 ## Zweck
@@ -72,75 +72,96 @@ Der eingefrorene Vertrag umfasst sparse Source-Key-basierte lokale Position-/Qua
 **Evidence Head:** `0a0d87e14c74b3a2fbf683f7990bd6d761a17f7f`  
 **Exact-Head Evidence:** GitHub Actions Run `37184813866`
 
-#### Scope
+Der eingefrorene Vertrag umfasst Source-Key-basierte sparse Materialparameter-Overrides am vorhandenen `external.gltf`-Root, ausschließlich Base Color, Metallic, Roughness und Opacity, Clone-on-Override für Single-Material Imported Meshes, Undo/Redo, Save→Reload/Re-Hydration und non-blocking Behandlung verwaister Source-Keys. Multi-Material, Texture Replacement, UV und Pivot/Origin waren in diesem Block ausgeschlossen.
 
-Dieser Block erweitert adressierbare Imported Single-Material Meshes um sparse persistente Materialparameter-Overrides, ohne Imported Elements in native MaterialDefinitions, `materialIds`, `scene.objects`, Bodies oder Features umzudeuten.
+**Freeze-Entscheidung:** PASS / 0 BLOCKER.
+
+### 2026-10-04 – Imported Element Base-Color Texture Replacement
+
+**Status:** PASS / FROZEN / 0 BLOCKER
+
+**Basis / vorheriger V3-Freeze:** `e52284c19ed6830deaed308b90a0615f18e612b3`  
+**Functional Head:** `eefaa42ccf4f9b99b82dac4fb1e2a43de45ee8c1`  
+**Evidence Head:** `9ce0ab18fe2df281fd251d5c85207b9f541988b1`  
+**Exact-Head Evidence:** GitHub Actions Run `37197737824`
+
+#### Scope und eingefrorener Vertrag
+
+Dieser Block erweitert adressierbare Single-Material Imported Meshes ausschließlich um Base-Color/Albedo-Texture-Replacement. Das ursprüngliche GLB/glTF-Asset wird nicht mutiert und Imported Elements werden weiterhin weder native `scene.objects` noch Bodies, Features oder native MaterialDefinitions.
 
 Der eingefrorene Vertrag umfasst:
 
-- Source-Key-basierte sparse Materialparameter-Overrides am vorhandenen `external.gltf`-Root;
-- ausschließlich Base Color, Metallic, Roughness und Opacity;
-- Clone-on-Override für Single-Material Imported Meshes, sodass ursprünglich geteilte GLTF-Materialinstanzen nicht unbeabsichtigt gemeinsam mutiert werden;
-- Wertevalidierung für Metallic, Roughness und Opacity im Bereich `0..1`;
-- Wiederverwendung der vorhandenen Inspector-Materialcontrols für die Imported-Subselection;
+- Wiederverwendung bestehender persistenter `image.texture`-Assets mit stabiler `assetId`;
+- Source-Key-basierte sparse Base-Color-Texture-Referenz am vorhandenen `external.gltf`-Root;
+- ausschließlich Base-Color/Albedo (`material.map`) für Single-Material Imported Meshes;
+- bestehende GLTF-UV-Projektion bleibt unverändert und wird für die Ersatztextur wiederverwendet;
+- sRGB-Hydration der Base-Color-Textur in den Runtime-Materialzustand;
+- Wiederverwendung des eingefrorenen Clone-on-Override-Vertrags, sodass gemeinsam genutzte GLTF-Materialinstanzen nicht unbeabsichtigt gemeinsam mutiert werden;
+- Koexistenz mit den eingefrorenen Base-Color-/Metallic-/Roughness-/Opacity-Materialparameter-Overrides;
 - Undo/Redo und History über den bestehenden Store-Vertrag;
-- Save → Reload / Re-Hydration und deterministisches Reapply über denselben Source-Key;
-- unresolved/verwaiste Source-Keys bleiben non-blocking und lösen keinen `INVALID`/`BLOCKED`-Recompute aus;
-- bestehende Imported Structure-, Visibility- und Transform-Verträge bleiben unverändert kompatibel;
-- keine Änderung an `SCHEMA_VERSION`, GLTF-Interchange, Exportarchitektur oder nativer Materialbibliothek.
+- Save → Reload / Re-Hydration und deterministisches Reapply über Source-Key und Texture-Asset-Referenz;
+- Entfernen des Overrides stellt die ursprüngliche GLTF-Base-Color-Map wieder her, ohne bestehende Materialparameter-Overrides zu verlieren;
+- unresolved Source-Keys bzw. fehlende Texture-Assets bleiben non-blocking und führen nicht zu `INVALID`/`BLOCKED` des `external.gltf`-Roots;
+- GLB/glTF-Export übernimmt den vollständig hydrierten Runtime-Materialzustand;
+- bestehende OBJ-/STL-Verträge bleiben unverändert; es wird kein neuer OBJ+MTL- oder STL-Texturvertrag eingeführt;
+- keine Änderung an `SCHEMA_VERSION`, Persistence-Foundation oder GLTF-Interchange-Architektur.
 
-#### Implementierter Produkt-Scope
+#### Implementierungs- und Evidence-Scope
+
+Produkt/Test:
 
 - `src/ui/imported-structure.js`
-- `tests/v3-imported-element-material-overrides.mjs`
+- `tests/v3-imported-element-base-color-texture-replacement.mjs`
+
+Notwendige Regression-Contract-Korrektur:
+
+- `tests/v3-imported-element-material-overrides.mjs` – ausschließlich die obsolete Assertion entfernt, die jeglichen Texture-Austausch verbot; der Materialparameter-Vertrag bleibt weiterhin auf `baseColor`, `metallic`, `roughness`, `opacity` begrenzt.
 
 Evidence-Infrastruktur:
 
-- `.github/workflows/v3-imported-material-exact-head.yml`
+- `.github/workflows/v3-imported-base-color-texture-exact-head.yml`
 
 #### Verification / Regression
 
-Run `37184813866` wurde gegen Evidence Head `0a0d87e14c74b3a2fbf683f7990bd6d761a17f7f` ausgeführt und vollständig erfolgreich abgeschlossen.
+Run `37197737824` wurde gegen Evidence Head `9ce0ab18fe2df281fd251d5c85207b9f541988b1` ausgeführt und vollständig erfolgreich abgeschlossen.
 
 Bestätigte Checks:
 
-- V3 Imported Material Override Contract – PASS;
+- V3 Imported Base-Color Texture Replacement Contract – PASS;
 - V3 Imported Structure Regression – PASS;
 - V3 Imported Visibility Regression – PASS;
 - V3 Imported Transform Regression – PASS;
-- V2 Material Binding Regression – PASS;
-- V2 PBR Numeric Properties Regression – PASS;
+- V3 Imported Material Parameter Regression – PASS;
+- V2 Base-Color Texture Foundation Regression – PASS;
 - V2 GLTF Export Regression – PASS.
 
-Der erste Evidence-Lauf war ausschließlich durch einen falschen Testdateinamen im Runner blockiert. Die Korrektur beschränkte sich auf `.github/workflows/v3-imported-material-exact-head.yml`; Produkt- und Testdateien blieben unverändert. Der korrigierte Exact-Head-Lauf ist grün.
+Die vorherigen Evidence-Fehler waren ausschließlich Runner-/Regression-Contract-Probleme: zuerst eine veraltete Material-Test-Assertion, anschließend ein nicht existierender V2-Texture-Testname. Die Produktimplementation musste dafür nicht korrigiert werden. Der finale Exact-Head-Lauf ist vollständig grün.
 
-**Freeze-Entscheidung:** PASS / 0 BLOCKER. Imported Element Material Parameter Overrides sind damit funktional eingefroren.
+**Freeze-Entscheidung:** PASS / 0 BLOCKER. Imported Element Base-Color Texture Replacement ist damit funktional eingefroren.
 
 #### Ausdrücklich ausgeschlossen / deferred
 
 Nicht Teil dieses Blocks sind:
 
 - Multi-Material-/Material-Slot-Editing;
-- Texture Replacement oder neue Texture-Asset-Persistenz;
-- Normal-/Roughness-/Metalness-Map-Austausch;
-- UV-/Materialbezug;
+- Normal-, Roughness-, Metalness-, AO- oder Emissive-Texture-Replacement;
+- UV-Editing oder UV-Reprojektion;
+- Sampler-/Wrap-/Filter-Editing;
 - Pivot-/Origin-Korrektur;
-- Mesh-Simplification / Decimation;
-- LOD- und Collision-Aufbereitung.
-
-Multi-Material bleibt read-only/deferred. Pivot/Origin bleibt nach separater Gate-1-Reconciliation deferred, da ein sauberer Vertrag eine zusätzliche Runtime-Hierarchie-/Geometrie-/Export-Semantik erfordern würde.
+- Meshbearbeitung, Decimation oder LOD;
+- neue OBJ+MTL- oder STL-Material-/Textursemantik.
 
 ## Weitere V3-Kandidaten
 
 ### Game Asset Editing / Materials / Optimization
 
-**Status:** V3-KANDIDAT / STRUCTURE + VISIBILITY + TRANSFORM + MATERIAL PARAMETERS FROZEN
+**Status:** V3-KANDIDAT / STRUCTURE + VISIBILITY + TRANSFORM + MATERIAL PARAMETERS + BASE-COLOR TEXTURE FROZEN
 
-CyberMotion soll langfristig die eigentliche 3D-Bearbeitungsautorität für importierte Game Assets sein. Adressierbare Imported Structure & Subselection, persistente Visibility-, Position-/Rotation-/Scale- und Single-Material-PBR-Parameter-Overrides sind eingefroren.
+CyberMotion soll langfristig die eigentliche 3D-Bearbeitungsautorität für importierte Game Assets sein. Adressierbare Imported Structure & Subselection, persistente Visibility-, Position-/Rotation-/Scale-, Single-Material-PBR-Parameter- und Base-Color-Texture-Overrides sind eingefroren.
 
 Offene Kandidaten:
 
-- Texture Replacement und Textur-Asset-Persistenz;
+- weitere Texture-Slots (Normal/Roughness/Metalness/AO/Emissive);
 - UV-/Materialbezug;
 - Multi-Material-/Material-Slot-Editing;
 - Pivot/Origin und Maße feinjustieren;
