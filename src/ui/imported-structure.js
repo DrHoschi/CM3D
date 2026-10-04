@@ -3,6 +3,7 @@ const iconFor = kind => kind === 'mesh' ? '◇' : kind === 'line' ? '╱' : kind
 export function installImportedStructureUI(store, runtime, ui) {
   store.selection.importedElement ??= null;
   const structures = new Map();
+  const baseMaterials = new Map();
 
   const rootObject = rootObjectId => {
     const object = store.getObject(rootObjectId);
@@ -10,6 +11,7 @@ export function installImportedStructureUI(store, runtime, ui) {
   };
   const visibilityMap = rootObjectId => rootObject(rootObjectId)?.data?.importedOverrides?.visibility || {};
   const transformMap = rootObjectId => rootObject(rootObjectId)?.data?.importedOverrides?.transform || {};
+  const materialMap = rootObjectId => rootObject(rootObjectId)?.data?.importedOverrides?.material || {};
   const isVisible = (rootObjectId, sourceKey) => visibilityMap(rootObjectId)[sourceKey] !== false;
   const runtimeNode = (rootObjectId, sourceKey) => {
     const root = runtime.objectMap.get(rootObjectId);
@@ -52,6 +54,63 @@ export function installImportedStructureUI(store, runtime, ui) {
     const unresolved = Object.keys(transformMap(rootObjectId)).filter(sourceKey => !resolved.has(sourceKey));
     store.emit('importedTransformDiagnostics', { rootObjectId, unresolvedSourceKeys: unresolved });
     return unresolved;
+  };
+  const materialKey = (rootObjectId, sourceKey) => `${rootObjectId}:${sourceKey}`;
+  const singleMaterialNode = (rootObjectId, sourceKey) => {
+    const node = runtimeNode(rootObjectId, sourceKey);
+    return node?.isMesh && node.material && !Array.isArray(node.material) ? node : null;
+  };
+  const rememberBaseMaterial = (rootObjectId, sourceKey, node) => {
+    const key = materialKey(rootObjectId, sourceKey);
+    if (!baseMaterials.has(key) && node?.material && !Array.isArray(node.material)) baseMaterials.set(key, node.material);
+    return baseMaterials.get(key) || null;
+  };
+  const applyMaterialValue = (material, value = {}) => {
+    if (value.baseColor != null && material.color?.set) material.color.set(value.baseColor);
+    if (value.metallic != null && 'metalness' in material) material.metalness = Number(value.metallic);
+    if (value.roughness != null && 'roughness' in material) material.roughness = Number(value.roughness);
+    if (value.opacity != null) { material.opacity = Number(value.opacity); material.transparent = material.opacity < 1; }
+    material.needsUpdate = true;
+  };
+  const applyMaterials = rootObjectId => {
+    const descriptors = structures.get(rootObjectId) || [];
+    const resolved = new Set(descriptors.map(item => item.sourceKey));
+    for (const descriptor of descriptors) {
+      const node = singleMaterialNode(rootObjectId, descriptor.sourceKey);
+      if (node) rememberBaseMaterial(rootObjectId, descriptor.sourceKey, node);
+    }
+    for (const [sourceKey, value] of Object.entries(materialMap(rootObjectId))) {
+      if (!resolved.has(sourceKey)) continue;
+      const node = singleMaterialNode(rootObjectId, sourceKey);
+      if (!node) continue;
+      const base = rememberBaseMaterial(rootObjectId, sourceKey, node);
+      if (!base) continue;
+      if (node.material === base) node.material = base.clone();
+      applyMaterialValue(node.material, value);
+    }
+    const unresolved = Object.keys(materialMap(rootObjectId)).filter(sourceKey => !resolved.has(sourceKey));
+    store.emit('importedMaterialDiagnostics', { rootObjectId, unresolvedSourceKeys: unresolved });
+    return unresolved;
+  };
+  const validColor = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
+  const validUnit = value => Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1;
+  store.setImportedMaterialProperty = (rootObjectId, sourceKey, property, value) => {
+    const object = rootObject(rootObjectId);
+    const node = singleMaterialNode(rootObjectId, sourceKey);
+    if (!object || !node) return { ok: false, message: 'Nur importierte Single-Material-Meshes werden unterstützt.' };
+    if (!['baseColor','metallic','roughness','opacity'].includes(property)) return { ok: false, message: 'Nicht unterstützte Materialeigenschaft.' };
+    const next = property === 'baseColor' ? value : Number(value);
+    if ((property === 'baseColor' && !validColor(next)) || (property !== 'baseColor' && !validUnit(next))) return { ok: false, message: property === 'baseColor' ? 'Ungültige Basisfarbe.' : 'Wert muss zwischen 0 und 1 liegen.' };
+    const before = store.snapshot();
+    object.data ??= {}; object.data.importedOverrides ??= {}; object.data.importedOverrides.material ??= {};
+    object.data.importedOverrides.material[sourceKey] ??= {};
+    object.data.importedOverrides.material[sourceKey][property] = next;
+    store.touch();
+    store.pushHistory(before, `Importiertes Material ${property}`);
+    applyMaterials(rootObjectId);
+    store.emit('importedMaterialChanged', { rootObjectId, sourceKey, property, value: next });
+    ui.render();
+    return { ok: true };
   };
 
   store.setImportedElementVisible = (rootObjectId, sourceKey, nextVisible) => {
@@ -111,13 +170,19 @@ export function installImportedStructureUI(store, runtime, ui) {
 
   const clearForRoot = rootObjectId => {
     structures.delete(rootObjectId);
+    for (const key of [...baseMaterials.keys()]) if (key.startsWith(`${rootObjectId}:`)) baseMaterials.delete(key);
     if (store.selection.importedElement?.rootObjectId === rootObjectId) store.selection.importedElement = null;
   };
 
   const register = (rootObjectId, descriptors = []) => {
     structures.set(rootObjectId, descriptors.map(item => ({ ...item })));
+    for (const descriptor of descriptors) {
+      const node = singleMaterialNode(rootObjectId, descriptor.sourceKey);
+      if (node) rememberBaseMaterial(rootObjectId, descriptor.sourceKey, node);
+    }
     applyTransforms(rootObjectId);
     applyVisibility(rootObjectId);
+    applyMaterials(rootObjectId);
     store.emit('importedStructureChanged', { rootObjectId });
     ui.render();
   };
@@ -173,6 +238,42 @@ export function installImportedStructureUI(store, runtime, ui) {
     return wrap;
   };
 
+  const materialPanel = () => document.querySelector('#material-fields');
+  const materialControls = () => ({
+    color: document.querySelector('#material-color'), metallic: document.querySelector('#material-metallic'), roughness: document.querySelector('#material-roughness'), opacity: document.querySelector('#material-opacity'),
+    select: document.querySelector('#material-select'), preset: document.querySelector('#material-preset'), presetApply: document.querySelector('#material-preset-apply'), library: document.querySelector('#material-library'), librarySave: document.querySelector('#material-library-save'), libraryApply: document.querySelector('#material-library-apply'), textureFile: document.querySelector('#material-texture-file'), textureRemove: document.querySelector('#material-texture-remove'), assign: document.querySelector('#material-assign'), remove: document.querySelector('#material-remove'), create: document.querySelector('#material-new'), state: document.querySelector('#material-selection-state'), textureState: document.querySelector('#material-texture-state')
+  });
+  const renderImportedMaterial = selected => {
+    const panel = materialPanel(); if (!panel) return;
+    const controls = materialControls();
+    const node = singleMaterialNode(selected.rootObjectId, selected.sourceKey);
+    panel.hidden = false;
+    const editable = !!node;
+    for (const control of [controls.color,controls.metallic,controls.roughness,controls.opacity]) if (control) control.disabled = !editable;
+    for (const control of [controls.select,controls.preset,controls.presetApply,controls.library,controls.librarySave,controls.libraryApply,controls.textureFile,controls.textureRemove,controls.assign,controls.remove,controls.create]) if (control) control.disabled = true;
+    if (controls.state) controls.state.textContent = editable ? 'Importiertes Single-Material-Mesh · lokale Parameter-Overrides' : 'Importiertes Multi-/Nicht-Mesh · Material read-only';
+    if (controls.textureState) controls.textureState.textContent = 'Textur-Austausch in diesem V3-Block nicht unterstützt';
+    if (!editable) return;
+    const material = node.material;
+    if (controls.color && material.color?.getHexString) controls.color.value = `#${material.color.getHexString()}`;
+    if (controls.metallic) controls.metallic.value = String(Number(material.metalness ?? 0));
+    if (controls.roughness) controls.roughness.value = String(Number(material.roughness ?? 0.6));
+    if (controls.opacity) controls.opacity.value = String(Number(material.opacity ?? 1));
+  };
+  const bindImportedMaterialControls = () => {
+    const controls = materialControls();
+    const commit = (property, input) => {
+      const selected = store.selection.importedElement; if (!selected || !input) return;
+      const result = store.setImportedMaterialProperty(selected.rootObjectId, selected.sourceKey, property, input.value);
+      if (!result.ok) { alert(result.message); ui.render(); }
+    };
+    for (const [property,input] of [['baseColor',controls.color],['metallic',controls.metallic],['roughness',controls.roughness],['opacity',controls.opacity]]) {
+      if (!input || input.dataset.importedMaterialBound) continue;
+      input.dataset.importedMaterialBound = '1';
+      input.addEventListener('change', event => { if (!store.selection.importedElement) return; event.stopImmediatePropagation(); commit(property, input); }, true);
+    }
+  };
+
   const baseRenderInspector = ui.renderInspector.bind(ui);
   ui.renderInspector = () => {
     baseRenderInspector();
@@ -189,6 +290,8 @@ export function installImportedStructureUI(store, runtime, ui) {
     const euler = node.rotation; ui.fields.rx.value = euler.x * 180 / Math.PI; ui.fields.ry.value = euler.y * 180 / Math.PI; ui.fields.rz.value = euler.z * 180 / Math.PI;
     ui.fields.sx.value = node.scale.x; ui.fields.sy.value = node.scale.y; ui.fields.sz.value = node.scale.z;
     for (const field of [ui.fields.pvx,ui.fields.pvy,ui.fields.pvz,ui.fields.dx,ui.fields.dy,ui.fields.dz,ui.fields.radius,ui.fields.height]) field.disabled = true;
+    bindImportedMaterialControls();
+    renderImportedMaterial(selected);
   };
 
   const restoreInspectorEditability = () => {
@@ -199,8 +302,8 @@ export function installImportedStructureUI(store, runtime, ui) {
   store.subscribe(event => {
     if (event.type === 'selectionChanged') { restoreInspectorEditability(); queueMicrotask(syncImportedTransformSelection); }
     if (event.type === 'externalImportedStructure') register(event.objectId, event.descriptors || []);
-    if (event.type === 'projectLoaded') structures.clear();
-    if (['projectChanged','projectLoaded'].includes(event.type)) queueMicrotask(() => { for (const rootObjectId of structures.keys()) { applyTransforms(rootObjectId); applyVisibility(rootObjectId); } syncImportedTransformSelection(); ui.render(); });
+    if (event.type === 'projectLoaded') { structures.clear(); baseMaterials.clear(); }
+    if (['projectChanged','projectLoaded'].includes(event.type)) queueMicrotask(() => { for (const rootObjectId of structures.keys()) { applyTransforms(rootObjectId); applyVisibility(rootObjectId); applyMaterials(rootObjectId); } syncImportedTransformSelection(); ui.render(); });
   });
 
   const onPointer = event => {
@@ -214,5 +317,5 @@ export function installImportedStructureUI(store, runtime, ui) {
   };
   runtime.renderer.domElement.addEventListener('pointerdown', onPointer, true);
 
-  return { register, clearForRoot, select, isVisible, applyVisibility, applyTransforms, runtimeNode, get: rootObjectId => (structures.get(rootObjectId) || []).map(item => ({ ...item })) };
+  return { register, clearForRoot, select, isVisible, applyVisibility, applyTransforms, applyMaterials, runtimeNode, get: rootObjectId => (structures.get(rootObjectId) || []).map(item => ({ ...item })) };
 }
