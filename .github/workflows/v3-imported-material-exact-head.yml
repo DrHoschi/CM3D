@@ -1,0 +1,28 @@
+name: V3 Imported Material Exact-Head Verification
+
+on:
+  push:
+    branches:
+      - feature/v3-imported-element-material-overrides
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: V3 imported material override contract
+        run: node tests/v3-imported-element-material-overrides.mjs
+      - name: V3 imported structure regression
+        run: node tests/v3-imported-structure-subselection.mjs
+      - name: V3 imported visibility regression
+        run: node tests/v3-imported-element-visibility-overrides.mjs
+      - name: V3 imported transform regression
+        run: node tests/v3-imported-element-transform-overrides.mjs
+      - name: V2 material regression
+        run: node tests/wd-26a-pbr-material-core.mjs
+      - name: V2 GLTF export regression
+        run: node tests/wd-27a-central-export-workflow.mjs
