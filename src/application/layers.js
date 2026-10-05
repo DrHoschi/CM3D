@@ -19,9 +19,34 @@ export function installLayerAuthority(store,runtime,ui){
   const baseRebuild=runtime.rebuild.bind(runtime);runtime.rebuild=(...args)=>{const result=baseRebuild(...args);apply();return result;};
   const basePick=runtime.pick.bind(runtime);runtime.pick=event=>{const all=runtime.pickables;runtime.pickables=all.filter(node=>{const id=node?.userData?.cm3dObjectId;return !id||store.isObjectEffectivelyVisible(id);});try{return basePick(event);}finally{runtime.pickables=all;}};
 
-  const baseInspector=ui.renderInspector.bind(ui);ui.renderInspector=()=>{baseInspector();const object=store.getObject(store.selection.activeObjectId);if(!object||!ui.form)return;const layer=store.getLayer(object.layerId);const field=document.createElement('label');field.className='field';field.innerHTML='<span>Layer</span>';const select=document.createElement('select');select.innerHTML='<option value="">Ohne Layer</option>'+ordered(store).map(item=>`<option value="${item.layerId}">${item.name}</option>`).join('');select.value=object.layerId??'';select.onchange=()=>store.setObjectLayer(object.objectId,select.value||null);field.appendChild(select);ui.form.appendChild(field);if(layer?.locked){ui.form.classList.add('inspector-locked');for(const control of ui.form.querySelectorAll('input, select, button'))if(control!==select)control.disabled=true;}};
+  const baseInspector=ui.renderInspector.bind(ui);
+  ui.renderInspector=()=>{
+    baseInspector();
+    const object=store.getObject(store.selection.activeObjectId);
+    if(!object||!ui.form)return;
+    const layer=store.getLayer(object.layerId);
+    let field=ui.form.querySelector('#inspector-layer-field');
+    if(!field){
+      field=document.createElement('label');
+      field.id='inspector-layer-field';
+      field.className='field';
+      const caption=document.createElement('span');caption.textContent='Layer';
+      field.appendChild(caption);
+      field.appendChild(document.createElement('select'));
+      ui.form.appendChild(field);
+    }
+    const select=field.querySelector('select');
+    select.innerHTML='<option value="">Ohne Layer</option>'+ordered(store).map(item=>`<option value="${item.layerId}">${item.name}</option>`).join('');
+    select.value=object.layerId??'';
+    select.onchange=()=>store.setObjectLayer(object.objectId,select.value||null);
+    if(layer?.locked){
+      ui.form.classList.add('inspector-locked');
+      for(const control of ui.form.querySelectorAll('input, select, button'))if(control!==select)control.disabled=true;
+    }
+  };
 
   store.subscribe(event=>{if(['layersChanged','projectChanged','projectLoaded','visibilityChanged','lockChanged','objectCreated'].includes(event.type)){queueMicrotask(apply);ui.render();}});
   apply();ui.render();
   return {apply};
 }
+
